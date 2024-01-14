@@ -194,10 +194,11 @@ export async function createCustomRole(interaction: ModalSubmitInteraction) {
 	}
 
 	const role = await config.guild.roles.create({
+		mentionable: false,
 		color,
 		name: PREFIX + name,
 		reason: `Created by ${interaction.user.tag}`,
-		position: (config.roles.staff?.position ?? 0) + 1,
+		//position: (config.roles.epic?.position ?? 0) + 1,
 		...iconData,
 	});
 	await interaction.member.roles.add(role, "Custom role created");
@@ -239,7 +240,8 @@ export function getCustomRole(member: GuildMember) {
 export async function qualifiesForRole(member: GuildMember) {
 	if (
 		member.roles.premiumSubscriberRole ||
-		(config.roles.staff && member.roles.resolve(config.roles.staff.id))
+		(config.roles.staff && member.roles.resolve(config.roles.staff.id)) ||
+		(config.roles.epic && member.roles.resolve(config.roles.epic.id))
 	)
 		return true;
 	const recentXp = recentXpDatabase.data.toSorted((one, two) => one.time - two.time);

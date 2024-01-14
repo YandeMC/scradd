@@ -11,9 +11,8 @@
 		"build-n-run": "npm run build && npm run start",
 		"dev": "tsc --project tsconfig.json --watch",
 		"format": "prettier --write \"**\" \"!dist/**\" --ignore-unknown",
-		"launch-n-deploy": "fly launch && fly deploy",
+		"launch-n-deploy": "fly launch -y && fly deploy",
 		"lint": "eslint .",
-		"node_modules": "rm -rf node_modules && npm i && npm run build",
 		"serve": "nodemon --env-file=.env --enable-source-maps . --ext js,json,html,css,png",
 		"start": " node --env-file=.env --enable-source-maps .",
 		"test": "npm run build && node --enable-source-maps --test"

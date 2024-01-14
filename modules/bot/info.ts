@@ -15,7 +15,6 @@ import { client } from "strife.js";
 import config, { syncConfig } from "../../common/config.js";
 import pkg from "../../package.json" assert { type: "json" };
 import lockFile from "../../package-lock.json" assert { type: "json" };
-import { autoreactions, dadEasterEggCount } from "../auto/secrets.js";
 import { joinWithAnd } from "../../util/text.js";
 import { mentionUser } from "../settings.js";
 import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
@@ -188,10 +187,11 @@ async function credits(interaction: ChatInputCommandInteraction) {
 				description: `Scrub is hosted on [Fly.io](https://fly.io/) using Node.JS ${process.version}.\nBot code "borrowd" from @cobaltt7 and is available [on GitHub](https://github.com/scratchaddons-community/scradd)`,
 
 				fields: [
-					{ name: "🧑‍💻 Developers", value: await getRole(developers), inline: true },
+					{ name: "🧑‍💻 Devs", value: await getRole(developers), inline: true },
+
 					{ name: "🖌️ Designers", value: await getRole(designers), inline: true },
 					{
-						name: "🧪 Additional beta testers",
+						name: "🧪 yTesters",
 						value: await getRole(testers),
 						inline: true,
 					},
@@ -215,8 +215,6 @@ async function credits(interaction: ChatInputCommandInteraction) {
 	async function getRole(roleId: Snowflake): Promise<string> {
 		const role = await config.testingGuild?.roles.fetch(roleId);
 		const members: { user: User }[] = [...(role?.members.values() ?? [])];
-		if (roleId === designers)
-			members.push({ user: await client.users.fetch(constants.users.retron) });
 
 		return joinWithAnd(
 			await Promise.all(
@@ -235,7 +233,7 @@ function getConfig() {
 	return [
 		{
 			color: constants.themeColor,
-			description: `## Configuration\n\nThere are currently **${dadEasterEggCount}** custom dad responses and **${autoreactions.length}** autoreactions.\nSome have multiple triggers, which are not counted here.`,
+			description: `## Configuration`,
 		},
 		{
 			title: "Channels",

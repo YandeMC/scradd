@@ -62,7 +62,7 @@ defineEvent.pre("guildMemberUpdate", async (_, member) => {
 });
 
 defineChatCommand(
-	{ name: "custom-role", description: "Create a custom role for yourself", restricted: true },
+	{ name: "custom-role", description: "Create a custom role for yourself" },
 	customRole,
 );
 defineModal("customRole", createCustomRole);

@@ -119,7 +119,7 @@ export default async function makeSlideshow(
 					post: [
 						{
 							custom_id: nextId,
-							label: "Next >>",
+							label: ">Next >",
 							style: ButtonStyle.Primary,
 							type: ComponentType.Button,
 						},
