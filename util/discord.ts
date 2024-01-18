@@ -728,8 +728,7 @@ export async function paginate<Item>(
 	if (
 		numberOfPages === 1 ||
 		!user ||
-		!(message instanceof InteractionResponse) ||
-		!(message instanceof Message)
+		!(message instanceof InteractionResponse || message instanceof Message)
 	)
 		return;
 

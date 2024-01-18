@@ -68,7 +68,10 @@ export default async function hangman(interaction: ChatInputCommandInteraction<"
 	let color: number | undefined;
 
 	const guesses: (Lowercase<string> | typeof CHARACTERS[number])[] = [];
-	const message = await interaction.reply({ embeds: [{ title: "Hangman" }], fetchReply: true });
+	const message = await interaction.reply({
+		embeds: [{ title: "Starting game..." }],
+		fetchReply: true,
+	});
 	await tick();
 
 	const collector = message

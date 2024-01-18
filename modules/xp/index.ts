@@ -3,6 +3,7 @@ import {
 	ApplicationCommandType,
 	ComponentType,
 	GuildMember,
+	User,
 } from "discord.js";
 import config from "../../common/config.js";
 import {
@@ -14,7 +15,8 @@ import {
 	defineMenuCommand,
 } from "strife.js";
 import getUserRank, { top } from "./rank.js";
-import { giveXpForMessage } from "./giveXp.js";
+import giveXp, { giveXpForMessage } from "./giveXp.js";
+import constants from "../../common/constants.js";
 
 defineEvent("messageCreate", async (message) => {
 	if (message.guild?.id !== config.guild.id) return;
@@ -38,7 +40,20 @@ defineSubcommands(
 					},
 				},
 			},
+			give: {
+				description: "Give someone xp (yande only)",
 
+				options: {
+					user: {
+						type: ApplicationCommandOptionType.User,
+						description: "User to give xp to",
+					},
+					amount: {
+						type: ApplicationCommandOptionType.Integer,
+						description: "how much",
+					},
+				},
+			},
 			leaderboard: {
 				description: "View the server XP leaderboard",
 
@@ -84,6 +99,34 @@ defineSubcommands(
 			}
 			case "leaderboard": {
 				await top(interaction, options.options.user);
+				return;
+			}
+			case "give": {
+				const { owner } = await client.application.fetch();
+				const owners =
+					owner instanceof User
+						? [owner.id]
+						: owner?.members.map((member) => member.id) ?? [];
+				if (process.env.NODE_ENV === "production" && !owners.includes(interaction.user.id))
+					return await interaction.reply({
+						ephemeral: true,
+						content: `${constants.emojis.statuses.no} This command is reserved for ${
+							owner instanceof User
+								? owner.displayName
+								: "the " + owner?.name + " team"
+						} only!`,
+					});
+				await interaction.reply({ content: "Giving Xp...", ephemeral: true });
+				const user =
+					options.options.user instanceof GuildMember
+						? options.options.user.user
+						: options.options.user ?? interaction.user;
+				const amount = options.options.amount;
+				giveXp(user, "https://example.com", amount);
+
+				return await interaction.editReply({
+					content: `:sparkles: Gave <@${user.id}> ${amount} XP`,
+				});
 			}
 		}
 	},

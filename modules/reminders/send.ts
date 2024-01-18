@@ -17,10 +17,9 @@ import {
 	userMention,
 	ActivityType,
 } from "discord.js";
-import constants from "../../common/constants.js";
+
 import { backupDatabases, cleanDatabaseListeners } from "../../common/database.js";
 import config from "../../common/config.js";
-import { gracefulFetch } from "../../util/promises.js";
 import { syncRandomBoard } from "../board/update.js";
 
 let nextReminder: NodeJS.Timeout | undefined;
@@ -82,22 +81,22 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					const message = await channel.send(await getWeekly(nextWeeklyDate));
 					if (!chatters) continue;
 					const thread = await message.startThread({
-						name: `🏆 Weekly Winners week of ${
+						name: `🏆 Weekly Winners(${
 							[
-								"January",
-								"February",
-								"March",
-								"April",
+								"Jan",
+								"Feb",
+								"Mar",
+								"Apr",
 								"May",
-								"June",
-								"July",
-								"August",
-								"September",
-								"October",
-								"November",
-								"December",
+								"Jun",
+								"Jul",
+								"Aug",
+								"Sep",
+								"Oct",
+								"Nov",
+								"Dec",
 							][date.getUTCMonth()] || ""
-						} ${nth(date.getUTCDate())}`,
+						} ${nth(date.getUTCDate())})`,
 						reason: "To send all chatters",
 					});
 					await thread.send(chatters);
@@ -117,19 +116,11 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 						},
 					];
 
-					const count = await gracefulFetch<{ count: number; _chromeCountDate: string }>(
-						`${constants.urls.usercountJson}?date=${Date.now()}`,
-					);
-					if (!count) continue;
-
+					const guild = config.guild;
+					const memberCount = guild.memberCount;
 					await channel.setName(
-						`Scratch Addons - ${count.count.toLocaleString([], {
-							compactDisplay: "short",
-							maximumFractionDigits: 1,
-							minimumFractionDigits: +(count.count > 999),
-							notation: "compact",
-						})} users`,
-						"Automated update to sync count",
+						`💬 Chat - ${memberCount} Members`,
+						"update member count",
 					);
 					continue;
 				}

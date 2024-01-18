@@ -5,12 +5,29 @@ import { CURRENTLY_PLAYING } from "./misc.js";
 import constants from "../../common/constants.js";
 import { disableComponents } from "../../util/discord.js";
 import hangman from "./hangman.js";
+import rps from "./rps.js";
 
 defineChatCommand(
 	{ name: "hangman", description: "Try to guess who from the server I’m thinking of" },
 	hangman,
 );
-
+defineChatCommand(
+	{
+		name: "rps",
+		description: "a",
+		options: {
+			opponent: {
+				description: "user to play ansagert",
+				type: ApplicationCommandOptionType.User,
+			},
+			rounds: {
+				description: "what do you think",
+				type: ApplicationCommandOptionType.Integer,
+			},
+		},
+	},
+	rps,
+);
 defineChatCommand(
 	{
 		name: "memory-match",
