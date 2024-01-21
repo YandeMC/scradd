@@ -30,7 +30,7 @@ async function getConfig() {
 		channels: {
 			info: getChannel("Info", ChannelType.GuildCategory, "start"),
 			announcements:
-				guild?.systemChannel || getChannel("week", ChannelType.GuildText, "partial"),
+				 getChannel("week", ChannelType.GuildText, "partial"),
 			board: getChannel(
 				"board",
 				[ChannelType.GuildText, ChannelType.GuildAnnouncement],

@@ -1,4 +1,3 @@
-import { client } from 'strife.js';
 import constants from '../../common/constants.js';
 import {
 	ButtonStyle,
@@ -9,11 +8,12 @@ import {
 	type APIInteractionGuildMember,
 	Message,
 } from 'discord.js';
+import { GAME_COLLECTOR_TIME } from './misc.js';
 
 
 let games = {} as any;
 const letters = "rps";
-let emojis:any = {
+let emojis: Record<string, string> | any = {
 	'draw': '<:draw:1196987416939069490>',//draw
 	'p1': '<:blurple:1196987629703536640>',//player1 wins
 	'p2': '<:green:1196987578881150976>',//player2 wins
@@ -48,7 +48,7 @@ export default async function rps(
 	let message: Message<boolean>
 	if (options.opponent){
 	 message = await interaction.reply({
-		content: `<@${options.opponent?.id}> get challenged lmao`,
+		content: `<@${options.opponent?.id}> get challenged lmao (${options.rounds || 2} rounds)`,
 		components: [
 			{
 				type: ComponentType.ActionRow,
@@ -169,6 +169,7 @@ return "end"
 	let collector = message
 		.createMessageComponentCollector({
 			componentType: ComponentType.Button,
+			idle: GAME_COLLECTOR_TIME,
 		})
 		.on('collect', async (button: ButtonInteraction) => {
             if (button.customId.split('-')[1] != interaction.id) return
@@ -240,6 +241,40 @@ return "end"
 				if (player2Choice != emojis['-']) player2Choices[currentRound] = emojis['/'];
 			}
 			await message.edit({ embeds: editEmbed(interaction, player1Choices, player2Choices) });
+		}).on("end", async() => {
+			const player1Choices: Array<any> = games[interaction.id].choices.map(
+				(arr: any[]) => arr[0],
+			);
+			const player2Choices: Array<any> = games[interaction.id].choices.map(
+				(arr: any[]) => arr[1],
+			);
+			let counter: any = {};
+			counter[emojis['p1']] = 0;
+			counter[emojis['p2']] = 0;
+			const arr = games[interaction.id].results;
+
+			arr.forEach((ele: string | number) => {
+				if (counter[ele] != undefined) {
+					counter[ele] += 1;
+				}
+			});
+			
+			let result;
+			
+			if ((counter[emojis['p1']] == counter[emojis['p2']])) {
+				result = 'Draw';
+			} else if (counter[emojis['p1']] > counter[emojis['p2']]) {
+				result = games[interaction.id].players[0].displayName + ' Wins';
+			} else {
+				result = (games[interaction.id].players[1]?.displayName || "Scrub") + ' Wins';
+			}
+			let finalEmbed = editEmbed(interaction, player1Choices, player2Choices, result);
+			await message.reply(result)
+			await message.edit({content:"Game became inactive.", components: [], embeds: finalEmbed });
+			
+			
+			collector.stop()
+			return games[interaction.id] = null;
 		});
 }
 
@@ -259,7 +294,7 @@ function checkWinner(p1: any, p2: any) {
 	return outcomes[p1 + p2];
 }
 
-function editEmbed(interaction: ChatInputCommandInteraction, p1c: Array<any>, p2c: Array<any>,title: string = "") {
+function editEmbed(interaction: ChatInputCommandInteraction, p1c: Array<any>, p2c: Array<any>,title: string = "", footer: string = "") {
 	return [
 		{
 			fields: [
@@ -283,7 +318,7 @@ function editEmbed(interaction: ChatInputCommandInteraction, p1c: Array<any>, p2
 				name: 'RPS',
 			},
 			footer: {
-				text: '',
+				text: footer,
 			},
 			title: title
 		},

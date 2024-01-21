@@ -14,14 +14,14 @@ defineChatCommand(
 defineChatCommand(
 	{
 		name: "rps",
-		description: "a",
+		description: "Play Rock Paper Scissors against someone(or the bot)",
 		options: {
 			opponent: {
-				description: "user to play ansagert",
+				description: "Opponent (leave blank for solo)",
 				type: ApplicationCommandOptionType.User,
 			},
 			rounds: {
-				description: "what do you think",
+				description: "Number of rounds",
 				type: ApplicationCommandOptionType.Integer,
 			},
 		},

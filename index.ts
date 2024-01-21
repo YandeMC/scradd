@@ -61,7 +61,7 @@ await login({
 			GatewayIntentBits.MessageContent |
 			GatewayIntentBits.GuildScheduledEvents |
 			GatewayIntentBits.AutoModerationExecution,
-		presence: { status: "dnd" },
+		presence: { status: "idle" },
 	},
 	commandErrorMessage: `${constants.emojis.statuses.no} An error occurred.`,
 });

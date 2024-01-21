@@ -1,5 +1,5 @@
-import { defineChatCommand } from "strife.js";
-import { GuildMember } from "discord.js";
+import { defineChatCommand, defineEvent } from "strife.js";
+import { GuildMember, Message } from "discord.js";
 
 defineChatCommand(
 	{
@@ -24,3 +24,13 @@ defineChatCommand(
 		}
 	},
 );
+
+defineEvent("messageCreate",async (message:Message) => {
+	const user = message.member
+	if (!user) return;
+		const currentNickname = user.displayName;
+		if (currentNickname.includes("[afk]")) {
+			const newNickname = currentNickname.replace("[afk]", "").trim();
+			await user.setNickname(newNickname);
+		} 
+})
