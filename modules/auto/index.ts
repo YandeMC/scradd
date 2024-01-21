@@ -5,9 +5,8 @@ import {
 	ComponentType,
 	MessageType,
 	type APIEmbed,
-	type BaseMessageOptions,
-	type Message,
-	type Snowflake,
+	ComponentType,
+	ButtonStyle,
 } from "discord.js";
 import { setTimeout as wait } from "node:timers/promises";
 import { client, defineButton, defineEvent, defineMenuCommand } from "strife.js";
@@ -175,33 +174,22 @@ async function handleMutatable(
 			const embed = await handleMatch(match);
 			if (embed) {
 				embeds.push(embed);
-				if (configuredSettings.scratchEmbeds !== undefined)
-					embed.footer = { text: "Disable this using /settings" };
 			}
 			if (embeds.length >= 5) break;
 		}
-		if (embeds.length)
-			return {
-				content: "",
-				files: [],
-				embeds,
-				components:
-					configuredSettings.scratchEmbeds === undefined ?
-						[
-							{
-								components: [
-									{
-										customId: `scratchEmbeds-${message.author.id}_toggleSetting`,
-										type: ComponentType.Button as const,
-										label: "Disable Scratch Embeds",
-										style: ButtonStyle.Success as const,
-									},
-								],
-								type: ComponentType.ActionRow,
-							},
-						]
-					:	[],
-			};
+		if (embeds.length) return { content: "", files: [], embeds, components: notSet ? [
+			{
+			components: [
+				{
+					customId: "scratchEmbeds_toggleSetting",
+					type: ComponentType.Button as const,
+					label: `Disable Scratch Embeds`,
+					style: ButtonStyle.Success as const,
+				},
+			],
+			type: ComponentType.ActionRow,
+		}
+	] : [] };
 	}
 
 	const ignored = ignoreTriggers.some((trigger) => message.content.match(trigger));
