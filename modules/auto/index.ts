@@ -177,19 +177,27 @@ async function handleMutatable(
 			}
 			if (embeds.length >= 5) break;
 		}
-		if (embeds.length) return { content: "", files: [], embeds, components: notSet ? [
-			{
-			components: [
-				{
-					customId: "scratchEmbeds_toggleSetting",
-					type: ComponentType.Button as const,
-					label: `Disable Scratch Embeds`,
-					style: ButtonStyle.Success as const,
-				},
-			],
-			type: ComponentType.ActionRow,
-		}
-	] : [] };
+		if (embeds.length)
+			return {
+				content: "",
+				files: [],
+				embeds,
+				components: notSet
+					? [
+							{
+								components: [
+									{
+										customId: "scratchEmbeds_toggleSetting",
+										type: ComponentType.Button as const,
+										label: `Disable Scratch Embeds`,
+										style: ButtonStyle.Success as const,
+									},
+								],
+								type: ComponentType.ActionRow,
+							},
+					  ]
+					: [],
+			};
 	}
 
 	const ignored = ignoreTriggers.some((trigger) => message.content.match(trigger));
