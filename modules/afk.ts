@@ -25,12 +25,12 @@ defineChatCommand(
 	},
 );
 
-defineEvent("messageCreate",async (message:Message) => {
-	const user = message.member
+defineEvent("messageCreate", async (message: Message) => {
+	const user = message.member;
 	if (!user) return;
-		const currentNickname = user.displayName;
-		if (currentNickname.includes("[afk]")) {
-			const newNickname = currentNickname.replace("[afk]", "").trim();
-			await user.setNickname(newNickname);
-		} 
-})
+	const currentNickname = user.displayName;
+	if (currentNickname.includes("[afk]")) {
+		const newNickname = currentNickname.replace("[afk]", "").trim();
+		await user.setNickname(newNickname);
+	}
+});

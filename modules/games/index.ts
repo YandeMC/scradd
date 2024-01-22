@@ -23,6 +23,8 @@ defineChatCommand(
 			rounds: {
 				description: "Number of rounds",
 				type: ApplicationCommandOptionType.Integer,
+				minValue: 1,
+				maxValue: 31,
 			},
 		},
 	},

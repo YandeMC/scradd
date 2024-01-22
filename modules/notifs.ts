@@ -18,11 +18,13 @@ defineEvent("messageCreate", async (message) => {
 
 defineEvent("guildMemberAdd", async (member) => {
 	if (member.guild.id !== config.guild.id) return;
-    member.send({content: `
+	member.send({
+		content: `
 	Hello ${member.displayName}! Welcome to ${config.guild.name}! \n
 	To verify, follow the instructions in [this message](https://discord.com/channels/1141222489582735360/1142268770673492118/1194057347572703292).\n
 	If any problems emerge, contact mods by going to <#${config.channels.tickets?.id}>.\n
-	Hope you have a fun time!`})
+	Hope you have a fun time!`,
+	});
 	const countString = config.guild.memberCount.toString();
 	const jokes = /^[1-9]0+$/.test(countString)
 		? ` (${"🥳".repeat(countString.length - 1)})`
