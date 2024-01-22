@@ -59,6 +59,7 @@ async function getConfig() {
 			bots: getChannel("bots", ChannelType.GuildText, "partial"),
 
 			old_suggestions: getChannel("suggestions", ChannelType.GuildText, "partial"),
+			verify: getChannel("verif", ChannelType.GuildText, "partial"),
 		},
 
 		roles: {

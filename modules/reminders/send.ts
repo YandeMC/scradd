@@ -16,11 +16,14 @@ import {
 	time,
 	userMention,
 	ActivityType,
+	Message,
 } from "discord.js";
 
 import { backupDatabases, cleanDatabaseListeners } from "../../common/database.js";
 import config from "../../common/config.js";
 import { syncRandomBoard } from "../board/update.js";
+import { gracefulFetch } from "../../util/promises.js";
+import constants from "../../common/constants.js";
 
 let nextReminder: NodeJS.Timeout | undefined;
 export default async function queueReminders(): Promise<NodeJS.Timeout | undefined> {
@@ -218,6 +221,50 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 						name: "status",
 						state: STATUSES[next],
 					});
+					continue;
+				}
+				case SpecialReminders.UpdateVerificationStatus: {
+					remindersDatabase.data = [
+						...remindersDatabase.data,
+						{
+							channel: "0",
+							date: Date.now() + 60000,
+							id: SpecialReminders.UpdateVerificationStatus,
+							user: client.user.id,
+						},
+					];
+
+					const ScratchOauth = await gracefulFetch(
+						"https://stats.uptimerobot.com/api/getMonitorList/4Ggz4Fzo2O",
+					);
+					const Scrub = await gracefulFetch(
+						"https://stats.uptimerobot.com/api/getMonitorList/K2V4js80Pk",
+					);
+					let fields = ScratchOauth.psp.monitors.map(({ statusClass, name }:{statusClass:string,name:string}) => ({ value: constants.zws, name: `${statusClass == "danger" ? "<:icons_outage:1199113890584342628>":"<:green:1196987578881150976>"}${name}` }));
+fields.push({
+	name: `${Scrub.psp.monitors[0].statusClass == "danger" ? "<:icons_outage:1199113890584342628>":"<:green:1196987578881150976>"}${Scrub.psp.monitors[0].name}`,
+	value: constants.zws
+})
+					const verifyMessages: any = await config.channels.verify?.messages.fetch({
+						limit: 10,
+					});
+					let messgae: any = verifyMessages.find(
+						(msg: Message) => msg.author.id == client.user.id,
+					);
+					if (!messgae) {
+						messgae = await config.channels.verify?.send({ content: "..." });
+					}
+					messgae.edit({content: "", embeds: [
+						{
+						
+						  "fields": fields,
+						  "author": {
+							"name": "Verification Status"
+						  },
+						  "title": "All Good/D'Oh",
+						  "color": 16754688
+						}
+					  ],});
 					continue;
 				}
 			}

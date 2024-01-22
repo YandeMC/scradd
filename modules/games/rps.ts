@@ -258,24 +258,20 @@ export default async function rps(
 				arr,
 				result,
 			);
+			const scoreDiff: number = Math.abs(counter[emojis["p1"]] - counter[emojis["p2"]]);
 			const resultsEmbed: APIEmbed = {
 				author: {
-					name:
-						result + result.toLowerCase() == "draw"
-							? ``
-							: counter[emojis["p1"]] > counter[emojis["p2"]]
-							? `by ${counter[emojis["p1"]] - counter[emojis["p2"]]} points`
-							: `by ${counter[emojis["p2"]] - counter[emojis["p1"]]} points`,
+					name: result + (scoreDiff != 0 ? ` by ${scoreDiff} points` : ``),
 				},
 				fields: [
 					{
 						name: `${games[interaction.id].players[0].displayName}`,
-						value: `${counter[emojis["p1"]]} Points}`,
+						value: `${counter[emojis["p1"]]} Points`,
 						inline: true,
 					},
 					{
 						name: `${games[interaction.id].players[1]?.displayName || "Scrub"}`,
-						value: `${counter[emojis["p2"]]} Points}`,
+						value: `${counter[emojis["p2"]]} Points`,
 						inline: true,
 					},
 				],
