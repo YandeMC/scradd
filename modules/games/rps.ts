@@ -207,33 +207,7 @@ return "end"
 				)];
 				
 				if (games[interaction.id].round >= games[interaction.id].totalRounds) {
-					let counter: any = {};
-					counter[emojis['p1']] = 0;
-					counter[emojis['p2']] = 0;
-					const arr = games[interaction.id].results;
-
-					arr.forEach((ele: string | number) => {
-						if (counter[ele] != undefined) {
-							counter[ele] += 1;
-						}
-					});
-					
-					let result;
-					
-					if ((counter[emojis['p1']] == counter[emojis['p2']])) {
-						result = 'Draw';
-					} else if (counter[emojis['p1']] > counter[emojis['p2']]) {
-						result = games[interaction.id].players[0].displayName + ' Wins';
-					} else {
-						result = (games[interaction.id].players[1]?.displayName || "Scrub") + ' Wins';
-					}
-					let finalEmbed = editEmbed(interaction, player1Choices, player2Choices,result);
-					await message.reply(result)
-					await message.edit({ components: [], embeds: finalEmbed });
-					
-					
 					collector.stop()
-					return games[interaction.id] = null;
 				}
 				games[interaction.id].round += 1;
 			} else {
@@ -241,7 +215,7 @@ return "end"
 				if (player2Choice != emojis['-']) player2Choices[currentRound] = emojis['/'];
 			}
 			await message.edit({ embeds: editEmbed(interaction, player1Choices, player2Choices) });
-		}).on("end", async() => {
+		}).on("end", async(_, endReason) => {
 			const player1Choices: Array<any> = games[interaction.id].choices.map(
 				(arr: any[]) => arr[0],
 			);
@@ -270,7 +244,7 @@ return "end"
 			}
 			let finalEmbed = editEmbed(interaction, player1Choices, player2Choices, result);
 			await message.reply(result)
-			await message.edit({content:"Game became inactive.", components: [], embeds: finalEmbed });
+			await message.edit({content: endReason === "idle" ?"Game became inactive.":"", components: [], embeds: finalEmbed });
 			
 			
 			collector.stop()
