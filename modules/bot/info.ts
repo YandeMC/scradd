@@ -19,6 +19,7 @@ import { joinWithAnd } from "../../util/text.js";
 import { mentionUser } from "../settings.js";
 import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
 import constants from "../../common/constants.js";
+import { gracefulFetch } from "../../util/promises.js";
 
 const designers = "1021061241260740719",
 	developers = "1021061241260740720",
@@ -100,7 +101,18 @@ export default async function info(
 
 async function status(interaction: ChatInputCommandInteraction) {
 	const message = await interaction.reply({ content: "Pinging…", fetchReply: true });
-
+	const ScratchOauth = await gracefulFetch(
+		"https://stats.uptimerobot.com/api/getMonitorList/4Ggz4Fzo2O",
+	);
+	const Scrub = await gracefulFetch(
+		"https://stats.uptimerobot.com/api/getMonitorList/K2V4js80Pk",
+	);
+	let fields = ScratchOauth.psp.monitors.map(({ statusClass, name }:{statusClass:string,name:string}) => ({ value: constants.zws, name: `${statusClass == "danger" ? "<:icons_outage:1199113890584342628>":"<:green:1196987578881150976>"}${name}` }));
+fields.push({
+name: `${Scrub.psp.monitors[0].statusClass == "danger" ? "<:icons_outage:1199113890584342628>":"<:green:1196987578881150976>"}${Scrub.psp.monitors[0].name}`,
+value: constants.zws
+})
+const downCount:number = ScratchOauth.statistics.counts.down + Scrub.statistics.counts.down
 	await interaction.editReply({
 		content: "",
 
@@ -110,7 +122,7 @@ async function status(interaction: ChatInputCommandInteraction) {
 				thumbnail: { url: client.user.displayAvatarURL() },
 				color: constants.themeColor,
 				description:
-					"I’m open-source! The source code is available [on GitHub](https://github.com/scratchaddons-community/scradd).",
+					"I’m open-source! The source code is available [on GitHub](https://github.com/YandeMC/scradd/tree/Scrub).",
 
 				fields: [
 					{
@@ -147,6 +159,15 @@ async function status(interaction: ChatInputCommandInteraction) {
 					},
 				],
 			},
+			{
+						
+				"fields": fields,
+				"author": {
+				  "name": "Verification Status"
+				},
+				"title": downCount != 0 ? `${downCount} services are down! `:"All good!",
+				"color": constants.themeColor
+			  }
 		],
 	});
 }

@@ -16,7 +16,7 @@ import {
 	time,
 	userMention,
 	ActivityType,
-	Message,
+	Message
 } from "discord.js";
 
 import { backupDatabases, cleanDatabaseListeners } from "../../common/database.js";
@@ -245,7 +245,7 @@ fields.push({
 	name: `${Scrub.psp.monitors[0].statusClass == "danger" ? "<:icons_outage:1199113890584342628>":"<:green:1196987578881150976>"}${Scrub.psp.monitors[0].name}`,
 	value: constants.zws
 })
-					const verifyMessages: any = await config.channels.verify?.messages.fetch({
+					let verifyMessages: any = await config.channels.verify?.messages.fetch({
 						limit: 10,
 					});
 					let messgae: any = verifyMessages.find(
@@ -254,21 +254,27 @@ fields.push({
 					if (!messgae) {
 						messgae = await config.channels.verify?.send({ content: "..." });
 					}
-					messgae.edit({content: "", embeds: [
+					const downCount:number = ScratchOauth.statistics.counts.down + Scrub.statistics.counts.down
+					messgae.edit({content: `Last updated <t:${Math.floor(Date.now() / 1000)}:R>`, embeds: [
 						{
 						
 						  "fields": fields,
+						  footer: {
+							text: `Updated every minute`
+						},
 						  "author": {
 							"name": "Verification Status"
 						  },
-						  "title": "All Good/D'Oh",
+						  "title": downCount != 0 ? `Uh oh! ${downCount} services are down! `:"All good!",
 						  "color": 16754688
 						}
 					  ],});
+                 // post again in general
 					continue;
 				}
 			}
 		}
+		
 		if (!channel?.isTextBased() || typeof reminder.reminder !== "string") continue;
 		const silent = reminder.reminder.startsWith("@silent");
 		const content = silent ? reminder.reminder.replace("@silent", "") : reminder.reminder;
