@@ -6,6 +6,7 @@ import { defineButton, defineSelect, client, defineEvent, defineSubcommands } fr
 import queueReminders from "./send.js";
 import { BUMPING_THREAD, SpecialReminders, remindersDatabase } from "./misc.js";
 import { cancelReminder, createReminder, listReminders } from "./management.js";
+import giveXp from "../../modules/xp/giveXp.js";
 
 defineSubcommands(
 	{
@@ -84,6 +85,7 @@ defineEvent("messageCreate", async (message) => {
 		message.interaction?.commandName == "bump" &&
 		message.author.id === constants.users.disboard
 	) {
+		giveXp(message.interaction.user,undefined,400)
 		remindersDatabase.data = [
 			...remindersDatabase.data.filter(
 				(reminder) =>

@@ -1,11 +1,12 @@
-import { ApplicationCommandOptionType, ComponentType, TextInputStyle } from "discord.js";
+import { ApplicationCommandOptionType, ButtonStyle, ComponentType, TextInputStyle} from "discord.js";
 import constants from "../common/constants.js";
 import { reactAll } from "../util/discord.js";
 import { BOARD_EMOJI } from "./board/misc.js";
 import twemojiRegexp from "@twemoji/parser/dist/lib/regex.js";
-import { defineChatCommand, defineEvent, client, defineModal } from "strife.js";
+import { defineChatCommand, defineEvent, client, defineModal, defineButton } from "strife.js";
 
-const DEFAULT_SHAPES = ["🔺", "🔶", "🟡", "🟩", "🔹", "💜", "🟤", "🏳️"];
+
+const DEFAULT_SHAPES = ["🔺", "🔶", "🟡", "🟩", "🔹", "💜", "🟤", "🏳️","⚫","⭕","🔰","♻"];
 const bannedReactions = new Set(BOARD_EMOJI);
 
 defineChatCommand(
@@ -16,12 +17,37 @@ defineChatCommand(
 		options: {
 			"vote-mode": {
 				type: ApplicationCommandOptionType.Boolean,
-				description: "Restrict people to one reaction on this poll (defaults to true)",
+				description: "Only let people answer once. (defaults to true)",
+			},
+			"open-ended": {
+				type: ApplicationCommandOptionType.Boolean,
+				description: "People answer with custom responces",
 			},
 		},
 	},
 
 	async (interaction, options) => {
+		if (options["open-ended"]) {
+			await interaction.showModal({
+				title: "Set Up Poll",
+				components: [
+					{
+						type: ComponentType.ActionRow,
+						components: [
+							{
+								type: ComponentType.TextInput,
+								customId: "question",
+								label: "The question to ask",
+								required: true,
+								style: TextInputStyle.Short,
+								maxLength: 256,
+							},
+						],
+					},
+				],
+				customId: Number(options["vote-mode"] ?? true) +"-"+ Number(options["open-ended"]) + "_poll",
+			});
+		} else {
 		await interaction.showModal({
 			title: "Set Up Poll",
 			components: [
@@ -52,12 +78,41 @@ defineChatCommand(
 					],
 				},
 			],
-			customId: Number(options["vote-mode"] ?? true) + "_poll",
-		});
+			customId: Number(options["vote-mode"] ?? true) +"-"+ Number(options["open-ended"]) + "_poll",
+		});}
 	},
 );
 
-defineModal("poll", async (interaction, voteMode) => {
+defineModal("poll", async (interaction, mode) => {
+	if (mode.split("-")[1] === "1") {
+
+		await interaction.reply({
+			embeds: [
+				{
+					color: constants.themeColor,
+					title: interaction.fields.getTextInputValue("question"),
+					description: "answers:",
+					footer:
+						mode.split("-")[0] === "1" ? { text: "You can only answer once on this poll." } : undefined,
+				},
+			],
+			components: mode.split("-")[1] === "1" ?  [
+				{
+					type: ComponentType.ActionRow,
+					components: [
+						{
+							type: ComponentType.Button,
+							label: "Answer",
+							style: ButtonStyle.Success,
+							customId: `_pollAnswer`,
+						}
+					],
+				},
+			] : undefined,
+		});
+		
+	} 
+	else{
 	const regexp = new RegExp(`^${twemojiRegexp.default.source}`);
 
 	const { customReactions, options } = interaction.fields
@@ -77,7 +132,7 @@ defineModal("poll", async (interaction, voteMode) => {
 				};
 			},
 			{ customReactions: [], options: [] },
-		); // TODO: censor it
+		); 
 	if (options.length > DEFAULT_SHAPES.length)
 		return await interaction.reply({
 			ephemeral: true,
@@ -98,12 +153,13 @@ defineModal("poll", async (interaction, voteMode) => {
 					.map((option, index) => `${reactions[index]} ${option}`)
 					.join("\n"),
 				footer:
-					voteMode === "1" ? { text: "You can only vote once on this poll." } : undefined,
+					mode.split("-")[0] === "1" ? { text: "You can only vote once on this poll." } : undefined,
 			},
 		],
 		fetchReply: true,
 	});
 	await reactAll(message, reactions);
+}
 });
 
 defineEvent("messageReactionAdd", async (partialReaction, partialUser) => {
@@ -132,3 +188,75 @@ defineEvent("messageReactionAdd", async (partialReaction, partialUser) => {
 		}
 	}
 });
+
+defineButton("pollAnswer", async (i) => {
+	
+	 
+	  
+	
+	if (!i.message.embeds[0]) return
+	let answers = i.message.embeds[0]?.fields
+	if (!answers) {
+		answers = []
+	} 
+	if (answers.some(obj => obj['name'] == i.user.displayName) && i.message.embeds[0].footer?.text) return await i.reply({ephemeral:true, content: "You already answered"})
+	 
+
+	if (answers.length >= 25) {
+		return await i.reply({ephemeral:true, content: "this poll has reached the max answer length of 25"})
+	}
+	await i.showModal({
+		title: "Answer Poll",
+		components: [
+			{
+				type: ComponentType.ActionRow,
+				components: [
+					{
+						type: ComponentType.TextInput,
+						customId: "answer",
+						label: "Your answer",
+						required: true,
+						style: TextInputStyle.Short,
+						maxLength: 1024,
+					},
+				],
+			},
+		],
+		customId: "answer",
+	})
+	const collectorFilter = (mi: { user: { id: string } }) => {
+
+		return (
+			mi.user.id == i.user.id
+		);
+	};
+
+// Get the Modal Submit Interaction that is emitted once the User submits the Modal
+const submitted = await i.awaitModalSubmit({
+  // Timeout after a minute of not receiving any valid Modals
+  time: 60000,
+  // Make sure we only accept Modals from the User who sent the original Interaction we're responding to
+  filter: collectorFilter
+}).catch(() => {});
+// from it's Custom ID. See https://old.discordjs.dev/#/docs/discord.js/stable/class/ModalSubmitFieldsResolver for more info.
+let answer = ""
+if (submitted) {
+   answer = submitted.fields.getTextInputValue("answer")
+   submitted.deferUpdate()
+} else return
+
+	answers?.push({
+		name: i.user.displayName,
+		value: answer
+
+	})
+
+	await i.message.edit({embeds: [{
+		color: constants.themeColor,
+		title: i.message.embeds[0]?.title || undefined,
+		fields: answers,
+		description: "answers:",
+		footer:
+		  i.message.embeds[0]?.footer || undefined
+	},]})
+})

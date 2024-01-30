@@ -14,13 +14,11 @@ defineChatCommand(
 		if (currentNickname.includes("[afk]")) {
 			const newNickname = currentNickname.replace("[afk]", "").trim();
 			await user.setNickname(newNickname);
-			await interaction.reply(
-				`Removed [afk] from your nickname. New nickname: ${newNickname}`,
-			);
+			await interaction.reply({ephemeral: true, content: "You are no longer afk. "});
 		} else {
 			const newNickname = `${currentNickname} [afk]`;
 			await user.setNickname(newNickname);
-			await interaction.reply(`Added [afk] to your nickname. New nickname: ${newNickname}`);
+			await interaction.reply({content:`You are now afk.`,ephemeral: true});
 		}
 	},
 );

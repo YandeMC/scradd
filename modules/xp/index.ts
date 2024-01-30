@@ -102,6 +102,7 @@ defineSubcommands(
 				return;
 			}
 			case "give": {
+				
 				const { owner } = await client.application.fetch();
 				const owners =
 					owner instanceof User
@@ -116,16 +117,16 @@ defineSubcommands(
 								: "the " + owner?.name + " team"
 						} only!`,
 					});
-				await interaction.reply({ content: "Giving Xp...", ephemeral: true });
+				
 				const user =
 					options.options.user instanceof GuildMember
 						? options.options.user.user
 						: options.options.user ?? interaction.user;
 				const amount = options.options.amount;
-				giveXp(user, "https://example.com", amount);
+				giveXp(user, undefined, amount);
 
-				return await interaction.editReply({
-					content: `:sparkles: Gave <@${user.id}> ${amount} XP`,
+				return await interaction.reply({
+					content: (amount || 0) < 0 ? `:chart_with_downwards_trend: Took ${0 - (amount || 0)} XP from <@${user.id}> `:`:sparkles: Gave <@${user.id}> ${amount} XP`,
 				});
 			}
 		}

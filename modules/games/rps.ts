@@ -142,19 +142,19 @@ export default async function rps(
 				components: [
 					{
 						type: ComponentType.Button,
-						label: "r",
+						label: "R",
 						style: ButtonStyle.Success,
 						customId: `r-${interaction.id}`,
 					},
 					{
 						type: ComponentType.Button,
-						label: "p",
+						label: "P",
 						customId: `p-${interaction.id}`,
 						style: ButtonStyle.Danger,
 					},
 					{
 						type: ComponentType.Button,
-						label: "s",
+						label: "S",
 						customId: `s-${interaction.id}`,
 						style: ButtonStyle.Primary,
 					},

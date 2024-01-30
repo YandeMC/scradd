@@ -228,7 +228,7 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 						...remindersDatabase.data,
 						{
 							channel: "0",
-							date: Date.now() + 60000,
+							date: Date.now() + 60000 * 5,
 							id: SpecialReminders.UpdateVerificationStatus,
 							user: client.user.id,
 						},
@@ -237,14 +237,19 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					const ScratchOauth = await gracefulFetch(
 						"https://stats.uptimerobot.com/api/getMonitorList/4Ggz4Fzo2O",
 					);
-					const Scrub = await gracefulFetch(
-						"https://stats.uptimerobot.com/api/getMonitorList/K2V4js80Pk",
-					);
-					let fields = ScratchOauth.psp.monitors.map(({ statusClass, name }:{statusClass:string,name:string}) => ({ value: constants.zws, name: `${statusClass == "danger" ? "<:icons_outage:1199113890584342628>":"<:green:1196987578881150976>"}${name}` }));
-fields.push({
-	name: `${Scrub.psp.monitors[0].statusClass == "danger" ? "<:icons_outage:1199113890584342628>":"<:green:1196987578881150976>"}${Scrub.psp.monitors[0].name}`,
-	value: constants.zws
-})
+					
+					let fields:any[] = []
+					for (const monitor of ScratchOauth.psp.monitors) { 
+						const re = await gracefulFetch(`https://stats.uptimerobot.com/api/getMonitor/4Ggz4Fzo2O?m=${monitor.monitorId}`)
+						const statusEmoji = re.monitor.statusClass == "success" ? '<:green:1196987578881150976>':'<:icons_outage:1199113890584342628>'
+						fields.push({
+							name: `${statusEmoji} ${re.monitor.name}`,
+							value: re.monitor.statusClass == "success" ? constants.zws : re.monitor.logs[0] ? 
+							`Down for ${re.monitor.logs[0]?.duration}(${re.monitor.logs[0]?.reason?.code})` :
+							 `No logs.`
+						})
+					}
+
 					let verifyMessages: any = await config.channels.verify?.messages.fetch({
 						limit: 10,
 					});
@@ -254,22 +259,24 @@ fields.push({
 					if (!messgae) {
 						messgae = await config.channels.verify?.send({ content: "..." });
 					}
-					const downCount:number = ScratchOauth.statistics.counts.down + Scrub.statistics.counts.down
-					messgae.edit({content: `Last updated <t:${Math.floor(Date.now() / 1000)}:R>`, embeds: [
+					const downCount:number = ScratchOauth.statistics.counts.down
+					fields.push({
+						name: `Next update <t:${Math.floor(Date.now() / 1000) + (60 * 5)}:R>.`,
+						value: constants.zws
+					})
+					messgae.edit({content: ``, embeds: [
 						{
 						
 						  "fields": fields,
-						  footer: {
-							text: `Updated every minute`
-						},
+						  
 						  "author": {
 							"name": "Verification Status"
 						  },
-						  "title": downCount != 0 ? `Uh oh! ${downCount} services are down! `:"All good!",
+						  "title": downCount != 0 ? `Uh oh! ${downCount} service${downCount == 1? " is":"s are"} down! `:"All good!",
 						  "color": 16754688
 						}
 					  ],});
-                 // post again in general
+                 
 					continue;
 				}
 			}
