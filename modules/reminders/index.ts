@@ -85,7 +85,7 @@ defineEvent("messageCreate", async (message) => {
 		message.interaction?.commandName == "bump" &&
 		message.author.id === constants.users.disboard
 	) {
-		giveXp(message.interaction.user,undefined,400)
+		giveXp(message.interaction.user, undefined, 400);
 		remindersDatabase.data = [
 			...remindersDatabase.data.filter(
 				(reminder) =>

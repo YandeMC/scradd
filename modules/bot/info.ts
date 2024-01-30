@@ -107,12 +107,25 @@ async function status(interaction: ChatInputCommandInteraction) {
 	const Scrub = await gracefulFetch(
 		"https://stats.uptimerobot.com/api/getMonitorList/K2V4js80Pk",
 	);
-	let fields = ScratchOauth.psp.monitors.map(({ statusClass, name }:{statusClass:string,name:string}) => ({ value: constants.zws, name: `${statusClass == "danger" ? "<:icons_outage:1199113890584342628>":"<:green:1196987578881150976>"}${name}` }));
-fields.push({
-name: `${Scrub.psp.monitors[0].statusClass == "danger" ? "<:icons_outage:1199113890584342628>":"<:green:1196987578881150976>"}${Scrub.psp.monitors[0].name}`,
-value: constants.zws
-})
-const downCount:number = ScratchOauth.statistics.counts.down + Scrub.statistics.counts.down
+	let fields = ScratchOauth.psp.monitors.map(
+		({ statusClass, name }: { statusClass: string; name: string }) => ({
+			value: constants.zws,
+			name: `${
+				statusClass == "danger"
+					? "<:icons_outage:1199113890584342628>"
+					: "<:green:1196987578881150976>"
+			}${name}`,
+		}),
+	);
+	fields.push({
+		name: `${
+			Scrub.psp.monitors[0].statusClass == "danger"
+				? "<:icons_outage:1199113890584342628>"
+				: "<:green:1196987578881150976>"
+		}${Scrub.psp.monitors[0].name}`,
+		value: constants.zws,
+	});
+	const downCount: number = ScratchOauth.statistics.counts.down + Scrub.statistics.counts.down;
 	await interaction.editReply({
 		content: "",
 
@@ -160,14 +173,13 @@ const downCount:number = ScratchOauth.statistics.counts.down + Scrub.statistics.
 				],
 			},
 			{
-						
-				"fields": fields,
-				"author": {
-				  "name": "Verification Status"
+				fields: fields,
+				author: {
+					name: "Verification Status",
 				},
-				"title": downCount != 0 ? `${downCount} services are down! `:"All good!",
-				"color": constants.themeColor
-			  }
+				title: downCount != 0 ? `${downCount} services are down! ` : "All good!",
+				color: constants.themeColor,
+			},
 		],
 	});
 }

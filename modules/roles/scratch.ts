@@ -139,6 +139,8 @@ export default async function linkScratchRole(request: IncomingMessage, response
 		)} linked their Scratch account [${username}](${constants.urls.scratch}/users/${username})`,
 		LogSeverity.ServerChange,
 	);
-	await config.channels.welcome?.send(`${constants.emojis.statuses.yes} ${userMention(user.id)} Verfied their scratch account!`)
+	await config.channels.welcome?.send(
+		`${constants.emojis.statuses.yes} ${userMention(user.id)} Verfied their scratch account!`,
+	);
 	return response.writeHead(303, { location: config.guild.rulesChannel?.url }).end();
 }
