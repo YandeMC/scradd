@@ -29,7 +29,43 @@ await client.application.editRoleConnectionMetadataRecords([
 		type: ApplicationRoleConnectionMetadataType.DatetimeGreaterThanOrEqual,
 	},
 ]);
+function LinkHome(buttonURL:string,head:string,Btn:string,subtext:string = "") {return `
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="./style.css" />
+		<link rel="shortcut icon" href="./icon.png" />
+		<style>
+			
+			body {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				height: 100vh;
+				margin: 0;
+				width: 100vw;
+			}
 
+			.container {
+				text-align: center;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1>${head}</h1>
+			${subtext != "" ? `<p>${subtext}</p>`:""}
+			<a  rel="noopener" href="${buttonURL}">
+				<button type="button">${Btn}</button>
+			</a>
+			
+		</div>
+	</body>
+</html>
+
+`}
 const NOT_FOUND_PAGE = await fileSystem.readFile("./web/404.html", "utf8");
 
 const HASH = crypto.randomBytes(16);
@@ -46,23 +82,22 @@ export default async function linkScratchRole(request: IncomingMessage, response
 
 	const requestUrl = getRequestUrl(request);
 	const redirectUri = requestUrl.origin + requestUrl.pathname;
-	const discordUrl = `https://discord.com${Routes.oauth2Authorization()}?${new URLSearchParams({
+	const discordUrl = (`https://discord.com${Routes.oauth2Authorization()}?${new URLSearchParams({
 		client_id: client.user.id,
 		redirect_uri: redirectUri,
 		response_type: "code",
 		scope: OAuth2Scopes.Identify + " " + OAuth2Scopes.RoleConnectionsWrite,
-	})}`;
+	})}`);
 	const scratchUrl = `https://auth.itinerary.eu.org/auth/?name=${encodeURIComponent(
 		client.user.displayName,
 	)}&redirect=${Buffer.from(redirectUri).toString("base64")}`;
-	const discordHtml = `<meta http-equiv="refresh" content="0;url=${discordUrl}">`; // eslint-disable-line unicorn/string-content
-	const scratchHtml = `<meta http-equiv="refresh" content="0;url=${scratchUrl}">`; // eslint-disable-line unicorn/string-content
+	const LINKED = await fileSystem.readFile("./web/linked.html", "utf8");
 
 	const search = new URLSearchParams(requestUrl.search);
 	const scratchToken = search.get("privateCode");
 	if (!scratchToken) {
 		const code = search.get("code");
-		if (!code) return response.writeHead(303, { location: discordUrl }).end();
+		if (!code) return response.writeHead(200, { "content-type": "text/html" }).end(LinkHome(discordUrl,"Login To Discord to Link a Scratch Account.","Login to Discord"));
 
 		const tokenData = (await client.rest
 			.post(Routes.oauth2TokenExchange(), {
@@ -79,16 +114,16 @@ export default async function linkScratchRole(request: IncomingMessage, response
 			})
 			.catch(() => void 0)) as RESTPostOAuth2AccessTokenResult | undefined;
 		if (!tokenData)
-			return response.writeHead(401, { "content-type": "text/html" }).end(discordHtml);
+			return response.writeHead(200, { "content-type": "text/html" }).end(LinkHome(discordUrl,"Login To Discord to Link a Scratch Account.","Login to Discord"));
 
 		sessions[ipHash] = tokenData.refresh_token;
 
-		return response.writeHead(303, { location: scratchUrl }).end();
+		return response.writeHead(200, { "content-type": "text/html" }).end(LinkHome(scratchUrl,"Discord Login Successful.","Link Scratch","Now you can link your scratch to verify"));
 	}
 
 	const discordToken = sessions[ipHash];
 	if (!discordToken)
-		return response.writeHead(401, { "content-type": "text/html" }).end(discordHtml);
+		return response.writeHead(200, { "content-type": "text/html" }).end(LinkHome(discordUrl,"Login To Discord to Link a Scratch Account.","Login to Discord"));
 	const tokenData = (await client.rest
 		.post(Routes.oauth2TokenExchange(), {
 			body: new URLSearchParams({
@@ -103,7 +138,7 @@ export default async function linkScratchRole(request: IncomingMessage, response
 		})
 		.catch(() => void 0)) as RESTPostOAuth2RefreshTokenResult | undefined;
 	if (!tokenData)
-		return response.writeHead(401, { "content-type": "text/html" }).end(discordHtml);
+		return response.writeHead(200, { "content-type": "text/html" }).end(LinkHome(discordUrl,"Login To Discord to Link a Scratch Account.","Login to Discord"));
 
 	const { username } = await fetch(
 		`https://auth-api.itinerary.eu.org/auth/verifyToken/${encodeURI(scratchToken)}`,
@@ -113,7 +148,7 @@ export default async function linkScratchRole(request: IncomingMessage, response
 		(await gracefulFetch<{ joined: string }>(
 			`${constants.urls.scratchdb}/user/info/${username}`,
 		));
-	if (!scratch) return response.writeHead(401, { "content-type": "text/html" }).end(scratchHtml);
+	if (!scratch) return response.writeHead(401, { "content-type": "text/html" }).end("something went wrong");
 
 	(await client.rest.put(Routes.userApplicationRoleConnection(client.user.id), {
 		body: JSON.stringify({
@@ -142,5 +177,5 @@ export default async function linkScratchRole(request: IncomingMessage, response
 	await config.channels.welcome?.send(
 		`${constants.emojis.statuses.yes} ${userMention(user.id)} Verfied their scratch account!`,
 	);
-	return response.writeHead(303, { location: config.guild.rulesChannel?.url }).end();
+	return response.writeHead(401, { "content-type": "text/html" }).end(LINKED);
 }
