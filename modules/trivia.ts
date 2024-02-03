@@ -24,10 +24,9 @@ if (!triviaChannel) {
 }
 
 const triviaAnswer = new Database<{
-    answer: string;
-}>("trivia_answer	")
-await triviaAnswer.init()
-
+	answer: string;
+}>("trivia_answer	");
+await triviaAnswer.init();
 
 function hint(inputString: string) {
 	const words = inputString.split(" ");
@@ -53,7 +52,7 @@ function hint(inputString: string) {
 			})
 			.join("");
 
-		return replacedCharacters; 
+		return replacedCharacters;
 	});
 
 	// Join the replaced words back into a string
@@ -63,9 +62,10 @@ function hint(inputString: string) {
 }
 
 export default async function updateTrivia() {
-    
 	if (triviaAnswer.data[0]?.answer != "")
-		await triviaChannel?.send(`No one got the last trivia!\nThe answer was "${triviaAnswer.data[0]?.answer}"`);
+		await triviaChannel?.send(
+			`No one got the last trivia!\nThe answer was "${triviaAnswer.data[0]?.answer}"`,
+		);
 	remindersDatabase.data = [
 		...remindersDatabase.data.filter(
 			(reminder) =>
@@ -73,7 +73,7 @@ export default async function updateTrivia() {
 		),
 		{
 			channel: "0",
-			date: Date.now() + 86_400_000 / (2),
+			date: Date.now() + 86_400_000 / 2,
 			reminder: undefined,
 			id: SpecialReminders.trivia,
 			user: client.user.id,
@@ -84,15 +84,16 @@ export default async function updateTrivia() {
 		"https://opentdb.com/api.php?amount=1&encode=base64",
 	);
 	if (!triviaRes?.results[0]) {
-      await  setTimeout(() => { }, 30000);
+		await setTimeout(() => {}, 30000);
 		return updateTrivia();
 	}
 	const messages: any = await triviaChannel?.messages.fetchPinned();
 	const message: Message = messages.first();
 	if (message && message.pinned) message.unpin();
 	triviaAnswer.data = [{ answer: `${atob(triviaRes?.results[0].correct_answer)}` }];
-    const bool = atob(triviaRes.results[0].type) == "boolean"
-	await triviaChannel?.send({ content: "",
+	const bool = atob(triviaRes.results[0].type) == "boolean";
+	await triviaChannel?.send({
+		content: "",
 		embeds: [
 			{
 				author: {
@@ -100,10 +101,10 @@ export default async function updateTrivia() {
 				},
 				title: atob(triviaRes?.results[0].question),
 				description:
-					(!bool ? (hint(atob(triviaRes?.results[0].correct_answer) || "")) : "True or False")+
-					`\n\nTrivia expires <t:${Math.floor(
-						(Date.now() + 86_400_000 / (2)) / 1000,
-					)}:R>`,
+					(!bool
+						? hint(atob(triviaRes?.results[0].correct_answer) || "")
+						: "True or False") +
+					`\n\nTrivia expires <t:${Math.floor((Date.now() + 86_400_000 / 2) / 1000)}:R>`,
 				footer: {
 					text: `Category: ${atob(triviaRes.results[0].category)}\nDifficulty: ${atob(
 						triviaRes.results[0].difficulty,
@@ -115,23 +116,26 @@ export default async function updateTrivia() {
 }
 
 defineEvent("messageCreate", async (m: Message) => {
-   
 	if (m.channelId != triviaChannel?.id) return;
 	if (triviaAnswer.data[0]?.answer == "") return;
 	if (m.author.bot) return;
 	if (m.content == "skiptrivia" && m.author.id == "713805665407205426") {
-		m.reply({content:"u sure?", components: [	
-			{
-				type: ComponentType.ActionRow,
-				components: [
-					{
-						type: ComponentType.Button,
-						style: ButtonStyle.Primary,
-						label: "First Message",
-						customId: "_resetTrivia"
-					}]
-			}
-		],})
+		m.reply({
+			content: "u sure?",
+			components: [
+				{
+					type: ComponentType.ActionRow,
+					components: [
+						{
+							type: ComponentType.Button,
+							style: ButtonStyle.Primary,
+							label: "First Message",
+							customId: "_resetTrivia",
+						},
+					],
+				},
+			],
+		});
 	}
 	if (m.content.toLowerCase() == triviaAnswer.data[0]?.answer.toLowerCase()) {
 		await m.react(constants.emojis.statuses.yes);
@@ -140,16 +144,15 @@ defineEvent("messageCreate", async (m: Message) => {
 			`<@${m.author.id}> Got the correct answer of "${triviaAnswer.data[0]?.answer}"\n\nPosting new trivia...`,
 		);
 		triviaAnswer.data = [{ answer: "" }];
-		updateTrivia()
-		
+		updateTrivia();
 	} else {
 		m.react(constants.emojis.statuses.no);
 	}
 });
 
-defineButton("resetTrivia",async (button) => {
-	if (button.user.id != "713805665407205426") return
-	await button.deferReply()
-	await updateTrivia()
-	await button.message.delete()
-})
+defineButton("resetTrivia", async (button) => {
+	if (button.user.id != "713805665407205426") return;
+	await button.deferReply();
+	await updateTrivia();
+	await button.message.delete();
+});
