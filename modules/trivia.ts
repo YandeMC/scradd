@@ -152,7 +152,7 @@ defineEvent("messageCreate", async (m: Message) => {
 
 defineButton("resetTrivia", async (button) => {
 	if (button.user.id != "713805665407205426") return;
-	await button.deferReply();
+	await button.deferUpdate();
 	await updateTrivia();
 	await button.message.delete();
 });
