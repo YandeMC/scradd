@@ -60,8 +60,8 @@ export default class Database<Data extends Record<string, boolean | number | str
 		contructed.push(name);
 	}
 
-	async init(): Promise<void> {
-		if (this.message) return;
+	async init() {
+		if (this.message) return
 		this.message = databases[this.name] ||= await databaseThread.send(
 			`__**SCRADD ${this.name.toUpperCase()} DATABASE**__\n\n*Please don’t delete this message. If you do, all ${this.name.replaceAll(
 				"_",
