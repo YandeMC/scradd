@@ -72,7 +72,7 @@ export default async function updateTrivia() {
 		),
 		{
 			channel: "0",
-			date: Date.now() + 86_400_000 / (2),
+			date: Date.now() + 86_400_000 / 2,
 			reminder: undefined,
 			id: SpecialReminders.trivia,
 			user: client.user.id,
@@ -83,15 +83,16 @@ export default async function updateTrivia() {
 		"https://opentdb.com/api.php?amount=1&encode=base64",
 	);
 	if (!triviaRes?.results[0]) {
-        await setTimeout(() => {}, 30000);
+		await setTimeout(() => {}, 30000);
 		return updateTrivia();
 	}
 	const messages: any = await triviaChannel?.messages.fetchPinned();
 	const message: Message = messages.first();
 	if (message && message.pinned) message.unpin();
 	triviaAnswer.data = [{ answer: `${atob(triviaRes?.results[0].correct_answer)}` }];
-    const bool = atob(triviaRes.results[0].type) == "boolean"
-	await triviaChannel?.send({ content: '<@&1203131252547395665>',
+	const bool = atob(triviaRes.results[0].type) == "boolean";
+	await triviaChannel?.send({
+		content: "<@&1203131252547395665>",
 		embeds: [
 			{
 				author: {
@@ -99,10 +100,10 @@ export default async function updateTrivia() {
 				},
 				title: atob(triviaRes?.results[0].question),
 				description:
-					(!bool ? (hint(atob(triviaRes?.results[0].correct_answer) || "")) : "True or False")+
-					`\n\nTrivia expires <t:${Math.floor(
-						(Date.now() + 86_400_000 / (2)) / 1000,
-					)}:R>`,
+					(!bool
+						? hint(atob(triviaRes?.results[0].correct_answer) || "")
+						: "True or False") +
+					`\n\nTrivia expires <t:${Math.floor((Date.now() + 86_400_000 / 2) / 1000)}:R>`,
 				footer: {
 					text: `Category: ${atob(triviaRes.results[0].category)}\nDifficulty: ${atob(
 						triviaRes.results[0].difficulty,
@@ -124,7 +125,6 @@ defineEvent("messageCreate", async (m: Message) => {
 			`<@${m.author.id}> Got the correct answer of "${triviaAnswer.data[0]?.answer}"\n\nPosting new trivia later`,
 		);
 		triviaAnswer.data = [{ answer: "" }];
-		
 	} else {
 		m.react(constants.emojis.statuses.no);
 	}
