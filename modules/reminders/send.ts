@@ -296,6 +296,7 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					continue;
 				}
 				case SpecialReminders.trivia: {
+					await config.channels.trivia?.send("<@&1203131252547395665> new trivia")
 					await updateTrivia();
 				}
 			}
