@@ -2,6 +2,7 @@ import type { Snowflake } from "discord.js";
 import Database from "../../common/database.js";
 import config from "../../common/config.js";
 import { client } from "strife.js";
+import updateTrivia from "../trivia.js";
 
 export enum SpecialReminders {
 	Weekly,
@@ -15,6 +16,7 @@ export enum SpecialReminders {
 	SyncRandomBoard,
 	ChangeStatus,
 	UpdateVerificationStatus,
+	trivia,
 }
 export type Reminder = {
 	channel: Snowflake;
@@ -116,6 +118,10 @@ if (
 			user: client.user.id,
 		},
 	];
+}
+
+if (!remindersDatabase.data.some((reminder) => reminder.id === SpecialReminders.trivia)) {
+	updateTrivia();
 }
 
 if (

@@ -16,7 +16,7 @@ import {
 	time,
 	userMention,
 	ActivityType,
-	Message
+	Message,
 } from "discord.js";
 
 import { backupDatabases, cleanDatabaseListeners } from "../../common/database.js";
@@ -24,6 +24,7 @@ import config from "../../common/config.js";
 import { syncRandomBoard } from "../board/update.js";
 import { gracefulFetch } from "../../util/promises.js";
 import constants from "../../common/constants.js";
+import updateTrivia from "../trivia.js";
 
 let nextReminder: NodeJS.Timeout | undefined;
 export default async function queueReminders(): Promise<NodeJS.Timeout | undefined> {
@@ -235,19 +236,27 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					];
 
 					const ScratchOauth = await gracefulFetch(
-						"https://stats.uptimerobot.com/api/getMonitorList/4Ggz4Fzo2O",
+						"https://stats.uptimerobot.com/api/getMonitorList/K2V4js80Pk",
 					);
-					
-					let fields:any[] = []
-					for (const monitor of ScratchOauth.psp.monitors) { 
-						const re = await gracefulFetch(`https://stats.uptimerobot.com/api/getMonitor/4Ggz4Fzo2O?m=${monitor.monitorId}`)
-						const statusEmoji = re.monitor.statusClass == "success" ? '<:green:1196987578881150976>':'<:icons_outage:1199113890584342628>'
+
+					let fields: any[] = [];
+					for (const monitor of ScratchOauth.psp.monitors) {
+						const re = await gracefulFetch(
+							`https://stats.uptimerobot.com/api/getMonitor/K2V4js80Pk?m=${monitor.monitorId}`,
+						);
+						const statusEmoji =
+							re.monitor.statusClass == "success"
+								? "<:green:1196987578881150976>"
+								: "<:icons_outage:1199113890584342628>";
 						fields.push({
 							name: `${statusEmoji} ${re.monitor.name}`,
-							value: re.monitor.statusClass == "success" ? constants.zws : re.monitor.logs[0] ? 
-							`Down for ${re.monitor.logs[0]?.duration}(${re.monitor.logs[0]?.reason?.code})` :
-							 `No logs.`
-						})
+							value:
+								re.monitor.statusClass == "success"
+									? constants.zws
+									: re.monitor.logs[0]
+									? `Down for ${re.monitor.logs[0]?.duration}(${re.monitor.logs[0]?.reason?.code})`
+									: `No logs.`,
+						});
 					}
 
 					let verifyMessages: any = await config.channels.verify?.messages.fetch({
@@ -259,29 +268,39 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					if (!messgae) {
 						messgae = await config.channels.verify?.send({ content: "..." });
 					}
-					const downCount:number = ScratchOauth.statistics.counts.down
+					const downCount: number = ScratchOauth.statistics.counts.down;
 					fields.push({
-						name: `Next update <t:${Math.floor(Date.now() / 1000) + (60 * 5)}:R>.`,
-						value: constants.zws
-					})
-					messgae.edit({content: ``, embeds: [
-						{
-						
-						  "fields": fields,
-						  
-						  "author": {
-							"name": "Verification Status"
-						  },
-						  "title": downCount != 0 ? `Uh oh! ${downCount} service${downCount == 1? " is":"s are"} down! `:"All good!",
-						  "color": 16754688
-						}
-					  ],});
-                 
+						name: `Next update <t:${Math.floor(Date.now() / 1000) + 60 * 5}:R>.`,
+						value: constants.zws,
+					});
+					messgae.edit({
+						content: ``,
+						embeds: [
+							{
+								fields: fields,
+
+								author: {
+									name: "Verification Status",
+								},
+								title:
+									downCount != 0
+										? `Uh oh! ${downCount} service${
+												downCount == 1 ? " is" : "s are"
+										  } down! `
+										: "All good!",
+								color: 16754688,
+							},
+						],
+					});
+
 					continue;
+				}
+				case SpecialReminders.trivia: {
+					await updateTrivia();
 				}
 			}
 		}
-		
+
 		if (!channel?.isTextBased() || typeof reminder.reminder !== "string") continue;
 		const silent = reminder.reminder.startsWith("@silent");
 		const content = silent ? reminder.reminder.replace("@silent", "") : reminder.reminder;

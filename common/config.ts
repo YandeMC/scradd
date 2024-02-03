@@ -60,6 +60,7 @@ async function getConfig() {
 
 			old_suggestions: getChannel("suggestions", ChannelType.GuildText, "partial"),
 			verify: getChannel("verif", ChannelType.GuildText, "partial"),
+			trivia: getChannel("trivia", ChannelType.GuildText, "partial"),
 		},
 
 		roles: {
