@@ -29,7 +29,8 @@ await client.application.editRoleConnectionMetadataRecords([
 		type: ApplicationRoleConnectionMetadataType.DatetimeGreaterThanOrEqual,
 	},
 ]);
-function LinkHome(buttonURL:string,head:string,Btn:string,subtext:string = "") {return `
+function LinkHome(buttonURL: string, head: string, Btn: string, subtext: string = "") {
+	return `
 <!DOCTYPE html>
 <html lang="en">
 	<head>
@@ -56,7 +57,7 @@ function LinkHome(buttonURL:string,head:string,Btn:string,subtext:string = "") {
 	<body>
 		<div class="container">
 			<h1>${head}</h1>
-			${subtext != "" ? `<p>${subtext}</p>`:""}
+			${subtext != "" ? `<p>${subtext}</p>` : ""}
 			<a  rel="noopener" href="${buttonURL}">
 				<button type="button">${Btn}</button>
 			</a>
@@ -65,7 +66,8 @@ function LinkHome(buttonURL:string,head:string,Btn:string,subtext:string = "") {
 	</body>
 </html>
 
-`}
+`;
+}
 const NOT_FOUND_PAGE = await fileSystem.readFile("./web/404.html", "utf8");
 
 const HASH = crypto.randomBytes(16);
@@ -82,12 +84,12 @@ export default async function linkScratchRole(request: IncomingMessage, response
 
 	const requestUrl = getRequestUrl(request);
 	const redirectUri = requestUrl.origin + requestUrl.pathname;
-	const discordUrl = (`https://discord.com${Routes.oauth2Authorization()}?${new URLSearchParams({
+	const discordUrl = `https://discord.com${Routes.oauth2Authorization()}?${new URLSearchParams({
 		client_id: client.user.id,
 		redirect_uri: redirectUri,
 		response_type: "code",
 		scope: OAuth2Scopes.Identify + " " + OAuth2Scopes.RoleConnectionsWrite,
-	})}`);
+	})}`;
 	const scratchUrl = `https://auth.itinerary.eu.org/auth/?name=${encodeURIComponent(
 		client.user.displayName,
 	)}&redirect=${Buffer.from(redirectUri).toString("base64")}`;
@@ -97,7 +99,16 @@ export default async function linkScratchRole(request: IncomingMessage, response
 	const scratchToken = search.get("privateCode");
 	if (!scratchToken) {
 		const code = search.get("code");
-		if (!code) return response.writeHead(200, { "content-type": "text/html" }).end(LinkHome(discordUrl,"Login To Discord to Link a Scratch Account.","Login to Discord"));
+		if (!code)
+			return response
+				.writeHead(200, { "content-type": "text/html" })
+				.end(
+					LinkHome(
+						discordUrl,
+						"Login To Discord to Link a Scratch Account.",
+						"Login to Discord",
+					),
+				);
 
 		const tokenData = (await client.rest
 			.post(Routes.oauth2TokenExchange(), {
@@ -114,16 +125,41 @@ export default async function linkScratchRole(request: IncomingMessage, response
 			})
 			.catch(() => void 0)) as RESTPostOAuth2AccessTokenResult | undefined;
 		if (!tokenData)
-			return response.writeHead(200, { "content-type": "text/html" }).end(LinkHome(discordUrl,"Login To Discord to Link a Scratch Account.","Login to Discord"));
+			return response
+				.writeHead(200, { "content-type": "text/html" })
+				.end(
+					LinkHome(
+						discordUrl,
+						"Login To Discord to Link a Scratch Account.",
+						"Login to Discord",
+					),
+				);
 
 		sessions[ipHash] = tokenData.refresh_token;
 
-		return response.writeHead(200, { "content-type": "text/html" }).end(LinkHome(scratchUrl,"Discord Login Successful.","Link Scratch","Now you can link your scratch to verify"));
+		return response
+			.writeHead(200, { "content-type": "text/html" })
+			.end(
+				LinkHome(
+					scratchUrl,
+					"Discord Login Successful.",
+					"Link Scratch",
+					"Now you can link your scratch to verify",
+				),
+			);
 	}
 
 	const discordToken = sessions[ipHash];
 	if (!discordToken)
-		return response.writeHead(200, { "content-type": "text/html" }).end(LinkHome(discordUrl,"Login To Discord to Link a Scratch Account.","Login to Discord"));
+		return response
+			.writeHead(200, { "content-type": "text/html" })
+			.end(
+				LinkHome(
+					discordUrl,
+					"Login To Discord to Link a Scratch Account.",
+					"Login to Discord",
+				),
+			);
 	const tokenData = (await client.rest
 		.post(Routes.oauth2TokenExchange(), {
 			body: new URLSearchParams({
@@ -138,7 +174,15 @@ export default async function linkScratchRole(request: IncomingMessage, response
 		})
 		.catch(() => void 0)) as RESTPostOAuth2RefreshTokenResult | undefined;
 	if (!tokenData)
-		return response.writeHead(200, { "content-type": "text/html" }).end(LinkHome(discordUrl,"Login To Discord to Link a Scratch Account.","Login to Discord"));
+		return response
+			.writeHead(200, { "content-type": "text/html" })
+			.end(
+				LinkHome(
+					discordUrl,
+					"Login To Discord to Link a Scratch Account.",
+					"Login to Discord",
+				),
+			);
 
 	const { username } = await fetch(
 		`https://auth-api.itinerary.eu.org/auth/verifyToken/${encodeURI(scratchToken)}`,
@@ -148,7 +192,8 @@ export default async function linkScratchRole(request: IncomingMessage, response
 		(await gracefulFetch<{ joined: string }>(
 			`${constants.urls.scratchdb}/user/info/${username}`,
 		));
-	if (!scratch) return response.writeHead(401, { "content-type": "text/html" }).end("something went wrong");
+	if (!scratch)
+		return response.writeHead(401, { "content-type": "text/html" }).end("something went wrong");
 
 	(await client.rest.put(Routes.userApplicationRoleConnection(client.user.id), {
 		body: JSON.stringify({
