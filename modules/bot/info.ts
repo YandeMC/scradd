@@ -125,7 +125,7 @@ async function status(interaction: ChatInputCommandInteraction) {
 		});
 	}
 
-	const downCount: number = ScratchOauth.statistics.counts.down ;
+	const downCount: number = ScratchOauth.statistics.counts.down;
 	await interaction.editReply({
 		content: "",
 
@@ -180,9 +180,7 @@ async function status(interaction: ChatInputCommandInteraction) {
 				},
 				title:
 					downCount != 0
-						? `Uh oh! ${downCount} service${
-								downCount == 1 ? " is" : "s are"
-						  } down! `
+						? `Uh oh! ${downCount} service${downCount == 1 ? " is" : "s are"} down! `
 						: "All good!",
 				color: 16754688,
 			},
