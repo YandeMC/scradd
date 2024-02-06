@@ -102,30 +102,30 @@ export default async function info(
 async function status(interaction: ChatInputCommandInteraction) {
 	const message = await interaction.reply({ content: "Pinging…", fetchReply: true });
 	const ScratchOauth = await gracefulFetch(
-		"https://stats.uptimerobot.com/api/getMonitorList/4Ggz4Fzo2O",
-	);
-	const Scrub = await gracefulFetch(
 		"https://stats.uptimerobot.com/api/getMonitorList/K2V4js80Pk",
 	);
-	let fields = ScratchOauth.psp.monitors.map(
-		({ statusClass, name }: { statusClass: string; name: string }) => ({
-			value: constants.zws,
-			name: `${
-				statusClass == "danger"
-					? "<:icons_outage:1199113890584342628>"
-					: "<:green:1196987578881150976>"
-			}${name}`,
-		}),
-	);
-	fields.push({
-		name: `${
-			Scrub.psp.monitors[0].statusClass == "danger"
-				? "<:icons_outage:1199113890584342628>"
-				: "<:green:1196987578881150976>"
-		}${Scrub.psp.monitors[0].name}`,
-		value: constants.zws,
-	});
-	const downCount: number = ScratchOauth.statistics.counts.down + Scrub.statistics.counts.down;
+
+	let fields: any[] = [];
+	for (const monitor of ScratchOauth.psp.monitors) {
+		const re = await gracefulFetch(
+			`https://stats.uptimerobot.com/api/getMonitor/K2V4js80Pk?m=${monitor.monitorId}`,
+		);
+		const statusEmoji =
+			re.monitor.statusClass == "success"
+				? "<:green:1196987578881150976>"
+				: "<:icons_outage:1199113890584342628>";
+		fields.push({
+			name: `${statusEmoji} ${re.monitor.name}`,
+			value:
+				re.monitor.statusClass == "success"
+					? constants.zws
+					: re.monitor.logs[0]
+					? `Down for ${re.monitor.logs[0]?.duration}(${re.monitor.logs[0]?.reason?.code})`
+					: `No logs.`,
+		});
+	}
+
+	const downCount: number = ScratchOauth.statistics.counts.down ;
 	await interaction.editReply({
 		content: "",
 
@@ -174,11 +174,17 @@ async function status(interaction: ChatInputCommandInteraction) {
 			},
 			{
 				fields: fields,
+
 				author: {
 					name: "Verification Status",
 				},
-				title: downCount != 0 ? `${downCount} services are down! ` : "All good!",
-				color: constants.themeColor,
+				title:
+					downCount != 0
+						? `Uh oh! ${downCount} service${
+								downCount == 1 ? " is" : "s are"
+						  } down! `
+						: "All good!",
+				color: 16754688,
 			},
 		],
 	});
