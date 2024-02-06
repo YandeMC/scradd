@@ -90,7 +90,7 @@ export default async function linkScratchRole(request: IncomingMessage, response
 		response_type: "code",
 		scope: OAuth2Scopes.Identify + " " + OAuth2Scopes.RoleConnectionsWrite,
 	})}`;
-	const scratchUrl = `https://auth.itinerary.eu.org/auth/?name=${encodeURIComponent(
+	const scratchUrl = `https://oauth.fly.dev/auth/?name=${encodeURIComponent(
 		client.user.displayName,
 	)}&redirect=${Buffer.from(redirectUri).toString("base64")}`;
 	const LINKED = await fileSystem.readFile("./web/linked.html", "utf8");
@@ -185,7 +185,7 @@ export default async function linkScratchRole(request: IncomingMessage, response
 			);
 
 	const { username } = await fetch(
-		`https://auth-api.itinerary.eu.org/auth/verifyToken/${encodeURI(scratchToken)}`,
+		`https://scratch-coders-auth-server.vercel.app/auth/verifyToken/${encodeURI(scratchToken)}`,
 	).then((response) => response.json<{ username: string | null }>());
 	const scratch =
 		username &&
