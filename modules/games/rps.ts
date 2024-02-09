@@ -309,26 +309,17 @@ function GenerateRound(
 	results: Array<any>,
 	title: string = "",
 	footer: string = "",
-) {
+): APIEmbed[] {
+	const result = p1.choices.map((element, index) => {
+		return `${element} ${results[index]} ${p2.choices[index]}`;
+	});
 	return [
 		{
-			fields: [
-				{
-					name: `${emojis["p1"]}${p1.name}`,
-					value: `${p1.choices.join("\n")}`,
-					inline: true,
-				},
-				{
-					name: "VS.",
-					value: `${results.join("\n")}`,
-					inline: true,
-				},
-				{
-					name: `${emojis["p2"]}${p2.name}`,
-					value: `${p2.choices.join("\n")}`,
-					inline: true,
-				},
-			],
+			description: `
+			${emojis["p1"]}${p1.name}\n${emojis["p2"]}${p2.name}\n\n${
+				emojis["p1"] + " " + emojis["draw"] + " " + emojis["p2"]
+			}\n${result.join("\n")}
+			`,
 			author: {
 				name: "RPS",
 			},

@@ -1,20 +1,8 @@
 import { defineEvent } from "strife.js";
-import { truncateText } from "../util/text.js";
-import { stripMarkdown } from "../util/markdown.js";
 import config from "../common/config.js";
 import constants from "../common/constants.js";
 import { nth } from "../util/numbers.js";
 import { AuditLogEvent } from "discord.js";
-
-defineEvent("messageCreate", async (message) => {
-	if (message.channel.id === config.channels.updates?.id) {
-		await message.startThread({
-			name: truncateText(stripMarkdown(message.cleanContent) || "New update!", 50),
-
-			reason: "New upcoming update",
-		});
-	}
-});
 
 defineEvent("guildMemberAdd", async (member) => {
 	if (member.guild.id !== config.guild.id) return;
@@ -46,7 +34,6 @@ defineEvent("guildMemberAdd", async (member) => {
 		`${member.toString()}, our **${memberCount}** member, is here! (they didn’t bring pizza though)`,
 		`${member.toString()}, the **${memberCount}** member, has joined the circus!`,
 		`You have been warned… Welcome to our **${memberCount}** member, ${member.toString()}!`,
-		`\`when [user v] joins:\` \`say [Hello, \`${member.toString()}\`!]\` \`set [MEMBER COUNT v] to (${config.guild.memberCount.toLocaleString()})\`${jokes}`,
 		`A wild ${member.toString()} appeared (our **${memberCount}** member)`,
 		`${member.toString()}, our **${memberCount}** member, just spawned in!`,
 		`Act professional, ${member.toString()} is here, our **${memberCount}** member!`,
@@ -77,7 +64,7 @@ defineEvent("guildMemberRemove", async (member) => {
 	const byes =
 		banned || kicked
 			? [
-					`Oof… **${member.user.displayName}** got booted…`,
+					`Oof… **${member.user.displayName}** got ${kicked ? "kicked" : "banned"}…`,
 					`We don’t talk about what **${member.user.displayName}** did…`,
 					`I don’t think this was the best place for **${member.user.displayName}**…`,
 					`Whoops, **${member.user.displayName}** angered the mods!`,
@@ -111,7 +98,7 @@ defineEvent("guildMemberRemove", async (member) => {
 			  ];
 
 	await config.channels.welcome?.send(
-		`${constants.emojis.welcome[banned ? "ban" : "leave"]} ${
+		`${constants.emojis.welcome[banned ? "ban" : kicked ? "kick" : "leave"]} ${
 			byes[Math.floor(Math.random() * byes.length)]
 		}`,
 	);

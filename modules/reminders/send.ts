@@ -238,8 +238,9 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					const ScratchOauth = await gracefulFetch(
 						"https://stats.uptimerobot.com/api/getMonitorList/K2V4js80Pk",
 					);
-
+					if (!ScratchOauth) return;
 					let fields: any[] = [];
+
 					for (const monitor of ScratchOauth.psp.monitors) {
 						const re = await gracefulFetch(
 							`https://stats.uptimerobot.com/api/getMonitor/K2V4js80Pk?m=${monitor.monitorId}`,
@@ -258,10 +259,11 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 									: `No logs.`,
 						});
 					}
-
+					if (!config.channels.verify) return;
 					let verifyMessages: any = await config.channels.verify?.messages.fetch({
 						limit: 10,
 					});
+					if (!verifyMessages) return;
 					let messgae: any = verifyMessages.find(
 						(msg: Message) => msg.author.id == client.user.id,
 					);
