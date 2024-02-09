@@ -34,7 +34,7 @@ defineChatCommand(
 defineChatCommand(
 	{
 		name: "tic-tac-toe",
-		description: "Play Rock Paper Scissors against someone(or the bot)",
+		description: "Play Tic Tac Toe against someone(or the bot)",
 		options: {
 			opponent: {
 				description: "Opponent (leave blank for solo)",
