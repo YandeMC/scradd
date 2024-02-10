@@ -5,7 +5,6 @@ defineChatCommand(
 	{
 		name: "afk",
 		description: "Set Afk",
-		access: false,
 		options: {},
 	},
 	async (interaction) => {
