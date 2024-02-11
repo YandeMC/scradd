@@ -185,7 +185,7 @@ defineChatCommand(
 			});
 		const message = await interaction.reply({
 			content: `<@${interaction.user.id}> wants to skip the current trivia!`,
-			fetchReply:true,
+			fetchReply: true,
 			components: [
 				{
 					type: ComponentType.ActionRow,

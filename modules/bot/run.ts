@@ -8,8 +8,8 @@ import {
 import { client } from "strife.js";
 import constants from "../../common/constants.js";
 import { generateError } from "../logging/errors.js";
-import  _updateTrivia  from "../trivia.js"
- 
+import _updateTrivia from "../trivia.js";
+
 export default async function getCode(interaction: ChatInputCommandInteraction<"cached" | "raw">) {
 	const { owner } = await client.application.fetch();
 	const owners =
