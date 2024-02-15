@@ -132,7 +132,6 @@ export default async function ttt(
 		],
 		pingmsg: null,
 	};
-	console.log(game);
 
 	await message.edit({
 		content: `<@${game.ids[game.turn]}>, Its your turn!`,
@@ -222,7 +221,7 @@ function button(a: Row[] | any, x: number, y: number, disabled: boolean) {
 		customId: `${x}-${y}`,
 		style: ButtonStyle.Secondary,
 		emoji: label(a[x][y]),
-		disabled,
+		disabled: disabled || a[x][y] != "-",
 	};
 }
 const b = new ButtonBuilder();
