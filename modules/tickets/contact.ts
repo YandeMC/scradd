@@ -174,7 +174,6 @@ export default async function contactMods(
 	return thread;
 }
 
-
 export async function contactUser(member: GuildMember, interaction: RepliableInteraction) {
 	await interaction.deferReply({ ephemeral: true });
 	const existingThread = TICKETS_BY_MEMBER[member.id];
