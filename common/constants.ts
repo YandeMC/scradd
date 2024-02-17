@@ -39,6 +39,10 @@ export default {
 			typing: "<a:typing:1195857946156994711>",
 			warning: "<:warning:1193656265520459806>",
 			yes: "<:yes:1193656129750847488>",
+			subscription: "",
+			live: "",
+			fail: "",
+			success: "",
 		},
 		misc: {
 			blue: "<:primary:1195858102952665268>",
