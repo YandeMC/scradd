@@ -161,6 +161,7 @@ export default async function contactMods(
 				(data) =>
 					thread.send({
 						...data,
+						flags: undefined,
 						embeds: [details, ...(data.embeds ?? [])],
 						content: ping,
 						allowedMentions: { parse: ["roles"] },
@@ -172,6 +173,7 @@ export default async function contactMods(
 	await thread.members.add(member, "Thread created");
 	return thread;
 }
+
 
 export async function contactUser(member: GuildMember, interaction: RepliableInteraction) {
 	await interaction.deferReply({ ephemeral: true });
