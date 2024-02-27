@@ -29,7 +29,9 @@ import {
 } from "./misc.js";
 import contactMods, { contactUser, showTicketModal } from "./contact.js";
 import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
+import { disableComponents } from "../../util/discord.js";
 
+const appealedStrikes = new Set<string>();
 const resourcesDmed = new Set<string>();
 
 defineEvent("messageCreate", async (message) => {
@@ -136,10 +138,23 @@ defineButton("confirmStrikeAppeal", async (interaction, id) => {
 	});
 });
 defineButton("appealStrike", async (interaction, id) => {
+	if (appealedStrikes.has(id)) {
+		return await interaction.reply({
+			content: `${constants.emojis.statuses.no} You have already appealed this strike.`,
+			ephemeral: true,
+		});
+	}
+	appealedStrikes.add(id);
 	return await showTicketModal(interaction, "appeal", id);
 });
 defineModal("contactMods", async (interaction, id) => {
 	if (!TICKET_CATEGORIES.includes(id)) throw new TypeError(`Unknown ticket category: ${id}`);
+
+	if (!interaction.inGuild()) {
+		const reply =
+			interaction.message?.reference && (await interaction.message.fetchReference());
+		await reply?.edit({ components: disableComponents(reply.components) });
+	}
 
 	await interaction.deferReply({ ephemeral: true });
 	const thread = await contactMods(interaction, id);
@@ -162,7 +177,7 @@ defineMenuCommand(
 						{
 							type: ComponentType.TextInput,
 							style: TextInputStyle.Paragraph,
-							label: "Concisely explain how this message breaks the rules",
+							label: "Please explain how this message breaks rules",
 							required: true,
 							customId: "reason",
 							minLength: 10,
@@ -184,7 +199,9 @@ defineMenuCommand(
 		const reason = modalInteraction.fields.getTextInputValue("reason");
 
 		await log(
-			`${LoggingEmojis.Punishment} ${interaction.user} reported a message by ${interaction.targetMessage.author} - ${interaction.targetMessage.url}\n${reason}`,
+			`${LoggingEmojis.Punishment} ${interaction.user.toString()} reported [a message](<${
+				interaction.targetMessage.url
+			}>) by ${interaction.targetMessage.author.toString()}\n${reason}`,
 			LogSeverity.Alert,
 			{
 				buttons: [
@@ -211,14 +228,14 @@ defineMenuCommand(
 defineChatCommand(
 	{
 		name: "contact-user",
-		description: "(Mod only) Start a private ticket with a user",
+		description: "Start a private mod ticket with a member",
 		restricted: true,
 
 		options: {
 			user: {
 				required: true,
 				type: ApplicationCommandOptionType.User,
-				description: "The user to contact",
+				description: "The member to contact",
 			},
 		},
 	},

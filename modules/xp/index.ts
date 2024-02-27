@@ -4,6 +4,7 @@ import {
 	ComponentType,
 	GuildMember,
 	User,
+	time,
 } from "discord.js";
 import config from "../../common/config.js";
 import {
@@ -17,6 +18,8 @@ import {
 import getUserRank, { top } from "./rank.js";
 import giveXp, { giveXpForMessage } from "./giveXp.js";
 import constants from "../../common/constants.js";
+import { giveXpForMessage } from "./giveXp.js";
+import { recentXpDatabase } from "./util.js";
 
 defineEvent("messageCreate", async (message) => {
 	if (message.guild?.id !== config.guild.id) return;
@@ -27,7 +30,7 @@ defineEvent("messageCreate", async (message) => {
 defineSubcommands(
 	{
 		name: "xp",
-		description: "Commands to view users’ XP amounts",
+		description: "View users’ XP amounts",
 
 		subcommands: {
 			rank: {
@@ -71,17 +74,27 @@ defineSubcommands(
 	},
 
 	async (interaction, options) => {
-		switch (options?.subcommand) {
+		const user =
+			(options?.options &&
+				"user" in options.options &&
+				(options.options.user instanceof GuildMember
+					? options.options.user.user
+					: options.options.user)) ||
+			interaction.user;
+
+		switch (options?.subcommand ?? "rank") {
 			case "rank": {
-				const user =
-					options.options.user instanceof GuildMember
-						? options.options.user.user
-						: options.options.user ?? interaction.user;
 				await getUserRank(interaction, user);
 				return;
 			}
 			case "graph": {
+				const startData =
+					recentXpDatabase.data.toSorted((one, two) => one.time - two.time)[0]?.time ?? 0;
 				return await interaction.reply({
+					content: `Select up to 7 users. I will graph thier XP __last__ week (${time(
+						new Date(startData),
+						"d",
+					)} to ${time(new Date(startData + 604_800_000), "d")}).`,
 					components: [
 						{
 							type: ComponentType.ActionRow,
@@ -132,6 +145,9 @@ defineSubcommands(
 							  }> `
 							: `:sparkles: Gave <@${user.id}> ${amount} XP`,
 				});
+			case "top": {
+				await top(interaction, user);
+				break;
 			}
 		}
 	},

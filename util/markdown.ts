@@ -1,6 +1,5 @@
-import { escapeMarkdown } from "discord.js";
+import { escapeMarkdown, formatEmoji, type Snowflake } from "discord.js";
 
-/** @todo Remove after https://github.com/discordjs/discord.js/pull/9463 is merged. */
 export function escapeMessage(text: string): string {
 	return escapeMarkdown(text, {
 		heading: true,
@@ -15,4 +14,21 @@ export function stripMarkdown(text: string): string {
 		/(?<!\\)\\|```\S*\s+(.+?)\s*```|(?<!\\)\*\*(.+?)(?<!\\)\*\*|(?<!\\)__(.+?)(?<!\\)__|(?<!\\\*?)\*(.+?)(?<!\\|\*)\*|(?<!\\_?)_(.+?)(?<!\\|_)_|~~(.+?)(?<!\\)~~|`(.+?)(?<!\\|`)`|^> (.+?)/gms,
 		"$1$2$3$4$5$6$7$8",
 	);
+}
+
+export function formatAnyEmoji(
+	options:
+		| { animated?: boolean | null; id: Snowflake; name?: string | null }
+		| { animated?: false | null; id?: null; name: string }
+		| { animated?: false | null; id?: null; name?: null }
+		| null
+		| undefined,
+): string {
+	return typeof options?.id === "string"
+		? formatEmoji({
+				...options,
+				animated: options.animated ?? false,
+				name: options.name ?? undefined,
+		  })
+		: options?.name ?? "_";
 }

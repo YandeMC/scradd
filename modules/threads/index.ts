@@ -1,7 +1,7 @@
 import { defineButton, defineEvent, defineSubcommands } from "strife.js";
 import { ApplicationCommandOptionType, roleMention, ChannelType } from "discord.js";
-import { syncMembers, updateMemberThreads, updateThreadMembers } from "../threads/syncMembers.js";
-import { autoClose, cancelThreadChange, setUpAutoClose } from "../threads/autoClose.js";
+import { syncMembers, updateMemberThreads, updateThreadMembers } from "./syncMembers.js";
+import { autoClose, cancelThreadChange, setUpAutoClose } from "./autoClose.js";
 import { getThreadConfig } from "./misc.js";
 import { paginate } from "../../util/discord.js";
 
@@ -18,7 +18,7 @@ defineEvent("threadCreate", async (thread) => {
 defineSubcommands(
 	{
 		name: "thread",
-		description: "Commands to manage threads",
+		description: "Manage threads",
 		restricted: true,
 		subcommands: {
 			"close-in": {
@@ -67,33 +67,33 @@ defineSubcommands(
 			case "list-unjoined": {
 				await interaction.deferReply({ ephemeral: true });
 				const fetched = await interaction.guild?.channels.fetchActiveThreads();
-				const threads = await Promise.all(
-					fetched?.threads.map(
-						async (thread) =>
-							[
-								thread,
-								await thread.members.fetch(interaction.user.id).catch(() => void 0),
-							] as const,
-					) ?? [],
+				const threads = [];
+				for (const [, thread] of fetched?.threads ?? []) {
+					if (!thread.permissionsFor(interaction.user)?.has("ViewChannel")) continue;
+					try {
+						await thread.members.fetch(interaction.user.id);
+					} catch {
+						threads.push(thread);
+					}
+				}
+
+				const unjoined = threads.toSorted(
+					(one, two) =>
+						(one.parent &&
+							two.parent &&
+							(one.parent.rawPosition - two.parent.rawPosition ||
+								one.parent.position - two.parent.position ||
+								one.parent.name.localeCompare(two.parent.name))) ||
+						one.name.localeCompare(two.name),
 				);
-				const unjoined = threads
-					.filter(
-						([thread, joined]) =>
-							!joined && thread.permissionsFor(interaction.user)?.has("ViewChannel"),
-					)
-					.toSorted(
-						([one], [two]) =>
-							(one.parent?.rawPosition ?? 0) - (two.parent?.rawPosition ?? 0) ||
-							(one.parent?.position ?? 0) - (two.parent?.position ?? 0),
-					);
 				await paginate(
 					unjoined,
-					([thread]) => thread.parent?.toString() + " > " + thread.toString(),
+					(thread) => thread.parent?.toString() + " > " + thread.toString(),
 					(data) => interaction.editReply(data),
 					{
 						title: "Unjoined Threads",
 						singular: "thread",
-						failMessage: "You’ve joined all the threads here!",
+						failMessage: "You’ve joined all open threads here!",
 						user: interaction.user,
 						ephemeral: true,
 						totalCount: unjoined.length,
@@ -104,6 +104,7 @@ defineSubcommands(
 			case "close-in":
 			case "lock-in": {
 				await setUpAutoClose(interaction, options);
+				break;
 			}
 		}
 	},

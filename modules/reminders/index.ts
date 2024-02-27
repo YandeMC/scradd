@@ -11,7 +11,7 @@ import giveXp from "../../modules/xp/giveXp.js";
 defineSubcommands(
 	{
 		name: "reminders",
-		description: "Commands to manage reminders",
+		description: "Manage your reminders",
 		censored: false,
 		access: true,
 		subcommands: {

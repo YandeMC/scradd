@@ -3,11 +3,15 @@ import type { MenuCommandContext } from "strife.js";
 
 declare global {
 	interface Array<T> {
+		lastIndexOf(
+			searchElement: T | (NonNullable<unknown> & WidenLiteral<T>),
+			fromIndex?: number,
+		): number;
+		indexOf(
+			searchElement: T | (NonNullable<unknown> & WidenLiteral<T>),
+			fromIndex?: number,
+		): number;
 		filter(predicate: BooleanConstructor, thisArg?: unknown): NonFalsy<T>[];
-		map<U>(
-			callbackfn: (value: T, index: number, array: T[]) => U,
-			thisArg?: unknown,
-		): { [K in keyof this]: U };
 	}
 	interface ReadonlyArray<T> {
 		includes(
@@ -77,7 +81,7 @@ declare global {
 		readonly prototype: Boolean;
 	}
 	interface String {
-		split<Separator extends string, Limit extends number>(
+		split<Separator extends RegExp | string, Limit extends number>(
 			separator: Separator,
 			limit?: Limit,
 		): Limit extends 0 ? [] : Separator extends "" ? string[] : [string, ...string[]];
@@ -95,38 +99,37 @@ declare global {
 	namespace NodeJS {
 		/**
 		 * @example
-		 * 	```env
-		 * 	GUILD_ID = ...
-		 * 	BOT_TOKEN = ...
+		 * 	GUILD_ID = …
+		 * 	BOT_TOKEN = …
 		 * 	MONGO_URI = mongodb://127.0.0.1:27017/scradd
 		 * 	NODE_ENV = development
 		 * 	CANVAS = true
-		 * 	PORT = 80 ; Only if you want web server features (including ban appeals and linking Scratch)
-		 * 	CLIENT_SECRET = ...
-		 * 	```;
+		 * 	PORT = 80
+		 * 	CLIENT_SECRET = …
 		 */
 		interface ProcessEnv {
 			/** The main guild ID for the bot to operate in. Requires Administrator permission in this server. */
 			GUILD_ID: Snowflake;
-			/** The bot's token. */
+			/** The bot’s token. */
 			BOT_TOKEN: string;
 			/** The URI to use when connecting to MongoDB. */
 			MONGO_URI: string;
 			/**
-			 * The mode for the bot to run in. Defaults to `"development"`.
+			 * The mode for the bot to run in. For consistency, always compare against `"production"` in code.
 			 *
-			 * For consistency, always compare against `"production"` in code.
+			 * @default "development"
 			 */
 			NODE_ENV?: "development" | "production";
 			/**
-			 * Whether or not to enable features requiring `@napi-api/canvas`, which does not work on some devices. Defaults to `true`.
+			 * Whether or not to enable features requiring `@napi-api/canvas`, which does not work on some devices. For consistency, always
+			 * compare against `"false"` in code.
 			 *
-			 * For consistency, always compare against `"false"` in code.
+			 * @default true
 			 */
 			CANVAS?: `${boolean}`;
 			/** The port to run the web server on. Omit to not run the server. */
 			PORT?: `${number}`;
-			/** The bot's client secret, used in OAuth2 flows. Omit to disable all features using OAuth2. */
+			/** The bot’s client secret, used in OAuth2 flows. Omit to disable all features using OAuth2. */
 			CLIENT_SECRET?: string;
 			/** The API key to force a database write on `/cleanDatabaseListeners`. */
 			CDBL_AUTH?: string;
@@ -152,17 +155,6 @@ declare module "strife.js" {
 	}
 	export interface DefaultCommandAccess {
 		inGuild: true;
-	}
-}
-declare module "discord.js" {
-	export interface BaseGuildTextChannel {
-		toString(): ChannelMention;
-	}
-	export interface BaseGuildVoiceChannel {
-		toString(): ChannelMention;
-	}
-	export interface ThreadOnlyChannel {
-		toString(): ChannelMention;
 	}
 }
 

@@ -12,7 +12,13 @@ const processing = new Set<Snowflake>();
  *
  * @param message - The board message to update.
  */
-export default async function updateBoard({ count, message }: { count: number; message: Message }) {
+export default async function updateBoard({
+	count,
+	message,
+}: {
+	count: number;
+	message: Message;
+}): Promise<void> {
 	if (processing.has(message.id)) return;
 	processing.add(message.id);
 	if (!config.channels.board) throw new ReferenceError("Could not find board channel");
@@ -68,7 +74,7 @@ export default async function updateBoard({ count, message }: { count: number; m
 		top.map(async ({ onBoard }) => {
 			const toPin =
 				onBoard &&
-				(await config.channels.board?.messages.fetch(onBoard)?.catch(() => void 0));
+				(await config.channels.board?.messages.fetch(onBoard).catch(() => void 0));
 
 			if (toPin) await toPin.pin("Is a top-reacted message");
 
@@ -89,19 +95,18 @@ function updateById<Keys extends keyof typeof boardDatabase.data[number]>(
 		? Pick<typeof boardDatabase.data[number], Keys> & { source: string }
 		: never,
 	oldData?: Omit<typeof boardDatabase.data[number], Keys | "source">,
-) {
+): void {
 	const data = [...boardDatabase.data];
 	const index = data.findIndex((suggestion) => suggestion.source === newData.source);
 	const found = data[index];
-	if (found) {
-		data[index] = { ...found, ...newData };
-	} else if (oldData) {
+	if (found) data[index] = { ...found, ...newData };
+	else if (oldData)
 		data.push({ ...oldData, ...newData } as unknown as typeof boardDatabase.data[number]);
-	}
+
 	boardDatabase.data = data;
 }
 
-export async function syncRandomBoard() {
+export async function syncRandomBoard(): Promise<void> {
 	for (const info of boardDatabase.data.toSorted(() => Math.random() - 0.5)) {
 		if (info.onBoard) continue;
 

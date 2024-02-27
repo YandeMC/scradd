@@ -20,6 +20,7 @@ import constants from "../../common/constants.js";
 import { gracefulFetch } from "../../util/promises.js";
 import { getRequestUrl } from "../../util/text.js";
 import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
+import { handleUser } from "../auto/scratch.js";
 
 await client.application.editRoleConnectionMetadataRecords([
 	{
@@ -72,7 +73,10 @@ const NOT_FOUND_PAGE = await fileSystem.readFile("./web/404.html", "utf8");
 
 const HASH = crypto.randomBytes(16);
 const sessions: Record<string, string> = {};
-export default async function linkScratchRole(request: IncomingMessage, response: ServerResponse) {
+export default async function linkScratchRole(
+	request: IncomingMessage,
+	response: ServerResponse,
+): Promise<ServerResponse> {
 	if (!process.env.CLIENT_SECRET)
 		return response.writeHead(503, { "content-type": "text/html" }).end(NOT_FOUND_PAGE);
 

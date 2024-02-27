@@ -12,13 +12,13 @@ export function dad(
 				customNames[word] ||
 				customComments[word] ||
 				customTriggers.includes(word),
-		) ??
-		split[0] ??
+		) ||
+		split[0] ||
 		name;
 
 	return (
 		customResponses[firstName] ||
-		`${greetings[Math.floor(Math.random() * greetings.length)]} ${
+		`${greetings[Math.floor(Math.random() * greetings.length)] ?? greetings[0]} ${
 			customNames[firstName] || name
 		}${customTriggers.includes(firstName) ? "!" : ","} ${
 			customComments[firstName] || "I’m Scradd!"

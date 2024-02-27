@@ -5,18 +5,19 @@ import {
 	type ModalSubmitInteraction,
 	MessageMentions,
 } from "discord.js";
-import config, { getInitialChannelThreads } from "../../common/config.js";
-import { LoggingEmojis } from "../logging/misc.js";
-import { escapeMessage } from "../../util/markdown.js";
+import config, { getInitialChannelThreads } from "../../../common/config.js";
+import { LoggingEmojis } from "../../logging/misc.js";
+import { escapeMessage } from "../../../util/markdown.js";
 import { client } from "strife.js";
-import { getAllMessages } from "../../util/discord.js";
+import { getAllMessages } from "../../../util/discord.js";
 import generateAppeal, { NEEDED_ACCEPT, NEEDED_REJECT, parseIds } from "./generateAppeal.js";
+import constants from "../../../common/constants.js";
 
 if (!config.channels.mod) throw new ReferenceError("Could not find mod channel");
 export const appealThread =
 	getInitialChannelThreads(config.channels.mod).find(
 		(thread) => thread.name === "Ban Appeal Forms",
-	) ||
+	) ??
 	(await config.channels.mod.threads.create({
 		name: "Ban Appeal Forms",
 		reason: "For ban appeal forms",
@@ -31,7 +32,7 @@ const appeals = Object.fromEntries(
 				{
 					unbanned: decision === "Accepted",
 					note: message.embeds[1]?.fields.find(
-						(field) => field.name == `${decision} Note`,
+						(field) => field.name == `${decision ?? ""} Note`,
 					)?.value,
 					date: new Date(message.createdTimestamp + 691_200_000).toDateString(),
 				},
@@ -40,7 +41,10 @@ const appeals = Object.fromEntries(
 );
 export default appeals;
 
-export async function confirmAcceptAppeal(interaction: ButtonInteraction, counts: string) {
+export async function confirmAcceptAppeal(
+	interaction: ButtonInteraction,
+	counts: string,
+): Promise<void> {
 	const value = interaction.message.embeds[1]?.fields.find(
 		(field) => field.name == "Accepted Note",
 	)?.value;
@@ -64,10 +68,13 @@ export async function confirmAcceptAppeal(interaction: ButtonInteraction, counts
 		],
 
 		customId: `${counts}_acceptAppeal`,
-		title: "Accept Ban Appeal",
+		title: "Accept Ban Appeal (user may see the reason)",
 	});
 }
-export async function confirmRejectAppeal(interaction: ButtonInteraction, counts: string) {
+export async function confirmRejectAppeal(
+	interaction: ButtonInteraction,
+	counts: string,
+): Promise<void> {
 	const value = interaction.message.embeds[1]?.fields.find(
 		(field) => field.name == "Rejected Note",
 	)?.value;
@@ -77,7 +84,7 @@ export async function confirmRejectAppeal(interaction: ButtonInteraction, counts
 				components: [
 					{
 						customId: "note",
-						label: "Why should they not be unbanned?",
+						label: "Why shouldn’t they be unbanned?",
 						style: TextInputStyle.Paragraph,
 						type: ComponentType.TextInput,
 						value: value === "N/A" ? undefined : value,
@@ -91,13 +98,18 @@ export async function confirmRejectAppeal(interaction: ButtonInteraction, counts
 		],
 
 		customId: `${counts}_rejectAppeal`,
-		title: "Reject Ban Appeal",
+		title: "Reject Ban Appeal (user may see the reason)",
 	});
 }
-export async function submitAcceptAppeal(interaction: ModalSubmitInteraction, ids: string) {
+export async function submitAcceptAppeal(
+	interaction: ModalSubmitInteraction,
+	ids: string,
+): Promise<void> {
 	const users = parseIds(ids);
 	await interaction.reply({
-		content: `${LoggingEmojis.Punishment} ${interaction.user} accepted the ban appeal.`,
+		content: `${
+			LoggingEmojis.Punishment
+		} ${interaction.user.toString()} accepted the ban appeal.`,
 		ephemeral: users.accepters.has(interaction.user.id),
 	});
 	users.accepters.add(interaction.user.id);
@@ -122,18 +134,31 @@ export async function submitAcceptAppeal(interaction: ModalSubmitInteraction, id
 
 	if (users.accepters.size >= NEEDED_ACCEPT) {
 		const mention = interaction.message?.embeds[0]?.description ?? "";
-		await config.guild.bans.remove(
-			MessageMentions.UsersPattern.exec(mention)?.[1] ?? "",
-			`Appealed ban - see ${interaction.message?.url} for context`,
-		);
+		const unbanned = await config.guild.bans
+			.remove(
+				MessageMentions.UsersPattern.exec(mention)?.[1] ?? "",
+				`Appealed ban` +
+					(interaction.message ? ` - see ${interaction.message.url} for context` : ""),
+			)
+			.then(() => true)
+			.catch(() => false);
 		appeals[mention] = { unbanned: true, note, date: new Date().toISOString() };
-		await appealThread.send(`${mention} has beeen unbanned.`);
+		await interaction.message?.reply(
+			`${constants.emojis.statuses[unbanned ? "yes" : "no"]} ${mention} has ${
+				unbanned ? "" : "already "
+			}been unbanned.`,
+		);
 	}
 }
-export async function submitRejectAppeal(interaction: ModalSubmitInteraction, ids: string) {
+export async function submitRejectAppeal(
+	interaction: ModalSubmitInteraction,
+	ids: string,
+): Promise<void> {
 	const users = parseIds(ids);
 	await interaction.reply({
-		content: `${LoggingEmojis.Punishment} ${interaction.user} rejected the ban appeal.`,
+		content: `${
+			LoggingEmojis.Punishment
+		} ${interaction.user.toString()} rejected the ban appeal.`,
 		ephemeral: users.rejecters.has(interaction.user.id),
 	});
 	users.rejecters.add(interaction.user.id);
@@ -159,6 +184,8 @@ export async function submitRejectAppeal(interaction: ModalSubmitInteraction, id
 	if (users.rejecters.size >= NEEDED_REJECT) {
 		const mention = interaction.message?.embeds[0]?.description ?? "";
 		appeals[mention] = { unbanned: false, note, date: new Date().toISOString() };
-		await appealThread.send(`${mention} will not be unbanned.`);
+		await interaction.message?.reply(
+			`${constants.emojis.statuses.yes} ${mention} will not be unbanned.`,
+		);
 	}
 }
