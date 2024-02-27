@@ -64,7 +64,7 @@ defineEvent("guildMemberRemove", async (member) => {
 
 	const byes =
 		banned || kicked
-			? [
+			? ([
 					`Oof… **${member.user.displayName}** got ${kicked ? "kicked" : "banned"}…`,
 					`We don’t talk about what **${member.user.displayName}** did…`,
 					`I don’t think this was the best place for **${member.user.displayName}**…`,
