@@ -40,7 +40,7 @@ export function shouldLog(channel: TextBasedChannel | null): boolean {
 	return Boolean(
 		baseChannel?.type !== ChannelType.DM &&
 			baseChannel?.guild.id === config.guild.id &&
-			baseChannel.permissionsFor(config.roles.staff || config.guild.id)?.has("ViewChannel"),
+			baseChannel.permissionsFor(config.roles.staff ?? config.guild.id)?.has("ViewChannel"),
 	);
 }
 
@@ -111,7 +111,7 @@ export default async function log(
 	content: `${LoggingEmojis | typeof LoggingErrorEmoji} ${string}`,
 	group: LogSeverity | TextChannel,
 	extra: {
-		embeds?: (APIEmbed | Embed)[];
+		embeds?: (APIEmbed | Embed | undefined)[];
 		files?: (string | { extension?: string; content: string })[];
 		buttons?: ({ label: string } & (
 			| { customId: string; style: Exclude<ButtonStyle, ButtonStyle.Link> }
@@ -144,7 +144,7 @@ export default async function log(
 						.join("\n")
 				: ""),
 		allowedMentions: { users: [] },
-		embeds: extra.embeds,
+		embeds: extra.embeds?.filter(Boolean),
 		components: extra.buttons && [
 			{
 				components: extra.buttons.map((button) => ({
@@ -185,7 +185,7 @@ export async function getLoggingThread(group: LogSeverity): Promise<TextChannel 
 	return (
 		(await config.channels.modlogs.threads.fetch()).threads.find(
 			(thread) => thread.name === name,
-		) ||
+		) ??
 		(await config.channels.modlogs.threads.create({
 			name,
 			reason: "New logging thread",

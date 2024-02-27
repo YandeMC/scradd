@@ -23,7 +23,7 @@
 	"prettier": "@redguy12/prettier-config",
 	"dependencies": {
 		"@fontsource-variable/sora": "5.0.16",
-		"@napi-rs/canvas": "0.1.45",
+		"@napi-rs/canvas": "0.1.48",
 		"@sa-community/addons-data": "1.35.1-1",
 		"@twemoji/parser": "15.0.0",
 		"chart.js": "4.4.1",
@@ -45,11 +45,11 @@
 		"@types/mustache": "<=4.2",
 		"@types/node": "<=20.10",
 		"@types/papaparse": "<=5.4",
-		"@typescript-eslint/eslint-plugin": "7.0.1",
-		"@typescript-eslint/parser": "7.0.1",
+		"@typescript-eslint/eslint-plugin": "7.0.2",
+		"@typescript-eslint/parser": "7.0.2",
 		"eslint": "8.56.0",
 		"eslint-plugin-unicorn": "51.0.1",
-		"nodemon": "3.0.3",
+		"nodemon": "3.1.0",
 		"prettier": "2.8.0",
 		"typescript": "5.3.3"
 	},
