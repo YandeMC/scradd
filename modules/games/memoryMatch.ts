@@ -17,7 +17,6 @@ import config from "../../common/config.js";
 import { GAME_COLLECTOR_TIME, CURRENTLY_PLAYING, checkIfUserPlaying } from "./misc.js";
 import constants from "../../common/constants.js";
 import { disableComponents } from "../../util/discord.js";
-import { autoreactions } from "../auto/secrets.js";
 
 const EMPTY_TILE = "⬛";
 
@@ -412,11 +411,11 @@ async function setupGame(difficulty: 2 | 4, guild = config.guild) {
 		"👉",
 		"👈",
 	];
-	const secretEmojis = autoreactions.flatMap(([emoji]) => emoji);
+
 	const guildEmojis = (await guild.emojis.fetch())
 		.filter((emoji) => emoji.available)
 		.map((emoji) => emoji.toString());
-	const allEmojis = [...new Set([...twemojis, ...guildEmojis, ...secretEmojis])];
+	const allEmojis = [...new Set([...twemojis, ...guildEmojis])];
 
 	const selected = Array.from(
 		{ length: Math.min(24 / difficulty, allEmojis.length) },
