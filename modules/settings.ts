@@ -86,35 +86,7 @@ defineChatCommand(
 	settingsCommand,
 );
 
-defineChatCommand(
-	{
-		name: "settings",
-		description: "Customize personal settings",
-		access: config.otherGuildIds,
 
-		options: {
-			"board-pings": {
-				type: ApplicationCommandOptionType.Boolean,
-				description: `Pings you when your messages get on ${
-					config.channels.board ? "#" + config.channels.board.name : "the board"
-				} in the community server`,
-			},
-			"use-mentions": {
-				type: ApplicationCommandOptionType.Boolean,
-				description: "Replace mentions with usernames in embeds to avoid seeing raw IDs",
-			},
-			"dm-reminders": {
-				type: ApplicationCommandOptionType.Boolean,
-				description: "Send reminders in your DMs by default",
-			},
-			"scratch-embeds": {
-				type: ApplicationCommandOptionType.Boolean,
-				description: "Send information about Scratch links found in your messages",
-			},
-		},
-	},
-	settingsCommand,
-);
 
 defineButton("toggleSetting", async (interaction, setting = "") => {
 	if (

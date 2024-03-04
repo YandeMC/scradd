@@ -8,9 +8,6 @@ import {
 import { commands, defineChatCommand, defineEvent } from "strife.js";
 import { OPERATION_PREFIX, parseArguments, splitFirstArgument } from "./misc.js";
 import constants from "../../common/constants.js";
-import config from "../../common/config.js";
-import tryCensor, { badWordsAllowed } from "../automod/misc.js";
-import warn from "../punishments/warn.js";
 import hasPermission, { handleCommandPermissionUpdate } from "./permissions.js";
 import { getAllSchemas } from "./util.js";
 import { mentionChatCommand } from "../../util/discord.js";
@@ -105,27 +102,7 @@ defineChatCommand(
 			});
 		}
 
-		const shouldCensor =
-			interaction.guild?.id === config.guild.id &&
-			(command.censored === "channel"
-				? !badWordsAllowed(interaction.channel)
-				: command.censored ?? true);
-		const censoredOptions = shouldCensor && tryCensor(operation);
-		if (censoredOptions && censoredOptions.strikes) {
-			await interaction.reply({
-				ephemeral: true,
-				content: `${constants.emojis.statuses.no} ${
-					censoredOptions.strikes < 1 ? "That’s not appropriate" : "Language"
-				}!`,
-			});
-			await warn(
-				interaction.user,
-				"Please watch your language!",
-				censoredOptions.strikes,
-				`Used command \`${interaction.toString()}\``,
-			);
-			return;
-		}
+		
 
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		await (command.command as Function)(interaction, options);

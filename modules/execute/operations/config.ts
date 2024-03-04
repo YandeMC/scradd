@@ -11,7 +11,6 @@ import {
 	type ButtonInteraction,
 } from "discord.js";
 import config, { syncConfig } from "../../../common/config.js";
-import { autoreactions, dadEasterEggCount } from "../../auto/secrets.js";
 import log, { LogSeverity, LoggingEmojis } from "../../logging/misc.js";
 
 const data: CustomOperation = {
@@ -80,7 +79,6 @@ const data: CustomOperation = {
 					]),
 				);
 				await interaction.reply({
-					content: `There are currently **${dadEasterEggCount}** custom dad responses and **${autoreactions.length}** autoreactions.\nSome have multiple triggers, which are not counted here.`,
 					embeds: [
 						{
 							title: "Emojis",

@@ -4,6 +4,7 @@ import {
 	ComponentType,
 	GuildMember,
 	User,
+	time,
 } from "discord.js";
 import config from "../../common/config.js";
 import {
@@ -16,6 +17,7 @@ import {
 } from "strife.js";
 import getUserRank, { top } from "./rank.js";
 import giveXp, { giveXpForMessage } from "./giveXp.js";
+import { recentXpDatabase } from "./util.js";
 import constants from "../../common/constants.js";
 
 defineEvent("messageCreate", async (message) => {
@@ -40,6 +42,17 @@ defineSubcommands(
 					},
 				},
 			},
+
+			leaderboard: {
+				description: "View the server XP leaderboard",
+
+				options: {
+					user: {
+						type: ApplicationCommandOptionType.User,
+						description: "User to jump to",
+					},
+				},
+			},
 			give: {
 				description: "Give someone xp (yande only)",
 
@@ -54,23 +67,13 @@ defineSubcommands(
 					},
 				},
 			},
-			leaderboard: {
-				description: "View the server XP leaderboard",
-
-				options: {
-					user: {
-						type: ApplicationCommandOptionType.User,
-						description: "User to jump to",
-					},
-				},
-			},
 			...(process.env.CANVAS !== "false" && {
 				graph: { description: "Graph users’ XP over the last week", options: {} } as const,
 			}),
 		},
 	},
 
-	async (interaction, options) => {
+	async (interaction, options:any) => {
 		const user =
 			(options?.options &&
 				"user" in options.options &&
@@ -108,21 +111,21 @@ defineSubcommands(
 				});
 			}
 			case "leaderboard": {
-				await top(interaction, options.options.user);
-				return;
+				await top(interaction, user);
+				break;
 			}
 			case "give": {
-				const { owner } = await client.application.fetch();
+				const { owner }:any = await client.application.fetch();
 				const owners =
 					owner instanceof User
 						? [owner.id]
-						: owner?.members.map((member) => member.id) ?? [];
+						: owner?.members.map((member:any) => member.id) ?? [];
 				if (process.env.NODE_ENV === "production" && !owners.includes(interaction.user.id))
 					return await interaction.reply({
 						ephemeral: true,
 						content: `${constants.emojis.statuses.no} This command is reserved for ${
 							owner instanceof User
-								? owner.displayName
+								? owner?.displayName
 								: "the " + owner?.name + " team"
 						} only!`,
 					});
@@ -141,11 +144,10 @@ defineSubcommands(
 									user.id
 							  }> `
 							: `:sparkles: Gave <@${user.id}> ${amount} XP`,
-				});
-			}
+				})
 		}
-	},
-);
+	}
+});
 defineButton("xp", async (interaction, userId = "") => {
 	await getUserRank(interaction, await client.users.fetch(userId));
 });

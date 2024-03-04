@@ -20,7 +20,6 @@ import constants from "../../common/constants.js";
 import { gracefulFetch } from "../../util/promises.js";
 import { getRequestUrl } from "../../util/text.js";
 import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
-import { handleUser } from "../auto/scratch.js";
 
 await client.application.editRoleConnectionMetadataRecords([
 	{
@@ -222,7 +221,6 @@ export default async function linkScratchRole(
 			user.id,
 		)} linked their Scratch account [${username}](${constants.urls.scratch}/users/${username})`,
 		LogSeverity.ServerChange,
-		{ embeds: [await handleUser(["", "", username])] },
 	);
 	await config.channels.welcome?.send(
 		`${constants.emojis.statuses.yes} ${userMention(user.id)} Verfied their scratch account!`,
