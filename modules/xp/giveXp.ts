@@ -104,98 +104,102 @@ export default async function giveXp(
 		const newLevel = getLevelForXp(newXp);
 		if (oldLevel < newLevel) await sendLevelUpMessage(member, newXp, url);
 
-	const sorted = xp.toSorted((one, two) => two.xp - one.xp);
+		const sorted = xp.toSorted((one, two) => two.xp - one.xp);
 
-	const guildMembers = await config.guild.members.fetch();
-	const serverRank = sorted
-		.filter((entry) => guildMembers.has(entry.user))
-		.findIndex((entry) => entry.user === user.id);
+		const guildMembers = await config.guild.members.fetch();
+		const serverRank = sorted
+			.filter((entry) => guildMembers.has(entry.user))
+			.findIndex((entry) => entry.user === user.id);
 
-	if (
-		serverRank / config.guild.memberCount < 0.01 &&
-		member &&
-		config.roles.epic &&
-		!member.roles.resolve(config.roles.epic.id)
-	) {
-		await member.roles.add(config.roles.epic, "Top 1% of the server’s XP");
-		await config.channels.general?.send(
-			`🎊 ${member.toString()} Congratulations on being in the top 1% of the server’s XP! You have earned ${config.roles.epic.toString()}.`,
+		if (
+			serverRank / config.guild.memberCount < 0.01 &&
+			member &&
+			config.roles.epic &&
+			!member.roles.resolve(config.roles.epic.id)
+		) {
+			await member.roles.add(config.roles.epic, "Top 1% of the server’s XP");
+			await config.channels.general?.send(
+				`🎊 ${member.toString()} Congratulations on being in the top 1% of the server’s XP! You have earned ${config.roles.epic.toString()}.`,
+			);
+		}
+
+		const weekly = [...recentXpDatabase.data];
+		const weeklyIndex = weekly.findIndex(
+			(entry) => entry.user === user.id && entry.time + 3_600_000 > Date.now(),
 		);
+		const weeklyAmount = (weekly[weeklyIndex]?.xp || 0) + amount;
+		if (weeklyIndex === -1) {
+			weekly.push({ user: user.id, xp: weeklyAmount, time: Date.now() });
+		} else {
+			weekly[weeklyIndex] = {
+				user: user.id,
+				xp: weeklyAmount,
+				time: weekly[weeklyIndex]?.time ?? Date.now(),
+			};
+		}
+		recentXpDatabase.data = weekly;
 	}
 
-	const weekly = [...recentXpDatabase.data];
-	const weeklyIndex = weekly.findIndex(
-		(entry) => entry.user === user.id && entry.time + 3_600_000 > Date.now(),
-	);
-	const weeklyAmount = (weekly[weeklyIndex]?.xp || 0) + amount;
-	if (weeklyIndex === -1) {
-		weekly.push({ user: user.id, xp: weeklyAmount, time: Date.now() });
-	} else {
-		weekly[weeklyIndex] = {
-			user: user.id,
-			xp: weeklyAmount,
-			time: weekly[weeklyIndex]?.time ?? Date.now(),
-		};
-	}
-	recentXpDatabase.data = weekly;
-}
+	async function sendLevelUpMessage(
+		member: GuildMember,
+		newXp: number,
+		url?: string,
+	): Promise<void> {
+		const newLevel = getLevelForXp(newXp);
+		const nextLevelXp = getXpForLevel(newLevel + 1);
+		const showButton = (await getSettings(member, false)).levelUpPings === undefined;
+		const pingsDefault = (await getDefaultSettings(member)).levelUpPings;
 
-async function sendLevelUpMessage(member: GuildMember, newXp: number, url?: string): Promise<void> {
-	const newLevel = getLevelForXp(newXp);
-	const nextLevelXp = getXpForLevel(newLevel + 1);
-	const showButton = (await getSettings(member, false)).levelUpPings === undefined;
-	const pingsDefault = (await getDefaultSettings(member)).levelUpPings;
+		await config.channels.bots?.send({
+			allowedMentions: (await getSettings(member)).levelUpPings ? undefined : { users: [] },
+			content: `🎉 ${member.toString()}`,
+			components: showButton
+				? [
+						{
+							components: [
+								{
+									customId: "levelUpPings_toggleSetting",
+									type: ComponentType.Button,
+									label: `${pingsDefault ? "Disable" : "Enable"} Pings`,
+									style: ButtonStyle.Success,
+								},
+							],
+							type: ComponentType.ActionRow,
+						},
+				  ]
+				: [],
 
-	await config.channels.bots?.send({
-		allowedMentions: (await getSettings(member)).levelUpPings ? undefined : { users: [] },
-		content: `🎉 ${member.toString()}`,
-		components: showButton
-			? [
-					{
-						components: [
-							{
-								customId: "levelUpPings_toggleSetting",
-								type: ComponentType.Button,
-								label: `${pingsDefault ? "Disable" : "Enable"} Pings`,
-								style: ButtonStyle.Success,
-							},
-						],
-						type: ComponentType.ActionRow,
+			embeds: [
+				{
+					color: member.displayColor,
+					author: { icon_url: member.displayAvatarURL(), name: member.displayName },
+					title: `You’re at level ${newLevel}!`,
+					url,
+
+					fields: [
+						{
+							name: "✨ Current XP",
+							value: `${Math.floor(newXp).toLocaleString()} XP`,
+							inline: true,
+						},
+						{ name: constants.zws, value: constants.zws, inline: true },
+						{
+							name: "⬆️ Next level",
+							value: `${nextLevelXp.toLocaleString()} XP`,
+							inline: true,
+						},
+					],
+
+					footer: {
+						icon_url: config.guild.iconURL() ?? undefined,
+						text: `View your XP with /xp rank${
+							showButton ? "" : "\nToggle pings via /settings"
+						}`,
 					},
-			  ]
-			: [],
-
-		embeds: [
-			{
-				color: member.displayColor,
-				author: { icon_url: member.displayAvatarURL(), name: member.displayName },
-				title: `You’re at level ${newLevel}!`,
-				url,
-
-				fields: [
-					{
-						name: "✨ Current XP",
-						value: `${Math.floor(newXp).toLocaleString()} XP`,
-						inline: true,
-					},
-					{ name: constants.zws, value: constants.zws, inline: true },
-					{
-						name: "⬆️ Next level",
-						value: `${nextLevelXp.toLocaleString()} XP`,
-						inline: true,
-					},
-				],
-
-				footer: {
-					icon_url: config.guild.iconURL() ?? undefined,
-					text: `View your XP with /xp rank${
-						showButton ? "" : "\nToggle pings via /settings"
-					}`,
 				},
-			},
-		],
-	});
-}
+			],
+		});
+	}
 }
 export async function checkXPRoles(member: GuildMember): Promise<void> {
 	if (config.roles.active) {

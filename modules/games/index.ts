@@ -1,5 +1,5 @@
 import { ApplicationCommandOptionType, ApplicationCommandType } from "discord.js";
-import memoryMatch, {showMemoryInstructions } from "./memoryMatch.js";
+import memoryMatch, { showMemoryInstructions } from "./memoryMatch.js";
 import { defineButton, defineChatCommand, defineMenuCommand } from "strife.js";
 import { CURRENTLY_PLAYING } from "./misc.js";
 import constants from "../../common/constants.js";
