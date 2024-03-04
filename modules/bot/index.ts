@@ -1,17 +1,12 @@
-import { ApplicationCommandType, ApplicationCommandOptionType, User } from "discord.js";
+import { ApplicationCommandType, ApplicationCommandOptionType } from "discord.js";
 import { cleanDatabaseListeners } from "../../common/database.js";
-import {
-	client,
-	defineChatCommand,
-	defineButton,
-	defineModal,
-	defineMenuCommand,
-	defineSubcommands,
-} from "strife.js";
+import { defineChatCommand, defineButton, defineModal, defineMenuCommand } from "strife.js";
 import editMessage, { submitEdit } from "./edit.js";
 import getCode, { run } from "./run.js";
 import sayCommand, { say } from "./say.js";
-import info, { syncConfigButton } from "./info.js";
+import status from "./status.js";
+import credits from "./credits.js";
+import { syncConfigButton } from "../execute/operations/config.js";
 
 defineMenuCommand(
 	{ name: "Edit Message", restricted: true, type: ApplicationCommandType.Message, access: false },
@@ -19,27 +14,12 @@ defineMenuCommand(
 );
 defineModal("edit", submitEdit);
 
-const { owner } = await client.application.fetch();
-defineChatCommand(
-	{
-		name: "run",
-		description: `(${
-			process.env.NODE_ENV === "production"
-				? owner instanceof User
-					? owner.displayName
-					: owner?.name + " team"
-				: "Scradd dev"
-		} only) Run code on Scradd`,
-
-		restricted: true,
-	},
-	getCode,
-);
+defineChatCommand({ name: "run", description: "Run code on the bot", restricted: true }, getCode);
 defineModal("run", run);
 
 if (process.env.NODE_ENV === "production") {
 	defineChatCommand(
-		{ name: "restart", description: "(Admin only) Restarts the bot", restricted: true },
+		{ name: "restart", description: "Restart the bot", restricted: true },
 		async (interaction) => {
 			await cleanDatabaseListeners();
 			await interaction.reply("Restarts bot…");
@@ -49,7 +29,7 @@ if (process.env.NODE_ENV === "production") {
 	);
 } else {
 	defineChatCommand(
-		{ name: "kill", description: "(Scradd dev only) Kills the bot", restricted: true },
+		{ name: "kill", description: "Kill the bot", restricted: true },
 		async (interaction) => {
 			await cleanDatabaseListeners();
 			await interaction.reply("Killing bot…");
@@ -62,14 +42,13 @@ if (process.env.NODE_ENV === "production") {
 defineChatCommand(
 	{
 		name: "say",
-		description: "(Mod only) Send a message",
+		description: "Make me send a message",
 
 		options: {
 			message: {
 				type: ApplicationCommandOptionType.String,
-				description: "Message content (send ‘-’ to open a multi-line input)",
+				description: "Message to send",
 				maxLength: 2000,
-				required: true,
 			},
 		},
 
@@ -82,26 +61,43 @@ defineChatCommand(
 defineMenuCommand(
 	{ name: "Send Reply", type: ApplicationCommandType.Message, restricted: true, access: false },
 	async (interaction) => {
-		await sayCommand(interaction, { message: "-", reply: interaction.targetMessage.id });
+		await sayCommand(interaction, { reply: interaction.targetMessage.id });
 	},
 );
 defineModal("say", async (interaction, reply) => {
 	await say(interaction, interaction.fields.getTextInputValue("message"), reply || undefined);
 });
 
-defineSubcommands(
+defineChatCommand(
 	{
-		name: "info",
-		description: "Learn about me",
-		access: true,
+		name: "status",
+		description: "See my current status information",
 
-		subcommands: {
-			status: { description: "Show bot status", options: {} },
-			credits: { description: "Show credit information", options: {} },
-			config: { description: "Show configuration settings", options: {} },
-			emojis: { description: "Show all stored emojis", options: {} },
+		options: {
+			message: {
+				type: ApplicationCommandOptionType.String,
+				description: "Message to send",
+				maxLength: 2000,
+			},
 		},
+		access: true,
 	},
-	info,
+	status,
+);
+defineChatCommand(
+	{
+		name: "credits",
+		description: "List who and what allows me to work",
+
+		options: {
+			message: {
+				type: ApplicationCommandOptionType.String,
+				description: "Message to send",
+				maxLength: 2000,
+			},
+		},
+		access: true,
+	},
+	credits,
 );
 defineButton("syncConfig", syncConfigButton);

@@ -24,7 +24,7 @@ defineEvent("guildMemberAdd", async (member) => {
 	const memberCount = nth(config.guild.memberCount) + jokes;
 
 	const rawGreetings = [
-		`Everybody please welcome ${member} to the server; they’re our **${memberCount}** member!`,
+		`Everybody please welcome ${member.toString()} to the server; they’re our **${memberCount}** member!`,
 		`A big shoutout to ${member.toString()}, we’re glad you’ve joined us as our **${memberCount}** member!`,
 		`Here we go again… ${member.toString()} is here, our **${memberCount}** member!`,
 		`||Do I always have to let you know when there is a new member?|| ${member.toString()} is here (our **${memberCount}**)!`,
@@ -38,17 +38,18 @@ defineEvent("guildMemberAdd", async (member) => {
 		`${member.toString()}, our **${memberCount}** member, just spawned in!`,
 		`Act professional, ${member.toString()} is here, our **${memberCount}** member!`,
 		`Watch out! ${member.toString()} is here! They’re our **${memberCount}**!`,
-	];
+		`Rest here weary traveler, ${member.toString()}. You’re the **${memberCount}** member.`,
+	] as const;
 	const greetings = [
 		...rawGreetings,
 		...rawGreetings,
 		...rawGreetings,
 		`I hope ${member.toString()}, our **${memberCount}** member, doesn’t give us up or let us down…`,
-	];
+	] as const;
 
 	await config.channels.welcome?.send(
 		`${constants.emojis.welcome.join} ${
-			greetings[Math.floor(Math.random() * greetings.length)] ?? ""
+			greetings[Math.floor(Math.random() * greetings.length)] ?? greetings[0]
 		}`,
 	);
 });
@@ -63,13 +64,15 @@ defineEvent("guildMemberRemove", async (member) => {
 
 	const byes =
 		banned || kicked
-			? [
+			?( [
 					`Oof… **${member.user.displayName}** got ${kicked ? "kicked" : "banned"}…`,
 					`We don’t talk about what **${member.user.displayName}** did…`,
 					`I don’t think this was the best place for **${member.user.displayName}**…`,
 					`Whoops, **${member.user.displayName}** angered the mods!`,
 					`**${member.user.displayName}** broke the rules and took an 🇱`,
-					`**${member.user.displayName}** failed the mods’ ${config.roles.staff?.members.size}v1`,
+					`**${member.user.displayName}** failed the mods’ ${
+						config.roles.staff?.members.size ?? "1"
+					}v1`,
 					`**${member.user.displayName}** did the no-no.`,
 					`**${member.user.displayName}** was banished to the deep pits of hell.`,
 					`Oop, the hammer met **${member.user.displayName}**!`,
@@ -78,8 +81,11 @@ defineEvent("guildMemberRemove", async (member) => {
 					`*Somebody* sent **${member.user.displayName}** to a maximum security federal prison`,
 					`**${member.user.displayName}** choked on a watermelon`,
 					`Could someone help hide **${member.user.displayName}**’s body?`,
-			  ]
-			: [
+					`**${member.user.displayName}** took the candy from the mods’ white van`,
+					`**${member.user.displayName}** went to the banlands`,
+					`The mods canceled **${member.user.displayName}**`,
+			  ] as const)
+			: ([
 					`Welp… **${member.user.displayName}** decided to leave… what a shame…`,
 					`Ahh… **${member.user.displayName}** left us… hope they’ll have safe travels!`,
 					`There goes another, bye **${member.user.displayName}**!`,
@@ -95,7 +101,10 @@ defineEvent("guildMemberRemove", async (member) => {
 					`**${member.user.displayName}** fell from a high place`,
 					`**${member.user.displayName}** didn’t want to live in the same world as Blaze`,
 					`**${member.user.displayName}** turned into a fish and suffocated`,
-			  ];
+					`Raid Shadow Legends sponsored **${member.user.displayName}**`,
+					`And another one’s gone, and another one’s gone, **${member.user.displayName}** bit the dust`,
+					`**${member.user.displayName}** went to get some milk`,
+			  ] as const);
 
 	await config.channels.welcome?.send(
 		`${constants.emojis.welcome[banned ? "ban" : kicked ? "kick" : "leave"]} ${
@@ -111,8 +120,8 @@ defineEvent("guildMemberAdd", async (member) => {
 			config.guild.memberCount - (config.guild.memberCount > 1005 ? 5 : 0)
 		).toLocaleString([], {
 			compactDisplay: "short",
-			maximumFractionDigits: 2,
-			minimumFractionDigits: config.guild.memberCount > 1000 ? 2 : 0,
+			maximumFractionDigits: 1,
+			minimumFractionDigits: config.guild.memberCount > 1000 ? 1 : 0,
 			notation: "compact",
 		})} members`,
 		`${member.user.tag} joined the server`,

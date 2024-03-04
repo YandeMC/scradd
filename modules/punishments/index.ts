@@ -22,7 +22,7 @@ import ban from "./ban.js";
 defineSubcommands(
 	{
 		name: "strikes",
-		description: "Commands to view strike information",
+		description: "View strike information",
 
 		subcommands: {
 			id: {
@@ -38,12 +38,12 @@ defineSubcommands(
 			},
 
 			user: {
-				description: "View your or (mod only) someone else’s strikes",
+				description: "View your or (mods only) someone else’s strikes",
 
 				options: {
 					user: {
 						type: ApplicationCommandOptionType.User,
-						description: "(Mod only) The user to see strikes for",
+						description: "(Mods only) The user to see strikes for",
 					},
 					expired: {
 						type: ApplicationCommandOptionType.Boolean,
@@ -68,6 +68,7 @@ defineSubcommands(
 			}
 			case "id": {
 				await getStrikeById(interaction, options.options.id);
+				break;
 			}
 		}
 	},
@@ -92,7 +93,7 @@ defineSelect("selectStrike", async (interaction) => {
 defineChatCommand(
 	{
 		name: "warn",
-		description: "(Mod only) Warns a user",
+		description: "Warn a user",
 		restricted: true,
 
 		options: {
@@ -112,7 +113,7 @@ defineChatCommand(
 
 			strikes: {
 				type: ApplicationCommandOptionType.Integer,
-				description: `How many strikes to add (defaults to ${DEFAULT_STRIKES})`,
+				description: `How many times to warn them (defaults to ${DEFAULT_STRIKES})`,
 				maxValue: STRIKES_PER_MUTE * MUTE_LENGTHS.length + 1,
 				minValue: 0,
 			},
@@ -193,13 +194,13 @@ defineButton("addStrikeBack", addStrikeBack);
 defineChatCommand(
 	{
 		name: "ban-user",
-		description: "(Mod only) Bans a user",
+		description: "Ban a member",
 		restricted: true,
 
 		options: {
 			"user": {
 				type: ApplicationCommandOptionType.User,
-				description: "The user to ban",
+				description: "The member to ban",
 				required: true,
 			},
 

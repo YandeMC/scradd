@@ -4,11 +4,12 @@ import { describe, it } from "node:test";
 
 await describe("resolveIcon", async () => {
 	await it("should support Twemoji", async () => {
-		deepStrictEqual(await resolveIcon("😀"), { unicodeEmoji: "😀" });
+		deepStrictEqual(await resolveIcon("😀"), { unicodeEmoji: "😀", icon: null });
 	});
 	await it("should support data: URIs", async () => {
 		deepStrictEqual(await resolveIcon("data:image/png;base64,iVBORw0KGg"), {
 			icon: "data:image/png;base64,iVBORw0KGg",
+			unicodeEmoji: null,
 		});
 	});
 	await it("should support external images", async () => {
@@ -16,6 +17,7 @@ await describe("resolveIcon", async () => {
 			await resolveIcon("https://uploads.scratch.mit.edu/users/avatars/55742784.png"),
 			{
 				icon: "https://uploads.scratch.mit.edu/users/avatars/55742784.png",
+				unicodeEmoji: null,
 			},
 		);
 	});
@@ -41,12 +43,18 @@ await describe("parseColor", async () => {
 		strictEqual(parseColor("Red"), "Red");
 		strictEqual(parseColor("red"), "Red");
 		strictEqual(parseColor("reD"), "Red");
-		strictEqual(parseColor("light red"), "LightRed");
+		strictEqual(parseColor("dark red"), "DarkRed");
 		strictEqual(parseColor("random"), "Random");
 	});
 	await it("should support pound-insensitive hex codes", () => {
 		strictEqual(parseColor("#000000"), "#000000");
 		strictEqual(parseColor("ffffff"), "#ffffff");
+	});
+	await it("should support case-insensitive hex codes", () => {
+		strictEqual(parseColor("fffFFF"), "#ffffff");
+		strictEqual(parseColor("#fffFFF"), "#ffffff");
+		strictEqual(parseColor("ffF"), "#ffffff");
+		strictEqual(parseColor("#ffF"), "#ffffff");
 	});
 	await it("should support hex code shorthands", () => {
 		strictEqual(parseColor("#000"), "#000000");

@@ -5,7 +5,8 @@ import { createReadStream, promises as fileSystem } from "node:fs";
 import { client } from "strife.js";
 import config from "../common/config.js";
 import constants from "../common/constants.js";
-import appealRequest from "../modules/forms/showAppeal.js";
+import appealRequest from "../modules/forms/appeals/showAppeal.js";
+// import pkg from "../package.json" assert { type: "json" };
 import { fileURLToPath } from "node:url";
 import path from "node:path";
 import linkScratchRole from "../modules/roles/scratch.js";
@@ -28,7 +29,9 @@ const server = http.createServer(async (request, response) => {
 			case "/clean-database-listeners":
 			case "/clean-database-listeners/": {
 				if (requestUrl.searchParams.get("auth") !== process.env.CDBL_AUTH)
-					response.writeHead(403, { "content-type": "text/plain" }).end("Forbidden");
+					return response
+						.writeHead(403, { "content-type": "text/plain" })
+						.end("Forbidden");
 
 				await cleanDatabaseListeners();
 				process.emitWarning("cleanDatabaseListeners ran");

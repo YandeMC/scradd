@@ -52,6 +52,7 @@ const STATUSES = [
 	"ims scrub",
 	"alan 👑",
 	"strawberries 😌",
+	"Farming dangos",
 ].toSorted(() => Math.random() - 0.5);
 
 async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
@@ -155,6 +156,7 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					await cleanDatabaseListeners();
 					process.emitWarning(`${client.user.tag} is killing the bot`);
 					process.exit(1);
+					// Fake “fall-through” since ESLint doesn’t realize this is unreacahble
 				}
 				case SpecialReminders.CloseThread: {
 					if (channel?.isThread()) await channel.setArchived(true, "Close requested");
@@ -166,10 +168,9 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 				}
 				case SpecialReminders.Unban: {
 					if (typeof reminder.reminder == "string")
-						await config.guild.bans.remove(
-							reminder.reminder,
-							"Unbanned after set time period",
-						);
+						await config.guild.bans
+							.remove(reminder.reminder, "Unbanned after set time period")
+							.catch(() => void 0);
 					continue;
 				}
 				case SpecialReminders.BackupDatabases: {
@@ -324,7 +325,7 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 	return await queueReminders();
 }
 
-function getNextInterval() {
+function getNextInterval(): number | undefined {
 	const [reminder] = remindersDatabase.data.toSorted((one, two) => one.date - two.date);
 	if (!reminder) return;
 	return reminder.date - Date.now();

@@ -8,8 +8,8 @@ import {
 	type ChatInputCommandInteraction,
 	TextInputStyle,
 	type Snowflake,
-	ApplicationCommandPermissionType,
 	type Role,
+	type InteractionResponse,
 } from "discord.js";
 import constants from "../../common/constants.js";
 import { disableComponents } from "../../util/discord.js";
@@ -17,12 +17,14 @@ import { disableComponents } from "../../util/discord.js";
 import config from "../../common/config.js";
 import { recentXpDatabase } from "../xp/util.js";
 import { asyncFilter } from "../../util/promises.js";
-import { parseColor, resolveIcon } from "./misc.js";
+import { CUSTOM_ROLE_PREFIX, parseColor, resolveIcon } from "./misc.js";
+import hasPermission from "../execute/permissions.js";
 
-const PREFIX = "✨ ";
 let command: ApplicationCommand | undefined;
 
-export async function customRole(interaction: ChatInputCommandInteraction<"cached" | "raw">) {
+export async function customRole(
+	interaction: ChatInputCommandInteraction<"cached" | "raw">,
+): Promise<InteractionResponse | undefined> {
 	command ??= interaction.command ?? undefined;
 	if (!(interaction.member instanceof GuildMember))
 		throw new TypeError("interaction.member is not a GuildMember!");
@@ -49,7 +51,7 @@ export async function customRole(interaction: ChatInputCommandInteraction<"cache
 						type: ComponentType.TextInput,
 						maxLength: 98,
 						required: !existingRole,
-						value: existingRole?.name.replace(PREFIX, ""),
+						value: existingRole?.name.replace(CUSTOM_ROLE_PREFIX, ""),
 					},
 				],
 			},
@@ -89,7 +91,9 @@ export async function customRole(interaction: ChatInputCommandInteraction<"cache
 		],
 	});
 }
-export async function createCustomRole(interaction: ModalSubmitInteraction) {
+export async function createCustomRole(
+	interaction: ModalSubmitInteraction,
+): Promise<InteractionResponse | undefined> {
 	if (!(interaction.member instanceof GuildMember))
 		throw new TypeError("interaction.member is not a GuildMember!");
 
@@ -185,7 +189,7 @@ export async function createCustomRole(interaction: ModalSubmitInteraction) {
 	if (existingRole) {
 		await existingRole.edit({
 			color,
-			name: PREFIX + name,
+			name: CUSTOM_ROLE_PREFIX + name,
 			reason: `Edited by ${interaction.user.tag}`,
 			...iconData,
 		});
@@ -196,7 +200,7 @@ export async function createCustomRole(interaction: ModalSubmitInteraction) {
 	const role = await config.guild.roles.create({
 		mentionable: false,
 		color,
-		name: PREFIX + name,
+		name: CUSTOM_ROLE_PREFIX + name,
 		reason: `Created by ${interaction.user.tag}`,
 		//position: (config.roles.epic?.position ?? 0) + 1,
 		...iconData,
@@ -205,23 +209,26 @@ export async function createCustomRole(interaction: ModalSubmitInteraction) {
 	return await interaction.reply(`${constants.emojis.statuses.yes} Created your custom role!`);
 }
 
-export async function recheckMemberRole(_: GuildMember | PartialGuildMember, member: GuildMember) {
+export async function recheckMemberRole(
+	_: GuildMember | PartialGuildMember,
+	member: GuildMember,
+): Promise<void> {
 	const role = getCustomRole(member);
 	if (!role) return;
 	await recheckRole(role);
 }
-export async function recheckAllRoles() {
+export async function recheckAllRoles(): Promise<void> {
 	for (const [, role] of await config.guild.roles.fetch()) {
-		if (role.name.startsWith(PREFIX)) {
+		if (role.name.startsWith(CUSTOM_ROLE_PREFIX)) {
 			await recheckRole(role);
 		}
 	}
 }
-async function recheckRole(role: Role, reason = "No longer qualifies") {
+async function recheckRole(role: Role, reason = "No longer qualifies"): Promise<Role | undefined> {
 	if (!role.members.size) return await role.delete("Unused role");
 
 	const anyQualify = await asyncFilter([...role.members.values()], qualifiesForRole).next();
-	if (!anyQualify.value) return await role.delete(reason);
+	if (!anyQualify.value) return await role.delete(reason).catch(() => void 0);
 
 	if (
 		config.guild.features.includes("ROLE_ICONS") &&
@@ -234,8 +241,8 @@ async function recheckRole(role: Role, reason = "No longer qualifies") {
 	}
 }
 
-export function getCustomRole(member: GuildMember) {
-	return member.roles.valueOf().find((role) => role.name.startsWith(PREFIX));
+export function getCustomRole(member: GuildMember): Role | undefined {
+	return member.roles.valueOf().find((role) => role.name.startsWith(CUSTOM_ROLE_PREFIX));
 }
 export async function qualifiesForRole(member: GuildMember) {
 	if (
@@ -257,12 +264,12 @@ export async function qualifiesForRole(member: GuildMember) {
 	if (lastWeekly[0]?.[0] === member.user.id) return true;
 
 	command ??= (await config.guild.commands.fetch()).find(({ name }) => name === "custom-role");
-	const permissions =
-		command && (await config.guild.commands.permissions.fetch({ command }).catch(() => void 0));
-	return permissions?.some(
-		(permission) =>
-			permission.type === ApplicationCommandPermissionType.User &&
-			permission.id === member.user.id &&
-			permission.permission,
-	);
+	return command
+		? await hasPermission(
+				command,
+				member,
+				undefined,
+				config.roles.weeklyWinner && new Set(config.roles.weeklyWinner.id),
+		  )
+		: false;
 }
