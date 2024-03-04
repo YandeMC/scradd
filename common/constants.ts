@@ -93,7 +93,6 @@ export default {
 			live: "",
 			fail: "",
 			success: "",
-			
 		},
 
 		misc: {
