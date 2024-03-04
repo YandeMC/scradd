@@ -86,8 +86,6 @@ defineChatCommand(
 	settingsCommand,
 );
 
-
-
 defineButton("toggleSetting", async (interaction, setting = "") => {
 	if (
 		interaction.message.interaction?.user.id !== interaction.user.id &&

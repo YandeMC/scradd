@@ -102,8 +102,6 @@ defineChatCommand(
 			});
 		}
 
-		
-
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		await (command.command as Function)(interaction, options);
 	},
