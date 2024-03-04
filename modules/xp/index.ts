@@ -73,7 +73,7 @@ defineSubcommands(
 		},
 	},
 
-	async (interaction, options:any) => {
+	async (interaction, options: any) => {
 		const user =
 			(options?.options &&
 				"user" in options.options &&
@@ -115,11 +115,11 @@ defineSubcommands(
 				break;
 			}
 			case "give": {
-				const { owner }:any = await client.application.fetch();
+				const { owner }: any = await client.application.fetch();
 				const owners =
 					owner instanceof User
 						? [owner.id]
-						: owner?.members.map((member:any) => member.id) ?? [];
+						: owner?.members.map((member: any) => member.id) ?? [];
 				if (process.env.NODE_ENV === "production" && !owners.includes(interaction.user.id))
 					return await interaction.reply({
 						ephemeral: true,
@@ -144,10 +144,11 @@ defineSubcommands(
 									user.id
 							  }> `
 							: `:sparkles: Gave <@${user.id}> ${amount} XP`,
-				})
+				});
+			}
 		}
-	}
-});
+	},
+);
 defineButton("xp", async (interaction, userId = "") => {
 	await getUserRank(interaction, await client.users.fetch(userId));
 });
