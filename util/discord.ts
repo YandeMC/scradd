@@ -38,6 +38,7 @@ import {
 	MessageFlags,
 	hyperlink,
 	type MessageReaction,
+	type Channel,
 } from "discord.js";
 import constants from "../common/constants.js";
 import { escapeMessage, stripMarkdown } from "./markdown.js";
@@ -176,8 +177,6 @@ export function getMessageJSON(message: Message): {
 
 /**
  * Get all messages from a channel.
- *
- * @deprecated Too laggy.
  *
  * @param channel - The channel to fetch messages from.
  *
@@ -605,6 +604,7 @@ type PaginateOptions<Item, U extends User | false = User | false> = {
 
 	user: U;
 	rawOffset?: number;
+	highlightOffset?: boolean;
 	totalCount?: number;
 	ephemeral?: boolean;
 	perPage?: number;
@@ -636,13 +636,13 @@ export async function paginate<Item>(
 	toString: (value: Item, index: number, array: Item[]) => Awaitable<string>,
 	reply: (options: InteractionReplyOptions) => Promise<InteractionResponse | Message>,
 	options: PaginateOptions<Item, User>,
-): Promise<void>;
+): Promise<undefined>;
 export async function paginate<Item>(
 	array: Item[],
 	toString: (value: Item, index: number, array: Item[]) => Awaitable<string>,
 	reply: (options: InteractionReplyOptions) => unknown,
-	options: PaginateOptions<Item, false>,
-): Promise<void>;
+	options: PaginateOptions<Item>,
+): Promise<InteractionReplyOptions | undefined>;
 export async function paginate<Item>(
 	array: Item[],
 	toString: (value: Item, index: number, array: Item[]) => Awaitable<string>,
@@ -656,6 +656,7 @@ export async function paginate<Item>(
 
 		user,
 		rawOffset,
+		highlightOffset = false,
 		totalCount,
 		ephemeral = false,
 		perPage = 20,
@@ -663,10 +664,15 @@ export async function paginate<Item>(
 		generateComponents,
 		customComponentLocation = "above",
 	}: PaginateOptions<Item>,
-): Promise<void> {
+): Promise<InteractionReplyOptions | undefined> {
 	if (!array.length) {
-		await reply({ content: `${constants.emojis.statuses.no} ${failMessage}`, ephemeral: true });
-		return;
+		const messageOptions = {
+			content: `${constants.emojis.statuses.no} ${failMessage}`,
+			ephemeral: true,
+		};
+		await reply(messageOptions);
+		if (user) return;
+		return messageOptions;
 	}
 
 	const previousId = generateHash("previous");
@@ -685,13 +691,11 @@ export async function paginate<Item>(
 
 		const content = (
 			await Promise.all(
-				filtered.map(async (current, index, all) => {
-					const line = `${totalCount ? "" : `${index + offset + 1}) `}${await toString(
-						current,
-						index,
-						all,
-					)}`;
-					return rawOffset === index + offset ? `__${line}__` : line;
+				filtered.map(async (current, index) => {
+					const line =
+						(totalCount ? "" : `${index + offset + 1}. `) +
+						(await toString(current, index, filtered));
+					return highlightOffset && rawOffset === index + offset ? `__${line}__` : line;
 				}),
 			)
 		).join("\n");
@@ -761,13 +765,14 @@ export async function paginate<Item>(
 		};
 	}
 
-	let message = await reply(await generateMessage());
+	const firstReplyOptions = await generateMessage();
+	let message = await reply(firstReplyOptions);
 	if (
 		numberOfPages === 1 ||
 		!user ||
 		!(message instanceof InteractionResponse || message instanceof Message)
 	)
-		return;
+		return firstReplyOptions;
 
 	const editReply = (data: InteractionReplyOptions): unknown =>
 		ephemeral || !(message instanceof InteractionResponse) || !(message instanceof Message)
@@ -800,38 +805,37 @@ export async function paginate<Item>(
 		});
 }
 
-/**
- * Get a non-thread text channel from any other text channel.
- *
- * @param channel - The channel to convert.
- *
- * @returns The non-thread text channel.
- */
-export function getBaseChannel<Channel extends TextBasedChannel | null | undefined>(
-	channel: Channel, // TODO: THREAD ONLY CHANNELS SHOOT
-): Channel extends null | undefined
+export function getBaseChannel<TChannel extends Channel | null | undefined>(
+	channel: TChannel,
+): TChannel extends null
 	? undefined
-	: Channel extends AnyThreadChannel
-	? Exclude<GuildTextBasedChannel, AnyThreadChannel> | undefined
-	: Channel {
-	// @ts-expect-error TS2322 -- This is the right type.
-	return channel ? (channel.isThread() ? channel.parent ?? undefined : channel) : undefined;
+	: TChannel extends AnyThreadChannel
+	? NonNullable<TChannel["parent"]> | undefined
+	: TChannel {
+	// @ts-expect-error TS2322
+	return (channel && (channel.isThread() ? channel.parent : channel)) || undefined;
 }
 
 /** A global regular expression variant of {@link MessageMentions.UsersPattern}. */
-export const GlobalUsersPattern = new RegExp(MessageMentions.UsersPattern, "g");
+export const GlobalUsersPattern = new RegExp(
+	MessageMentions.UsersPattern,
+	`g${MessageMentions.UsersPattern.flags}`,
+);
 
 /** An enhanced variant of {@link Invite.InvitesPattern}. */
 export const InvitesPattern =
 	/discord(?:(?:(?:app)?\.com|:\/(?:\/-?)?)\/invite|\.gg(?:\/invite)?)\/(?<code>[\w-]{2,255})/gi;
 
 /** A global regular expression variant of {@link FormattingPatterns.AnimatedEmoji}. */
-export const GlobalAnimatedEmoji = new RegExp(FormattingPatterns.AnimatedEmoji, "g");
+export const GlobalAnimatedEmoji = new RegExp(
+	FormattingPatterns.AnimatedEmoji,
+	`g${FormattingPatterns.AnimatedEmoji.flags}`,
+);
 
 export const BotInvitesPattern = /discord(?:app)?\.com\/(?:api\/)?oauth2\/authorize/i;
 
 /** A global regular expression variant of {@link BotInvitesPattern}. */
-export const GlobalBotInvitesPattern = new RegExp(BotInvitesPattern, "g");
+export const GlobalBotInvitesPattern = new RegExp(BotInvitesPattern, `g${BotInvitesPattern.flags}`);
 
 export function commandInteractionToString(
 	interaction: ChatInputCommandInteraction,
