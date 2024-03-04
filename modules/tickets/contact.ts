@@ -162,6 +162,7 @@ export default async function contactMods(
 					thread.send({
 						...data,
 						flags: undefined,
+						flags: undefined,
 						embeds: [details, ...(data.embeds ?? [])],
 						content: ping,
 						allowedMentions: { parse: ["roles"] },

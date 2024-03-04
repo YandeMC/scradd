@@ -9,7 +9,7 @@ import rps from "./rps.js";
 import ttt from "./tic-tac-toe.js";
 
 defineChatCommand(
-	{ name: "hangman", description: "Guess who from the server I’m thinking of" },
+	{ name: "hangman", description: "Try to guess who from the server I’m thinking of" },
 	hangman,
 );
 defineChatCommand(

@@ -133,7 +133,7 @@ export default async function getWeekly(nextWeeklyDate: Date): Promise<string> {
 		if (member) await recheckMemberRole(member, member);
 	}
 
-	return `## 🏆 Weekly Winners week of ${new Date().toLocaleString([], {
+	return `## 🏆 Weekly Winners ${new Date().toLocaleString([], {
 		month: "long",
 		day: "numeric",
 	})}\n${

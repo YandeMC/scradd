@@ -95,14 +95,9 @@ export default async function giveXp(
 
 	xpDatabase.data = xp;
 
-	const member =
-		user instanceof GuildMember
-			? user
-			: await config.guild.members.fetch(user).catch(() => void 0);
-	if (member) {
-		const oldLevel = getLevelForXp(oldXp);
-		const newLevel = getLevelForXp(newXp);
-		if (oldLevel < newLevel) await sendLevelUpMessage(member, newXp, url);
+	const oldLevel = getLevelForXp(Math.abs(oldXp));
+	const newLevel = getLevelForXp(Math.abs(newXp));
+	if (oldLevel < newLevel && member) await sendLevelUpMessage(member, newXp, url);
 
 		const sorted = xp.toSorted((one, two) => two.xp - one.xp);
 
