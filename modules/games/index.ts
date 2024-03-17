@@ -82,8 +82,10 @@ defineButton("endGame", async (interaction, users) => {
 	return current.end();
 });
 
-defineChatCommand({
-    name: "uno",
-    description: "Start a game of Uno!", 
-    },
-	uno)
+defineChatCommand(
+	{
+		name: "uno",
+		description: "Start a game of Uno!",
+	},
+	uno,
+);

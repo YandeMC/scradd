@@ -1,1 +1,31 @@
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="159.63796" height="204.49482" viewBox="0,0,159.63796,204.49482"><g transform="translate(-160.18103,-77.75259)"><g data-paper-data="{&quot;isPaintingLayer&quot;:true}" fill="#ffffff" fill-rule="nonzero" stroke="#000000" stroke-width="5" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" style="mix-blend-mode: normal"><path d="M316.84245,80.33978l-13.1795,77.39882l-20.67787,-20.67584l-68.79578,57.758c-14.34269,-17.2044 -16.13456,-44.81383 1.06985,-59.15646l40.47252,-31.93638l-16.49052,-21.14219z"/><path d="M163.15756,279.66022l13.1795,-77.39882l20.67787,20.67584l68.79578,-57.758c14.34269,17.2044 16.13456,44.81383 -1.06985,59.15652l-40.47252,31.93638l16.49052,21.14213z"/></g></g></svg>
+<svg
+	version="1.1"
+	xmlns="http://www.w3.org/2000/svg"
+	xmlns:xlink="http://www.w3.org/1999/xlink"
+	width="159.63796"
+	height="204.49482"
+	viewBox="0,0,159.63796,204.49482"
+>
+	<g transform="translate(-160.18103,-77.75259)">
+		<g
+			data-paper-data='{"isPaintingLayer":true}'
+			fill="#ffffff"
+			fill-rule="nonzero"
+			stroke="#000000"
+			stroke-width="5"
+			stroke-linecap="butt"
+			stroke-linejoin="miter"
+			stroke-miterlimit="10"
+			stroke-dasharray=""
+			stroke-dashoffset="0"
+			style="mix-blend-mode: normal"
+		>
+			<path
+				d="M316.84245,80.33978l-13.1795,77.39882l-20.67787,-20.67584l-68.79578,57.758c-14.34269,-17.2044 -16.13456,-44.81383 1.06985,-59.15646l40.47252,-31.93638l-16.49052,-21.14219z"
+			/>
+			<path
+				d="M163.15756,279.66022l13.1795,-77.39882l20.67787,20.67584l68.79578,-57.758c14.34269,17.2044 16.13456,44.81383 -1.06985,59.15652l-40.47252,31.93638l16.49052,21.14213z"
+			/>
+		</g>
+	</g>
+</svg>
