@@ -1,9 +1,9 @@
 import { ChannelType, type TextBasedChannel } from "discord.js";
-import badWords from "./badWords.js";
+import config from "../../common/config.js";
 import { getBaseChannel } from "../../util/discord.js";
 import { caesar, normalize } from "../../util/text.js";
 import { PARTIAL_STRIKE_COUNT } from "../punishments/misc.js";
-import config from "../../common/config.js";
+import badWords from "./bad-words.js";
 
 function decodeRegexps(regexps: RegExp[]): string {
 	return regexps
@@ -69,7 +69,7 @@ export default function tryCensor(
 		return string.replaceAll(regexp, (word) => {
 			if (
 				word.length < 3 ||
-				(/[\d!#*@|-]/gi.exec(word)?.length ?? 0) > word.length * 0.5 + 1 ||
+				(word.match(/[\d!#*@|-]/gi)?.length ?? 0) > word.length * 0.5 + 1 ||
 				"-#*".includes(word[0] ?? word) ||
 				"-#*".includes(word.at(-1) ?? word)
 			)

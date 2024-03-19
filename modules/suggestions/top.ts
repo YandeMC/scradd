@@ -1,16 +1,16 @@
 import {
 	GuildMember,
-	hyperlink,
-	type User,
-	type RepliableInteraction,
 	channelLink,
+	hyperlink,
 	type InteractionReplyOptions,
+	type RepliableInteraction,
+	type User,
 } from "discord.js";
 import config from "../../common/config.js";
 import { paginate } from "../../util/discord.js";
+import { formatAnyEmoji } from "../../util/markdown.js";
 import { mentionUser } from "../settings.js";
 import { oldSuggestions, suggestionsDatabase } from "./misc.js";
-import { formatAnyEmoji } from "../../util/markdown.js";
 
 export default async function top(
 	interaction?: RepliableInteraction,
@@ -63,7 +63,7 @@ export default async function top(
 			format: options.user,
 			singular: "suggestion",
 			user: interaction?.user ?? false,
-			perPage: interaction ? 15 : 25,
+			pageLength: interaction ? 15 : 25,
 			rawOffset: (options.page ?? 0) * (interaction ? 15 : 25),
 			highlightOffset: false,
 		},

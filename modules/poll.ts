@@ -1,11 +1,11 @@
+import twemojiRegexp from "@twemoji/parser/dist/lib/regex.js";
 import { ApplicationCommandOptionType, ComponentType, TextInputStyle } from "discord.js";
+import { client, defineChatCommand, defineEvent, defineModal } from "strife.js";
 import constants from "../common/constants.js";
 import { reactAll } from "../util/discord.js";
-import { BOARD_EMOJI } from "./board/misc.js";
-import twemojiRegexp from "@twemoji/parser/dist/lib/regex.js";
-import { defineChatCommand, defineEvent, client, defineModal } from "strife.js";
-import warn from "./punishments/warn.js";
 import tryCensor from "./automod/misc.js";
+import { BOARD_EMOJI } from "./board/misc.js";
+import warn from "./punishments/warn.js";
 
 const DEFAULT_SHAPES = ["🔺", "♦️", "⭕", "🔶", "💛", "🟩", "💠", "🔹", "🟣", "🏴", "❕", "◽"];
 const bannedReactions = new Set(BOARD_EMOJI);
@@ -78,11 +78,12 @@ defineModal("poll", async (interaction, voteMode) => {
 	}
 
 	const { customReactions, options } = rawOptions
-		.split("\n")
+		.split(/\s*\n\s*/g)
 		.reduce<{ customReactions: (string | undefined)[]; options: string[] }>(
 			({ customReactions, options }, option) => {
-				const match = twemojiRegexp.default.exec(option);
-				const emoji = match?.index === 0 && match[0];
+				// eslint-disable-next-line @typescript-eslint/prefer-regexp-exec
+				const match = option.match(twemojiRegexp.default);
+				const emoji = match && option.startsWith(match[0]) && match[0];
 				return {
 					options: [...options, (emoji ? option.replace(emoji, "") : option).trim()],
 					customReactions: [

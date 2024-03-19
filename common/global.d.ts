@@ -1,3 +1,6 @@
+/// <reference lib="dom" />
+/// <reference lib="dom.iterable" />
+
 import type { Snowflake } from "discord.js";
 import type { MenuCommandContext } from "strife.js";
 
@@ -41,9 +44,11 @@ declare global {
 	interface ObjectConstructor {
 		entries<T, U extends PropertyKey>(
 			o: ArrayLike<T> | Record<U, T>,
-		): [U extends number ? `${U}` : U, T][];
+		): readonly [U extends number ? `${U}` : U, T][];
 		fromEntries<T, U extends PropertyKey>(entries: Iterable<readonly [U, T]>): Record<U, T>;
-		keys<U extends PropertyKey>(entries: Record<U, unknown>): (U extends number ? `${U}` : U)[];
+		keys<U extends PropertyKey>(
+			entries: Record<U, unknown>,
+		): readonly (U extends number ? `${U}` : U)[];
 	}
 
 	interface Response {

@@ -1,49 +1,50 @@
 import {
-	type ActionRow,
 	ButtonStyle,
 	Colors,
 	ComponentType,
+	FormattingPatterns,
+	GuildMember,
+	InteractionResponse,
 	Message,
+	MessageFlags,
+	MessageMentions,
 	MessageType,
-	type Attachment,
-	type User,
+	bold,
+	channelMention,
+	chatInputApplicationCommandMention,
+	hyperlink,
+	messageLink,
 	type APIActionRowComponent,
 	type APIEmbed,
+	type APIEmbedField,
 	type APIMessageActionRowComponent,
+	type ActionRow,
+	type ActionRowData,
+	type AnyThreadChannel,
+	type Attachment,
 	type Awaitable,
-	type InteractionReplyOptions,
+	type Channel,
+	type ChatInputCommandInteraction,
+	type DMChannel,
 	type EmojiIdentifierResolvable,
+	type Guild,
 	type GuildTextBasedChannel,
+	type InteractionReplyOptions,
 	type MessageActionRowComponent,
+	type MessageActionRowComponentData,
 	type MessageEditOptions,
+	type MessageReaction,
+	type PartialDMChannel,
 	type Snowflake,
 	type TextBasedChannel,
-	type MessageActionRowComponentData,
-	type ActionRowData,
-	GuildMember,
-	FormattingPatterns,
-	MessageMentions,
-	type AnyThreadChannel,
-	chatInputApplicationCommandMention,
-	type DMChannel,
-	type PartialDMChannel,
-	bold,
-	type ChatInputCommandInteraction,
-	InteractionResponse,
 	type ThreadChannel,
-	channelMention,
-	type APIEmbedField,
-	type Guild,
-	messageLink,
-	MessageFlags,
-	hyperlink,
-	type MessageReaction,
-	type Channel,
+	type User,
 } from "discord.js";
+import { client } from "strife.js";
+import config from "../common/config.js";
 import constants from "../common/constants.js";
 import { escapeMessage, stripMarkdown } from "./markdown.js";
-import { generateHash, truncateText } from "./text.js";
-import { client } from "strife.js";
+import { truncateText } from "./text.js";
 
 /**
  * Extract extremities (embeds, stickers, and attachments) from a message.
@@ -607,7 +608,8 @@ type PaginateOptions<Item, U extends User | false = User | false> = {
 	highlightOffset?: boolean;
 	totalCount?: number;
 	ephemeral?: boolean;
-	perPage?: number;
+	pageLength?: number;
+	columns?: 1 | 2 | 3;
 
 	generateComponents?(items: Item[]): Awaitable<MessageActionRowComponentData[] | undefined>;
 	customComponentLocation?: "above" | "below";
@@ -617,7 +619,7 @@ type PaginateOptions<Item, U extends User | false = User | false> = {
  * Creates a paginated embed from an array.
  *
  * @param array - The array to be paginated.
- * @param toString - A function to convert each element of the array to a string.
+ * @param stringify - A function to convert each element of the array to a string.
  * @param reply - A function to send pages.
  * @param options - Additional options.
  * @param options.title - The title of the embed.
@@ -633,19 +635,19 @@ type PaginateOptions<Item, U extends User | false = User | false> = {
  */
 export async function paginate<Item>(
 	array: Item[],
-	toString: (value: Item, index: number, array: Item[]) => Awaitable<string>,
+	stringify: (value: Item, index: number, array: Item[]) => Awaitable<string>,
 	reply: (options: InteractionReplyOptions) => Promise<InteractionResponse | Message>,
 	options: PaginateOptions<Item, User>,
 ): Promise<undefined>;
 export async function paginate<Item>(
 	array: Item[],
-	toString: (value: Item, index: number, array: Item[]) => Awaitable<string>,
+	stringify: (value: Item, index: number, array: Item[]) => Awaitable<string>,
 	reply: (options: InteractionReplyOptions) => unknown,
 	options: PaginateOptions<Item>,
 ): Promise<InteractionReplyOptions | undefined>;
 export async function paginate<Item>(
 	array: Item[],
-	toString: (value: Item, index: number, array: Item[]) => Awaitable<string>,
+	stringify: (value: Item, index: number, array: Item[]) => Awaitable<string>,
 	reply: (options: InteractionReplyOptions) => Awaitable<unknown>,
 	{
 		title,
@@ -656,10 +658,11 @@ export async function paginate<Item>(
 
 		user,
 		rawOffset,
-		highlightOffset = false,
+		highlightOffset = true,
 		totalCount,
 		ephemeral = false,
-		perPage = 20,
+		pageLength = 20,
+		columns = 1,
 
 		generateComponents,
 		customComponentLocation = "above",
@@ -675,33 +678,43 @@ export async function paginate<Item>(
 		return messageOptions;
 	}
 
-	const previousId = generateHash("previous");
-	const nextId = generateHash("next");
-	const numberOfPages = Math.ceil(array.length / perPage);
+	const pageCount = Math.ceil(array.length / pageLength);
+	const originalOffset = Math.floor((rawOffset ?? 0) / pageLength) * pageLength;
+	let currentOffset = originalOffset;
 
-	let offset = Math.floor((rawOffset ?? 0) / perPage) * perPage;
-
+	const presence =
+		user && (format instanceof GuildMember ? format : config).guild.presences.resolve(user.id);
+	const isMobile = !presence || presence.clientStatus?.mobile;
 	/**
 	 * Generate an embed that has the next page.
 	 *
 	 * @returns The next page.
 	 */
-	async function generateMessage(): Promise<InteractionReplyOptions> {
-		const filtered = array.filter((_, index) => index >= offset && index < offset + perPage);
+	async function generateMessage(
+		last = false,
+	): Promise<InteractionReplyOptions & MessageEditOptions> {
+		const condensed = last || isMobile;
+		const length = condensed && columns !== 1 ? pageLength / 2 : pageLength;
+		const pages = condensed ? Math.ceil(array.length / length) : pageCount;
+		const offset =
+			Math.floor(
+				(currentOffset === originalOffset ? rawOffset ?? 0 : currentOffset) / length,
+			) * length;
+		const filtered = array.filter((_, index) => index >= offset && index < offset + length);
+		const itemCount = totalCount ?? array.length;
 
-		const content = (
-			await Promise.all(
-				filtered.map(async (current, index) => {
-					const line =
-						(totalCount ? "" : `${index + offset + 1}. `) +
-						(await toString(current, index, filtered));
-					return highlightOffset && rawOffset === index + offset ? `__${line}__` : line;
-				}),
-			)
-		).join("\n");
+		async function formatLine(current: Item, rawIndex: number): Promise<string> {
+			const index = rawIndex + offset;
+			const stringified = await stringify(current, index, filtered);
+			const line =
+				(totalCount ? "" : `${index + 1}. `) +
+				(condensed ? stringified.replaceAll(/\n\s+/g, " - ") : stringified);
+
+			return highlightOffset && rawOffset === rawIndex + offset ? `__${line}__` : line;
+		}
 
 		const components: ActionRowData<MessageActionRowComponentData>[] =
-			numberOfPages > 1 && user
+			pages > 1 && user
 				? [
 						{
 							type: ComponentType.ActionRow,
@@ -711,15 +724,15 @@ export async function paginate<Item>(
 									type: ComponentType.Button,
 									label: "<< Previous",
 									style: ButtonStyle.Primary,
-									disabled: offset < 1,
-									customId: previousId,
+									disabled: last || offset < 1,
+									customId: "previous",
 								},
 								{
 									type: ComponentType.Button,
 									label: "Next >>",
 									style: ButtonStyle.Primary,
-									disabled: offset + perPage >= array.length,
-									customId: nextId,
+									disabled: last || offset + length >= array.length,
+									customId: "next",
 								},
 							],
 						},
@@ -735,19 +748,24 @@ export async function paginate<Item>(
 				});
 		}
 
-		const count = totalCount ?? array.length;
-
 		return {
 			components,
 			embeds: [
 				{
 					title,
-					description: content,
+					description:
+						condensed || columns === 1
+							? (await Promise.all(filtered.map(formatLine))).join("\n")
+							: "",
+					fields:
+						condensed || columns === 1
+							? []
+							: await columnize(filtered, constants.zws, formatLine, columns),
 
 					footer: {
-						text: `Page ${offset / perPage + 1}/${numberOfPages}${
+						text: `Page ${offset / length + 1}/${pages}${
 							constants.footerSeperator
-						}${count.toLocaleString()} ${count === 1 ? singular : plural}`,
+						}${itemCount.toLocaleString()} ${itemCount === 1 ? singular : plural}`,
 					},
 
 					author: format
@@ -762,27 +780,28 @@ export async function paginate<Item>(
 				},
 			],
 			ephemeral,
+			fetchReply: true,
 		};
 	}
 
 	const firstReplyOptions = await generateMessage();
 	let message = await reply(firstReplyOptions);
 	if (
-		numberOfPages === 1 ||
+		pageCount === 1 ||
 		!user ||
 		!(message instanceof InteractionResponse || message instanceof Message)
 	)
 		return firstReplyOptions;
+	const messageId = message.id;
 
-	const editReply = (data: InteractionReplyOptions): unknown =>
-		ephemeral || !(message instanceof InteractionResponse) || !(message instanceof Message)
+	const editReply = (data: InteractionReplyOptions & MessageEditOptions): unknown =>
+		ephemeral || !(message instanceof InteractionResponse || message instanceof Message)
 			? reply(data)
 			: message.edit(data);
 
 	const collector = message.createMessageComponentCollector({
 		filter: (buttonInteraction) =>
-			[previousId, nextId].includes(buttonInteraction.customId) &&
-			buttonInteraction.user.id === user.id,
+			buttonInteraction.message.id === messageId && buttonInteraction.user.id === user.id,
 
 		idle: constants.collectorTime,
 		time: ephemeral ? (14 * 60 + 50) * 1000 : undefined,
@@ -790,18 +809,16 @@ export async function paginate<Item>(
 
 	collector
 		.on("collect", async (buttonInteraction) => {
-			if (buttonInteraction.customId === nextId) offset += perPage;
-			else offset -= perPage;
+			const length = isMobile && columns !== 1 ? pageLength / 2 : pageLength;
+			if (buttonInteraction.customId === "next") currentOffset += length;
+			else if (buttonInteraction.customId === "previous") currentOffset -= length;
+			else return;
 
 			await buttonInteraction.deferUpdate();
 			message = await editReply(await generateMessage());
 		})
 		.on("end", async () => {
-			const [pagination, ...rest] = message instanceof Message ? message.components : [];
-			await editReply({
-				components: pagination ? [...disableComponents([pagination]), ...rest] : [],
-				ephemeral,
-			});
+			await editReply(await generateMessage(true));
 		});
 }
 
@@ -832,7 +849,14 @@ export const GlobalAnimatedEmoji = new RegExp(
 	`g${FormattingPatterns.AnimatedEmoji.flags}`,
 );
 
-export const BotInvitesPattern = /discord(?:app)?\.com\/(?:api\/)?oauth2\/authorize/i;
+export const BotInvitesPattern = new RegExp(
+	/discord(?:app)?\.com\/(?:(?:api\/)?oauth2\/authorize\/?\?\S*client_id=(?!CLIENT_ID)\d{17,20}\S*(?:\s|$)|application-directory\/(?!CLIENT_ID)\d{17,20})/.source.replaceAll(
+		"CLIENT_ID",
+		// eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- For in tests
+		client?.user.id ?? "0",
+	),
+	"i",
+);
 
 /** A global regular expression variant of {@link BotInvitesPattern}. */
 export const GlobalBotInvitesPattern = new RegExp(BotInvitesPattern, `g${BotInvitesPattern.flags}`);
@@ -871,34 +895,45 @@ export async function mentionChatCommand(
 	)?.id;
 	return id ? chatInputApplicationCommandMention(fullCommand, id) : bold(`/${fullCommand}`);
 }
-export function columns<Item extends { toString(): string }>(
+export async function columnize<Item extends { toString(): Awaitable<string> }>(
 	array: Item[],
 	title: string,
-	count: 1 | 2 | 3,
-	callback?: ((item: Item) => string) | undefined,
-): APIEmbedField[];
-export function columns<Item>(
+	stringify?: (item: Item, index: number, array: Item[]) => Awaitable<string>,
+	count?: 1 | 2 | 3,
+): Promise<APIEmbedField[]>;
+export async function columnize<Item>(
 	array: Item[],
 	title: string,
-	count: 1 | 2 | 3,
-	callback: (item: Item) => string,
-): APIEmbedField[];
-export function columns(
+	stringify: (item: Item, index: number, array: Item[]) => Awaitable<string>,
+	count?: 1 | 2 | 3,
+): Promise<APIEmbedField[]>;
+export async function columnize(
 	array: { toString(): string }[],
 	title: string = constants.zws,
+	stringify = (
+		item: { toString(): Awaitable<string> },
+		_: number,
+		__: { toString(): Awaitable<string> }[],
+	) => item.toString(),
 	count: 1 | 2 | 3 = 2,
-	callback = (item: { toString(): string }) => item.toString(),
-): APIEmbedField[] {
-	const columnLength = Math.ceil(array.length / count);
-	return Array.from({ length: count }, (_, index) => {
-		const startIndex = index * columnLength;
-		return {
-			name: index === 0 ? title : constants.zws,
-			value: array
-				.slice(startIndex, startIndex + columnLength)
-				.map(callback)
-				.join("\n"),
-			inline: true,
-		};
-	});
+): Promise<APIEmbedField[]> {
+	const size = Math.ceil(array.length / count);
+	return await Promise.all(
+		Array.from({ length: count }, async (_, index) => {
+			const start = index * size;
+			return {
+				name: index === 0 ? title : constants.zws,
+				value: (
+					await Promise.all(
+						array
+							.slice(start, start + size)
+							.map((item, subindex, column) =>
+								stringify(item, start + subindex, column),
+							),
+					)
+				).join("\n"),
+				inline: true,
+			};
+		}),
+	);
 }

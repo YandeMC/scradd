@@ -5,20 +5,20 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 // TODO: actually type this
 
-import constants from "../../common/constants.js";
-import { truncateText } from "../../util/text.js";
-import { nth } from "../../util/numbers.js";
-import { time, type APIEmbed, TimestampStyles, cleanCodeBlockContent } from "discord.js";
-import { gracefulFetch } from "../../util/promises.js";
-import { escapeMessage } from "../../util/markdown.js";
+import { TimestampStyles, cleanCodeBlockContent, time, type APIEmbed } from "discord.js";
 import { parser, type Node } from "posthtml-parser";
+import constants from "../../common/constants.js";
+import { escapeMessage } from "../../util/markdown.js";
+import { nth } from "../../util/numbers.js";
+import { gracefulFetch } from "../../util/promises.js";
 import { fetchUser } from "../../util/scratch.js";
+import { truncateText } from "../../util/text.js";
 
 const EMBED_LENGTH = 750;
 
 export function getMatches(content: string): URL[] {
 	const scratchUrlRegex =
-		/(?:^|.)?https?:\/\/scratch\.(?:mit\.edu|org)\/(?:projects|users|studios|discuss)\/(?:[\w!#$&'()*+,./:;=?@~-]|%\d\d)+(?:$|.)?/gis; //gpt wrote the regex and like half of this code
+		/(?:^|.)?https?:\/\/scratch\.(?:mit\.edu|org|camp|love|pizza|team)\/(?:projects|users|studios|discuss)\/(?:[\w!#$&'()*+,./:;=?@~-]|%\d\d)+(?:$|.)?/gis; //gpt wrote the regex and like half of this code
 
 	const urls = new Map<string, URL>();
 	for (const match of content.match(scratchUrlRegex) ?? []) {

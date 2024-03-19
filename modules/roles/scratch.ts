@@ -1,26 +1,25 @@
 import {
 	ApplicationRoleConnectionMetadataType,
-	Routes,
-	type RESTPostOAuth2AccessTokenURLEncodedData,
-	type RESTPostOAuth2AccessTokenResult,
-	type RESTPostOAuth2RefreshTokenURLEncodedData,
-	type RESTPostOAuth2RefreshTokenResult,
 	OAuth2Scopes,
+	Routes,
+	userMention,
+	type RESTGetAPICurrentUserResult,
+	type RESTPostOAuth2AccessTokenResult,
+	type RESTPostOAuth2AccessTokenURLEncodedData,
+	type RESTPostOAuth2RefreshTokenResult,
+	type RESTPostOAuth2RefreshTokenURLEncodedData,
 	type RESTPutAPICurrentUserApplicationRoleConnectionJSONBody,
 	type RESTPutAPICurrentUserApplicationRoleConnectionResult,
-	type RESTGetAPICurrentUserResult,
-	userMention,
 } from "discord.js";
+import { createHash, randomBytes } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { client } from "strife.js";
-import fileSystem from "node:fs/promises";
-import crypto from "node:crypto";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
 import { fetchUser } from "../../util/scratch.js";
 import { getRequestUrl } from "../../util/text.js";
-import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
 import { handleUser } from "../auto/scratch.js";
+import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
 
 await client.application.editRoleConnectionMetadataRecords([
 	{
@@ -31,19 +30,16 @@ await client.application.editRoleConnectionMetadataRecords([
 	},
 ]);
 
-const NOT_FOUND_PAGE = await fileSystem.readFile("./web/404.html", "utf8");
-
-const HASH = crypto.randomBytes(16);
+const HASH = randomBytes(16);
 const sessions: Record<string, string> = {};
 export default async function linkScratchRole(
 	request: IncomingMessage,
 	response: ServerResponse,
 ): Promise<ServerResponse> {
 	if (!process.env.CLIENT_SECRET)
-		return response.writeHead(503, { "content-type": "text/html" }).end(NOT_FOUND_PAGE);
+		return response.writeHead(501, { "content-type": "text/plain" }).end("501 Not Implemented");
 
-	const ipHash = crypto
-		.createHash("sha384")
+	const ipHash = createHash("sha384")
 		.update(request.socket.remoteAddress ?? "")
 		.update(HASH)
 		.digest("base64");

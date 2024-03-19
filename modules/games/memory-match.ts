@@ -1,25 +1,27 @@
 import {
-	ComponentType,
-	ButtonStyle,
-	type ButtonInteraction,
-	type User,
-	ThreadAutoArchiveDuration,
-	ChannelType,
-	type RepliableInteraction,
-	GuildMember,
-	type APIInteractionGuildMember,
 	Base,
+	ButtonStyle,
+	ChannelType,
+	ComponentType,
+	GuildMember,
+	ThreadAutoArchiveDuration,
+	formatEmoji,
+	type APIInteractionGuildMember,
+	type ActionRowData,
+	type ButtonInteraction,
+	type InteractionButtonComponentData,
 	type InteractionResponse,
 	type Message,
-	type ActionRowData,
-	type InteractionButtonComponentData,
+	type RepliableInteraction,
+	type User,
 } from "discord.js";
 import config from "../../common/config.js";
-import { GAME_COLLECTOR_TIME, CURRENTLY_PLAYING, checkIfUserPlaying } from "./misc.js";
 import constants from "../../common/constants.js";
 import { disableComponents } from "../../util/discord.js";
-import { autoreactions } from "../auto/secrets.js";
+import autoreactions from "../auto/autos-data.js";
 import { ignoredDeletions } from "../logging/messages.js";
+import { CURRENTLY_PLAYING, GAME_COLLECTOR_TIME, checkIfUserPlaying } from "./misc.js";
+import { CUSTOM_ROLE_PREFIX } from "../roles/misc.js";
 
 const EMPTY_TILE = "⬛";
 
@@ -395,42 +397,70 @@ async function playGame(
 
 async function setupGame(difficulty: 2 | 4, guild = config.guild): Promise<string[][]> {
 	const twemojis = [
-		"🥔",
+		"‼",
+		"⁉",
+		"⚠",
+		"🇱",
 		"⭐",
 		"🍀",
-		"😏",
-		"😭",
-		"🗿",
-		"👀",
-		"🧐",
-		"🤨",
-		"🥶",
-		"💀",
-		"💩",
 		"🍢",
-		"🐴",
-		"🪀",
-		"😡",
+		"🎉",
 		"🎶",
-		"😶",
-		"🙄",
-		"😎",
+		"🏆",
+		"🏓",
+		"🐢",
+		"🐱",
+		"🐴",
+		"🐶",
+		"👀",
+		"👋",
+		"💀",
+		"💐",
+		"💩",
+		"💪",
+		"💯",
+		"🔥",
+		"🗿",
+		"🤖",
+		"🤨",
+		"🥔",
+		"🥳",
+		"🥶",
 		"🥺",
-		"👉",
-		"👈",
+		"🧐",
+		"🧪",
+		"🪀",
+		"🫂",
+		"😀",
+		"😉",
+		"😌",
+		"😎",
+		"😏",
+		"😚",
+		"😡",
+		"😭",
+		"😮",
+		"😳",
+		"😶",
+		"😻",
+		"🙄",
+		"🙈",
+		"🚀",
+		"🛡",
+		CUSTOM_ROLE_PREFIX.trim(),
 	];
 	const secretEmojis = autoreactions.flatMap(([emoji]) => emoji);
 	const guildEmojis = (await guild.emojis.fetch())
 		.filter((emoji) => emoji.available)
-		.map((emoji) => emoji.toString()); // TODO: we use _ for emoji names - what does djs do?
-	const allEmojis = [...new Set([...twemojis, ...guildEmojis, ...secretEmojis])];
-
-	const selected = Array.from(
-		{ length: Math.min(24 / difficulty, allEmojis.length) },
-		() => allEmojis.splice(Math.floor(Math.random() * allEmojis.length), 1)[0] ?? "",
+		.map((emoji) =>
+			formatEmoji({ animated: emoji.animated ?? false, id: emoji.id, name: "_" }),
+		);
+	const allEmojis = [...new Set([...twemojis, ...guildEmojis, ...secretEmojis])].sort(
+		() => Math.random() - 0.5,
 	);
-	const emojis = Array.from<typeof selected>({ length: difficulty })
-		.fill(selected)
+
+	const selected = allEmojis.slice(0, 24 / difficulty);
+	const emojis = Array.from({ length: difficulty }, () => selected)
 		.flat()
 		.toSorted(() => Math.random() - 0.5);
 
