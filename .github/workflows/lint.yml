@@ -9,12 +9,11 @@ permissions: write-all
 jobs:
     format:
         name: Format
-        if: startsWith(github.ref_name, 'dependabot/') == false
         runs-on: ubuntu-20.04
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v4.1.1
+              uses: actions/checkout@v4.1.2
               with:
                   ref: ${{ github.head_ref }}
                   repository: ${{ github.event.pull_request.head.repo.full_name }}
@@ -42,19 +41,19 @@ jobs:
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v4.1.1
+              uses: actions/checkout@v4.1.2
               with:
                   ref: ${{ github.head_ref }}
                   repository: ${{ github.event.pull_request.head.repo.full_name }}
 
             - name: Setup CodeQL
-              uses: github/codeql-action/init@v3.24.6
+              uses: github/codeql-action/init@v3.24.8
               with:
                   languages: javascript
                   queries: security-and-quality
 
             - name: Analyze
-              uses: github/codeql-action/analyze@v3.24.6
+              uses: github/codeql-action/analyze@v3.24.8
 
     build:
         name: Build & Test
@@ -62,7 +61,7 @@ jobs:
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v4.1.1
+              uses: actions/checkout@v4.1.2
               with:
                   ref: ${{ github.head_ref }}
                   repository: ${{ github.event.pull_request.head.repo.full_name }}
@@ -85,7 +84,7 @@ jobs:
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v4.1.1
+              uses: actions/checkout@v4.1.2
               with:
                   ref: ${{ github.head_ref }}
                   repository: ${{ github.event.pull_request.head.repo.full_name }}

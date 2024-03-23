@@ -3,6 +3,13 @@ on:
     workflow_dispatch:
     schedule:
         - cron: 45 11 * * * # 60 min before Dependabot
+    push:
+        paths:
+            - package.json
+            - package-lock.json
+            - .github/workflows/bump.yml
+        branches:
+            - main
 
 permissions: write-all
 
@@ -13,47 +20,22 @@ jobs:
 
         steps:
             - name: Checkout
-              uses: actions/checkout@v4.1.1
+              uses: actions/checkout@v4.1.2
 
             - name: Bump
               id: sync_types
-              uses: RedGuy12/sync-types@v2.0.0
-
-            - name: Setup Node.JS
-              uses: actions/setup-node@v4.0.2
-              with:
-                  node-version: "20.6.0"
-                  cache: npm
-
-            - name: Install
-              run: npm ci
-
-            - name: Format
-              run: npm run format
-
-            - name: Lint
-              run: npm run lint
-
-            - name: Attempt build
-              run: npm run build
-
-            - name: Test
-              run: npm run test
-
-            - name: Exit on failure
-              if: failure()
-              run: exit 0
+              uses: RedGuy12/sync-types@v2.1.0
 
             - name: Commit
               id: commit
-              uses: stefanzweifel/git-auto-commit-action@v5.0.0
+              uses: peter-evans/create-pull-request@v6.0.2
               with:
-                  commit_message: Bump dependencies
-
-            - name: Comment
-              if: steps.commit.outputs.changes_detected == 'true'
-              run: |
-                  body="$(cat ${{ steps.sync_types.outputs.output-dir }}/changes.md)$(cat ${{ steps.sync_types.outputs.output-dir }}/sync.md)"
-                  gh api "repos/${{ github.repository }}/commits/${{ steps.commit.outputs.commit_hash }}/comments" -F "body=$body"
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  token: ${{ secrets.TOKEN }}
+                  push-to-fork: RedGuy13/scradd
+                  author:
+                      github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+                  commit-message: Bump dependencies
+                  branch: ci-bump-dependencies
+                  delete-branch: true
+                  title: Bump dependencies
+                  body-path: ${{ steps.sync_types.outputs.output-dir }}/output.md

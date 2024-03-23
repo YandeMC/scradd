@@ -3,22 +3,20 @@ import {
 	ApplicationCommandType,
 	ComponentType,
 	GuildMember,
-	User,
 	time,
 } from "discord.js";
-import config from "../../common/config.js";
 import {
 	client,
-	defineSubcommands,
-	defineEvent,
 	defineButton,
-	defineSelect,
+	defineEvent,
 	defineMenuCommand,
+	defineSelect,
+	defineSubcommands,
 } from "strife.js";
+import config from "../../common/config.js";
+import { giveXpForMessage } from "./give-xp.js";
 import getUserRank, { top } from "./rank.js";
-import giveXp, { giveXpForMessage } from "./giveXp.js";
 import { recentXpDatabase } from "./util.js";
-import constants from "../../common/constants.js";
 
 defineEvent("messageCreate", async (message) => {
 	if (message.guild?.id !== config.guild.id) return;
@@ -43,7 +41,7 @@ defineSubcommands(
 				},
 			},
 
-			leaderboard: {
+			top: {
 				description: "View the server XP leaderboard",
 
 				options: {
@@ -53,38 +51,23 @@ defineSubcommands(
 					},
 				},
 			},
-			give: {
-				description: "Give someone xp (yande only)",
-
-				options: {
-					user: {
-						type: ApplicationCommandOptionType.User,
-						description: "User to give xp to",
-					},
-					amount: {
-						type: ApplicationCommandOptionType.Integer,
-						description: "how much",
-					},
-				},
-			},
 			...(process.env.CANVAS !== "false" && {
 				graph: { description: "Graph users’ XP over the last week", options: {} } as const,
 			}),
 		},
 	},
 
-	async (interaction, options: any) => {
+	async (interaction, options) => {
 		const user =
-			(options?.options &&
-				"user" in options.options &&
-				(options.options.user instanceof GuildMember
-					? options.options.user.user
-					: options.options.user)) ||
-			interaction.user;
+			options?.options &&
+			"user" in options.options &&
+			(options.options.user instanceof GuildMember
+				? options.options.user.user
+				: options.options.user);
 
 		switch (options?.subcommand ?? "rank") {
 			case "rank": {
-				await getUserRank(interaction, user);
+				await getUserRank(interaction, user || interaction.user);
 				return;
 			}
 			case "graph": {
@@ -110,41 +93,9 @@ defineSubcommands(
 					],
 				});
 			}
-			case "leaderboard": {
-				await top(interaction, user);
+			case "top": {
+				await top(interaction, user || undefined);
 				break;
-			}
-			case "give": {
-				const { owner }: any = await client.application.fetch();
-				const owners =
-					owner instanceof User
-						? [owner.id]
-						: owner?.members.map((member: any) => member.id) ?? [];
-				if (process.env.NODE_ENV === "production" && !owners.includes(interaction.user.id))
-					return await interaction.reply({
-						ephemeral: true,
-						content: `${constants.emojis.statuses.no} This command is reserved for ${
-							owner instanceof User
-								? owner?.displayName
-								: "the " + owner?.name + " team"
-						} only!`,
-					});
-
-				const user =
-					options.options.user instanceof GuildMember
-						? options.options.user.user
-						: options.options.user ?? interaction.user;
-				const amount = options.options.amount;
-				giveXp(user, undefined, amount);
-
-				return await interaction.reply({
-					content:
-						(amount || 0) < 0
-							? `:chart_with_downwards_trend: Took ${0 - (amount || 0)} XP from <@${
-									user.id
-							  }> `
-							: `:sparkles: Gave <@${user.id}> ${amount} XP`,
-				});
 			}
 		}
 	},

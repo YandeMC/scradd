@@ -1,24 +1,24 @@
 import {
 	ApplicationRoleConnectionMetadataType,
-	Routes,
-	type RESTPostOAuth2AccessTokenURLEncodedData,
-	type RESTPostOAuth2AccessTokenResult,
-	type RESTPostOAuth2RefreshTokenURLEncodedData,
-	type RESTPostOAuth2RefreshTokenResult,
 	OAuth2Scopes,
+	Routes,
+	userMention,
+	type RESTGetAPICurrentUserResult,
+	type RESTPostOAuth2AccessTokenResult,
+	type RESTPostOAuth2AccessTokenURLEncodedData,
+	type RESTPostOAuth2RefreshTokenResult,
+	type RESTPostOAuth2RefreshTokenURLEncodedData,
 	type RESTPutAPICurrentUserApplicationRoleConnectionJSONBody,
 	type RESTPutAPICurrentUserApplicationRoleConnectionResult,
-	type RESTGetAPICurrentUserResult,
-	userMention,
 } from "discord.js";
+import { createHash, randomBytes } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { client } from "strife.js";
-import fileSystem from "node:fs/promises";
-import crypto from "node:crypto";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
-import { gracefulFetch } from "../../util/promises.js";
+import { fetchUser } from "../../util/scratch.js";
 import { getRequestUrl } from "../../util/text.js";
+import { handleUser } from "../auto/scratch.js";
 import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
 
 await client.application.editRoleConnectionMetadataRecords([
@@ -29,58 +29,17 @@ await client.application.editRoleConnectionMetadataRecords([
 		type: ApplicationRoleConnectionMetadataType.DatetimeGreaterThanOrEqual,
 	},
 ]);
-function LinkHome(buttonURL: string, head: string, Btn: string, subtext: string = "") {
-	return `
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<link rel="stylesheet" href="./style.css" />
-		<link rel="shortcut icon" href="./icon.png" />
-		<style>
-			
-			body {
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				height: 100vh;
-				margin: 0;
-				width: 100vw;
-			}
 
-			.container {
-				text-align: center;
-			}
-		</style>
-	</head>
-	<body>
-		<div class="container">
-			<h1>${head}</h1>
-			${subtext != "" ? `<p>${subtext}</p>` : ""}
-			<a  rel="noopener" href="${buttonURL}">
-				<button type="button">${Btn}</button>
-			</a>
-			
-		</div>
-	</body>
-</html>
-
-`;
-}
-const NOT_FOUND_PAGE = await fileSystem.readFile("./web/404.html", "utf8");
-
-const HASH = crypto.randomBytes(16);
+const HASH = randomBytes(16);
 const sessions: Record<string, string> = {};
 export default async function linkScratchRole(
 	request: IncomingMessage,
 	response: ServerResponse,
 ): Promise<ServerResponse> {
 	if (!process.env.CLIENT_SECRET)
-		return response.writeHead(503, { "content-type": "text/html" }).end(NOT_FOUND_PAGE);
+		return response.writeHead(501, { "content-type": "text/plain" }).end("501 Not Implemented");
 
-	const ipHash = crypto
-		.createHash("sha384")
+	const ipHash = createHash("sha384")
 		.update(request.socket.remoteAddress ?? "")
 		.update(HASH)
 		.digest("base64");
@@ -92,26 +51,18 @@ export default async function linkScratchRole(
 		redirect_uri: redirectUri,
 		response_type: "code",
 		scope: OAuth2Scopes.Identify + " " + OAuth2Scopes.RoleConnectionsWrite,
-	})}`;
-	const scratchUrl = `https://oauth.fly.dev/auth/?name=${encodeURIComponent(
+	}).toString()}`;
+	const scratchUrl = `https://auth.itinerary.eu.org/auth/?name=${encodeURIComponent(
 		client.user.displayName,
 	)}&redirect=${Buffer.from(redirectUri).toString("base64")}`;
-	const LINKED = await fileSystem.readFile("./web/linked.html", "utf8");
+	const discordHtml = `<meta http-equiv="refresh" content="0;url=${discordUrl}">`; // eslint-disable-line unicorn/string-content
+	const scratchHtml = `<meta http-equiv="refresh" content="0;url=${scratchUrl}">`; // eslint-disable-line unicorn/string-content
 
 	const search = new URLSearchParams(requestUrl.search);
 	const scratchToken = search.get("privateCode");
 	if (!scratchToken) {
 		const code = search.get("code");
-		if (!code)
-			return response
-				.writeHead(200, { "content-type": "text/html" })
-				.end(
-					LinkHome(
-						discordUrl,
-						"Login To Discord to Link a Scratch Account.",
-						"Login to Discord",
-					),
-				);
+		if (!code) return response.writeHead(303, { location: discordUrl }).end();
 
 		const tokenData = (await client.rest
 			.post(Routes.oauth2TokenExchange(), {
@@ -128,41 +79,16 @@ export default async function linkScratchRole(
 			})
 			.catch(() => void 0)) as RESTPostOAuth2AccessTokenResult | undefined;
 		if (!tokenData)
-			return response
-				.writeHead(200, { "content-type": "text/html" })
-				.end(
-					LinkHome(
-						discordUrl,
-						"Login To Discord to Link a Scratch Account.",
-						"Login to Discord",
-					),
-				);
+			return response.writeHead(401, { "content-type": "text/html" }).end(discordHtml);
 
 		sessions[ipHash] = tokenData.refresh_token;
 
-		return response
-			.writeHead(200, { "content-type": "text/html" })
-			.end(
-				LinkHome(
-					scratchUrl,
-					"Discord Login Successful.",
-					"Link Scratch",
-					"Now you can link your scratch to verify",
-				),
-			);
+		return response.writeHead(303, { location: scratchUrl }).end();
 	}
 
 	const discordToken = sessions[ipHash];
 	if (!discordToken)
-		return response
-			.writeHead(200, { "content-type": "text/html" })
-			.end(
-				LinkHome(
-					discordUrl,
-					"Login To Discord to Link a Scratch Account.",
-					"Login to Discord",
-				),
-			);
+		return response.writeHead(401, { "content-type": "text/html" }).end(discordHtml);
 	const tokenData = (await client.rest
 		.post(Routes.oauth2TokenExchange(), {
 			body: new URLSearchParams({
@@ -177,32 +103,23 @@ export default async function linkScratchRole(
 		})
 		.catch(() => void 0)) as RESTPostOAuth2RefreshTokenResult | undefined;
 	if (!tokenData)
-		return response
-			.writeHead(200, { "content-type": "text/html" })
-			.end(
-				LinkHome(
-					discordUrl,
-					"Login To Discord to Link a Scratch Account.",
-					"Login to Discord",
-				),
-			);
+		return response.writeHead(401, { "content-type": "text/html" }).end(discordHtml);
 
 	const { username } = await fetch(
-		`https://scratch-coders-auth-server.vercel.app/auth/verifyToken/${encodeURI(scratchToken)}`,
+		`https://auth-api.itinerary.eu.org/auth/verifyToken/${encodeURI(scratchToken)}`,
 	).then((response) => response.json<{ username: string | null }>());
-	const scratch =
-		username &&
-		(await gracefulFetch<{ joined: string }>(
-			`${constants.urls.scratchdb}/user/info/${username}`,
-		));
-	if (!scratch)
-		return response.writeHead(401, { "content-type": "text/html" }).end("something went wrong");
+	const scratch = username && (await fetchUser(username));
+	if (!scratch) return response.writeHead(401, { "content-type": "text/html" }).end(scratchHtml);
 
 	(await client.rest.put(Routes.userApplicationRoleConnection(client.user.id), {
 		body: JSON.stringify({
 			platform_name: "Scratch",
 			platform_username: username,
-			metadata: { joined: scratch.joined?.split("T")[0] },
+			metadata: {
+				joined: ("joined" in scratch ? scratch.joined : scratch.history.joined).split(
+					"T",
+				)[0],
+			},
 		} satisfies RESTPutAPICurrentUserApplicationRoleConnectionJSONBody),
 		passThroughBody: true,
 		headers: {
@@ -221,9 +138,7 @@ export default async function linkScratchRole(
 			user.id,
 		)} linked their Scratch account [${username}](${constants.urls.scratch}/users/${username})`,
 		LogSeverity.ServerChange,
+		{ embeds: [await handleUser(["", "", username])] },
 	);
-	await config.channels.welcome?.send(
-		`${constants.emojis.statuses.yes} ${userMention(user.id)} Verfied their scratch account!`,
-	);
-	return response.writeHead(401, { "content-type": "text/html" }).end(LINKED);
+	return response.writeHead(303, { location: config.guild.rulesChannel?.url }).end();
 }

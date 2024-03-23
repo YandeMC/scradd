@@ -1,19 +1,19 @@
 import { unifiedDiff } from "difflib";
 import {
-	type Message,
-	type PartialMessage,
-	type Collection,
-	type GuildTextBasedChannel,
-	type MessageReaction,
 	Colors,
 	messageLink,
+	type ReadonlyCollection,
+	type GuildTextBasedChannel,
+	type Message,
+	type MessageReaction,
+	type PartialMessage,
 	type Snowflake,
 } from "discord.js";
 import config from "../../common/config.js";
-import { getBaseChannel, messageToText, extractMessageExtremities } from "../../util/discord.js";
-import log, { LogSeverity, shouldLog, LoggingEmojis } from "./misc.js";
-import { joinWithAnd } from "../../util/text.js";
 import { databaseThread } from "../../common/database.js";
+import { extractMessageExtremities, getBaseChannel, messageToText } from "../../util/discord.js";
+import { joinWithAnd } from "../../util/text.js";
+import log, { LogSeverity, LoggingEmojis, shouldLog } from "./misc.js";
 
 export const ignoredDeletions = new Set<Snowflake>();
 
@@ -64,7 +64,7 @@ export async function messageDelete(message: Message | PartialMessage): Promise<
 	);
 }
 export async function messageDeleteBulk(
-	messages: Collection<string, Message | PartialMessage>,
+	messages: ReadonlyCollection<string, Message | PartialMessage>,
 	channel: GuildTextBasedChannel,
 ): Promise<void> {
 	if (!shouldLog(channel)) return;
@@ -113,7 +113,7 @@ export async function messageDeleteBulk(
 }
 export async function messageReactionRemoveAll(
 	partialMessage: Message | PartialMessage,
-	reactions: Collection<string, MessageReaction>,
+	reactions: ReadonlyCollection<string, MessageReaction>,
 ): Promise<void> {
 	const message = partialMessage.partial ? await partialMessage.fetch() : partialMessage;
 
@@ -184,15 +184,15 @@ export async function messageUpdate(
 		);
 	}
 
-	if (!oldMessage.partial && !newMessage.author.bot) {
+	if (!newMessage.author.bot) {
 		const files = [];
-		const contentDiff = unifiedDiff(
-			oldMessage.content.split("\n"),
-			newMessage.content.split("\n"),
-			{ lineterm: "" },
-		)
-			.join("\n")
-			.replace(/^-{3} \n\+{3} \n/, "");
+		const contentDiff =
+			!oldMessage.partial &&
+			unifiedDiff(oldMessage.content.split("\n"), newMessage.content.split("\n"), {
+				lineterm: "",
+			})
+				.join("\n")
+				.replace(/^-{3} \n\+{3} \n/, "");
 		if (contentDiff) files.push({ content: contentDiff, extension: "diff" });
 
 		const changedFiles = new Set(newMessage.attachments.map((attachment) => attachment.url));
@@ -204,9 +204,9 @@ export async function messageUpdate(
 
 		if (files.length) {
 			await log(
-				`${
-					LoggingEmojis.MessageEdit
-				} Message by ${newMessage.author.toString()} in ${newMessage.channel.toString()} (ID: ${
+				`${LoggingEmojis.MessageEdit} ${
+					oldMessage.partial ? "Unknown message" : "Message"
+				} by ${newMessage.author.toString()} in ${newMessage.channel.toString()} (ID: ${
 					newMessage.id
 				}) edited`,
 				LogSeverity.ContentEdit,

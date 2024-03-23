@@ -1,24 +1,25 @@
 import {
-	GuildMember,
-	type ModalSubmitInteraction,
-	type PartialGuildMember,
-	ComponentType,
 	ButtonStyle,
+	ComponentType,
+	GuildMember,
+	TextInputStyle,
 	type ApplicationCommand,
 	type ChatInputCommandInteraction,
-	TextInputStyle,
-	type Snowflake,
-	type Role,
 	type InteractionResponse,
+	type ModalSubmitInteraction,
+	type PartialGuildMember,
+	type Role,
+	type Snowflake,
 } from "discord.js";
+import config from "../../common/config.js";
 import constants from "../../common/constants.js";
 import { disableComponents } from "../../util/discord.js";
-
-import config from "../../common/config.js";
-import { recentXpDatabase } from "../xp/util.js";
 import { asyncFilter } from "../../util/promises.js";
-import { CUSTOM_ROLE_PREFIX, parseColor, resolveIcon } from "./misc.js";
+import tryCensor from "../automod/misc.js";
 import hasPermission from "../execute/permissions.js";
+import warn from "../punishments/warn.js";
+import { recentXpDatabase } from "../xp/util.js";
+import { CUSTOM_ROLE_PREFIX, parseColor, resolveIcon } from "./misc.js";
 
 let command: ApplicationCommand | undefined;
 
@@ -159,6 +160,22 @@ export async function createCustomRole(
 		return;
 	}
 
+	const censored = tryCensor(name);
+	if (censored) {
+		await warn(
+			interaction.user,
+			"Please watch your language!",
+			censored.strikes,
+			`Attempted to make custom role @${name}`,
+		);
+		return await interaction.reply({
+			ephemeral: true,
+			content: `${constants.emojis.statuses.no} ${
+				censored.strikes < 1 ? "That’s not appropriate" : "Language"
+			}!`,
+		});
+	}
+
 	if (
 		/\b(?:mod(?:erat(?:or|ion))?|admin(?:istrat(?:or|ion))?|owner|exec(?:utive)?|manager?|scradd)\b/i.test(
 			name,
@@ -198,11 +215,10 @@ export async function createCustomRole(
 	}
 
 	const role = await config.guild.roles.create({
-		mentionable: false,
 		color,
 		name: CUSTOM_ROLE_PREFIX + name,
 		reason: `Created by ${interaction.user.tag}`,
-		//position: (config.roles.epic?.position ?? 0) + 1,
+		position: (config.roles.staff?.position ?? 0) + 1,
 		...iconData,
 	});
 	await interaction.member.roles.add(role, "Custom role created");
@@ -244,13 +260,7 @@ async function recheckRole(role: Role, reason = "No longer qualifies"): Promise<
 export function getCustomRole(member: GuildMember): Role | undefined {
 	return member.roles.valueOf().find((role) => role.name.startsWith(CUSTOM_ROLE_PREFIX));
 }
-export async function qualifiesForRole(member: GuildMember) {
-	if (
-		member.roles.premiumSubscriberRole ||
-		(config.roles.staff && member.roles.resolve(config.roles.staff.id)) ||
-		(config.roles.epic && member.roles.resolve(config.roles.epic.id))
-	)
-		return true;
+export async function qualifiesForRole(member: GuildMember): Promise<boolean> {
 	const recentXp = recentXpDatabase.data.toSorted((one, two) => one.time - two.time);
 	const maxDate = (recentXp[0]?.time ?? 0) + 604_800_000;
 	const lastWeekly = Object.entries(

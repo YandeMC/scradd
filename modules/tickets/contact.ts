@@ -1,15 +1,16 @@
 import {
-	type AnySelectMenuInteraction,
-	type APIEmbedField,
-	type ButtonInteraction,
 	ButtonStyle,
 	ChannelType,
 	ComponentType,
 	GuildMember,
-	type InteractionResponse,
 	InteractionType,
+	channelMention,
+	type APIEmbedField,
+	type AnySelectMenuInteraction,
+	type ButtonInteraction,
+	type InteractionResponse,
 	type RepliableInteraction,
-	ThreadChannel,
+	type ThreadChannel,
 } from "discord.js";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
@@ -17,14 +18,14 @@ import { disableComponents } from "../../util/discord.js";
 import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
 import { listStrikes } from "../punishments/util.js";
 import {
-	type Category,
+	MOD_CATEGORY,
 	SA_CATEGORY,
 	SERVER_CATEGORY,
-	TICKET_CATEGORIES,
 	TICKETS_BY_MEMBER,
+	TICKET_CATEGORIES,
 	allFields,
 	categoryToDescription,
-	MOD_CATEGORY,
+	type Category,
 } from "./misc.js";
 
 export async function showTicketModal(
@@ -48,8 +49,15 @@ export async function showTicketModal(
 
 	if (option === SA_CATEGORY) {
 		return await interaction.reply({
-			content: `${constants.emojis.statuses.no} Please don’t contact mods for that kind of help. Instead, put your requests in <#1173752250825449522>,
-			)}.`,
+			content: `${
+				constants.emojis.statuses.no
+			} Please don’t contact mods for SA help. Instead, put your suggestions in ${
+				config.channels.suggestions?.toString() ?? "#suggestions"
+			}, bug reports in ${
+				config.channels.bugs?.toString() ?? "#bugs"
+			}, and other questions, comments, concerns, or etcetera in ${
+				config.channels.support?.toString() ?? "#support"
+			}.`,
 
 			ephemeral: true,
 		});
@@ -57,7 +65,11 @@ export async function showTicketModal(
 
 	if (option === SERVER_CATEGORY) {
 		return await interaction.reply({
-			content: `${constants.emojis.statuses.no} Please don’t contact mods for server suggestions. Instead, share them in <#${config.channels.suggestions?.id}>.`,
+			content: `${
+				constants.emojis.statuses.no
+			} Please don’t contact mods for server suggestions. Instead, share them in ${channelMention(
+				config.channels.server,
+			)}.`,
 
 			ephemeral: true,
 		});
@@ -97,7 +109,7 @@ export default async function contactMods(
 					{
 						appeal: { "🔨 Strike ID": "strike" },
 						report: { "👤 Reported User": "user" },
-						role: { "🗄️ Role(s)": "role", "Reason": "account" },
+						role: { "🗄️ Role(s)": "role", "👥 Account(s)": "account" },
 						bug: {},
 						update: {},
 						rules: { "📜 Rule": "rule" },
@@ -161,7 +173,6 @@ export default async function contactMods(
 				(data) =>
 					thread.send({
 						...data,
-						flags: undefined,
 						flags: undefined,
 						embeds: [details, ...(data.embeds ?? [])],
 						content: ping,

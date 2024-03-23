@@ -6,30 +6,29 @@ import {
 	ComponentType,
 	GuildMember,
 	TextInputStyle,
-	channelLink,
 } from "discord.js";
-import config from "../../common/config.js";
-import constants from "../../common/constants.js";
 import {
 	client,
+	defineButton,
 	defineChatCommand,
 	defineEvent,
-	defineButton,
+	defineMenuCommand,
 	defineModal,
 	defineSelect,
-	defineMenuCommand,
 } from "strife.js";
+import config from "../../common/config.js";
+import constants from "../../common/constants.js";
+import { disableComponents } from "../../util/discord.js";
+import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
+import contactMods, { contactUser, showTicketModal } from "./contact.js";
 import {
-	type Category,
 	SA_CATEGORY,
 	SERVER_CATEGORY,
-	TICKET_CATEGORIES,
 	TICKETS_BY_MEMBER,
+	TICKET_CATEGORIES,
 	getIdFromName,
+	type Category,
 } from "./misc.js";
-import contactMods, { contactUser, showTicketModal } from "./contact.js";
-import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
-import { disableComponents } from "../../util/discord.js";
 
 const appealedStrikes = new Set<string>();
 const resourcesDmed = new Set<string>();
@@ -49,7 +48,9 @@ defineEvent("messageCreate", async (message) => {
 							type: ComponentType.Button,
 							style: ButtonStyle.Link,
 							label: "Server Rules",
-							url: config.guild.rulesChannel?.url || "",
+							url:
+								config.guild.rulesChannel?.url ??
+								`https://discord.com/channels/${config.guild.id}`,
 						},
 						// {
 						// 	type: ComponentType.Button,
@@ -73,7 +74,9 @@ defineEvent("messageCreate", async (message) => {
 							type: ComponentType.Button,
 							style: ButtonStyle.Link,
 							label: "SA Support",
-							url: channelLink(config.guild.id, config.channels.support),
+							url:
+								config.channels.support?.url ??
+								`https://discord.com/channels/${config.guild.id}`,
 						},
 					],
 				},
@@ -92,19 +95,19 @@ defineButton("contactMods", async (interaction) => {
 					{
 						type: ComponentType.StringSelect,
 						customId: "_contactMods",
-						options: Object.entries({
-							appeal: "Appeal a strike",
-							report: "Report a user",
-							role: "Request a role",
-							bug: "Report a Scrub bug",
-							[SERVER_CATEGORY]: "Suggest a server change",
-							rules: "Get clarification on a rule",
-							[SA_CATEGORY]: "Get help with code/art/music/other",
-							server: "Become a partner",
-							other: "Other",
-						} satisfies Record<Category | typeof SA_CATEGORY | typeof SERVER_CATEGORY, string>).map(
-							([value, label]) => ({ value, label }),
-						),
+						options: [
+							...Object.entries({
+								appeal: "Appeal a strike",
+								report: "Report a user",
+								role: "Request a contributor role",
+								bug: "Report a Scradd bug",
+								[SERVER_CATEGORY]: "Suggest a server change",
+								rules: "Get clarification on a rule",
+								[SA_CATEGORY]: "Get help with Scratch Addons",
+								server: "Add your server to Other Scratch Servers",
+								other: "Other",
+							} satisfies Record<Category | typeof SA_CATEGORY | typeof SERVER_CATEGORY, string>),
+						].map(([value, label]) => ({ value, label })),
 						placeholder: "What do you need help with?",
 					},
 				],

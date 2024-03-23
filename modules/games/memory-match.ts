@@ -18,6 +18,7 @@ import config from "../../common/config.js";
 import { GAME_COLLECTOR_TIME, CURRENTLY_PLAYING, checkIfUserPlaying } from "./misc.js";
 import constants from "../../common/constants.js";
 import { disableComponents } from "../../util/discord.js";
+import { autoreactions } from "../auto/secrets.js";
 import { ignoredDeletions } from "../logging/messages.js";
 
 const EMPTY_TILE = "⬛";
@@ -418,11 +419,11 @@ async function setupGame(difficulty: 2 | 4, guild = config.guild): Promise<strin
 		"👉",
 		"👈",
 	];
-
+	const secretEmojis = autoreactions.flatMap(([emoji]) => emoji);
 	const guildEmojis = (await guild.emojis.fetch())
 		.filter((emoji) => emoji.available)
 		.map((emoji) => emoji.toString()); // TODO: we use _ for emoji names - what does djs do?
-	const allEmojis = [...new Set([...twemojis, ...guildEmojis])];
+	const allEmojis = [...new Set([...twemojis, ...guildEmojis, ...secretEmojis])];
 
 	const selected = Array.from(
 		{ length: Math.min(24 / difficulty, allEmojis.length) },
