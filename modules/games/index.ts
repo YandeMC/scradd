@@ -7,6 +7,7 @@ import { disableComponents } from "../../util/discord.js";
 import hangman from "./hangman.js";
 import rps from "./rps.js";
 import ttt from "./tic-tac-toe.js";
+import { uno } from "./uno.js";
 
 defineChatCommand(
 	{ name: "hangman", description: "Try to guess who from the server I’m thinking of" },
@@ -107,3 +108,11 @@ defineButton("endGame", async (interaction, users) => {
 	await interaction.deferUpdate();
 	return current.end();
 });
+
+defineChatCommand(
+	{
+		name: "uno",
+		description: "Start a game of Uno!",
+	},
+	uno,
+);
