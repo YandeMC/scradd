@@ -73,10 +73,7 @@ export default async function hangman(
 	let color: number | undefined;
 
 	const guesses: (Lowercase<string> | typeof CHARACTERS[number])[] = [];
-	const message = await interaction.reply({
-		embeds: [{ title: "Starting game..." }],
-		fetchReply: true,
-	});
+	const message = await interaction.reply({ embeds: [{ title: "Hangman" }], fetchReply: true });
 	await tick();
 
 	const collector = message
@@ -156,6 +153,22 @@ export default async function hangman(
 				if (!modalInteraction) return;
 				await modalInteraction.deferUpdate();
 				const guess = modalInteraction.fields.getTextInputValue("username").toUpperCase();
+
+				const censored = tryCensor(guess);
+				if (censored) {
+					await warn(
+						interaction.user,
+						censored.words.length === 1 ? "Used a banned word" : "Used banned words",
+						censored.strikes,
+						`Guessed ${guess} on Hangman`,
+					);
+					return await interaction.reply({
+						ephemeral: true,
+						content: `${constants.emojis.statuses.no} Please ${
+							censored.strikes < 1 ? "don’t say that here" : "watch your language"
+						}!`,
+					});
+				}
 
 				if (/^[\d.A-Z_]+$/.test(guess))
 					if (guess.toLowerCase() === user.username) collector.stop("win");
@@ -320,6 +333,7 @@ async function getMember(player: User): Promise<GuildMember> {
 				member.user.discriminator === "0" &&
 				member.user.username.length > 5 &&
 				member.id !== player.id &&
+				!tryCensor(member.user.username) &&
 				(process.env.NODE_ENV !== "production" ||
 					(xp[member.id] ?? 0) >= 250 ||
 					testers?.get(member.id)?.displayColor ||

@@ -105,6 +105,28 @@ defineChatCommand(
 			});
 		}
 
+		const shouldCensor =
+			interaction.guild?.id === config.guild.id &&
+			(command.censored === "channel"
+				? !badWordsAllowed(interaction.channel)
+				: command.censored ?? true);
+		const censoredOptions = shouldCensor && tryCensor(operation);
+		if (censoredOptions && censoredOptions.strikes) {
+			await interaction.reply({
+				ephemeral: true,
+				content: `${constants.emojis.statuses.no} Please ${
+					censoredOptions.strikes < 1 ? "don’t say that here" : "watch your language"
+				}!`,
+			});
+			await warn(
+				interaction.user,
+				censoredOptions.words.length === 1 ? "Used a banned word" : "Used banned words",
+				censoredOptions.strikes,
+				`Used command \`${interaction.toString()}\``,
+			);
+			return;
+		}
+
 		// eslint-disable-next-line @typescript-eslint/ban-types
 		await (command.command as Function)(interaction, options);
 	},

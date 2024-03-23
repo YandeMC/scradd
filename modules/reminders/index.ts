@@ -6,6 +6,7 @@ import { disableComponents } from "../../util/discord.js";
 import { cancelReminder, createReminder, listReminders } from "./management.js";
 import { BUMPING_THREAD, SpecialReminders, remindersDatabase } from "./misc.js";
 import queueReminders from "./send.js";
+import giveXp from "../xp/give-xp.js";
 
 defineSubcommands(
 	{

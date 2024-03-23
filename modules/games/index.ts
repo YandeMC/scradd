@@ -2,10 +2,12 @@ import { ApplicationCommandOptionType, ApplicationCommandType } from "discord.js
 import { defineButton, defineChatCommand, defineMenuCommand } from "strife.js";
 import constants from "../../common/constants.js";
 import { disableComponents } from "../../util/discord.js";
-import guessAddon from "./guess-addon.js";
 import hangman from "./hangman.js";
 import memoryMatch, { showMemoryInstructions } from "./memory-match.js";
 import { CURRENTLY_PLAYING } from "./misc.js";
+import rps from "./rps.js";
+import ttt from "./tic-tac-toe.js";
+import { uno } from "./uno.js";
 
 defineChatCommand(
 	{ name: "hangman", description: "Try to guess who from the server I’m thinking of" },

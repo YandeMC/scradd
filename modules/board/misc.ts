@@ -129,8 +129,8 @@ export async function generateBoardMessage(
 	 * @returns The converted message.
 	 */
 	async function messageToBoardData(message: Message): Promise<BaseMessageOptions> {
-		const { files, embeds } = extractMessageExtremities(message);
-		embeds.unshift(await messageToEmbed(message));
+		const { files, embeds } = extractMessageExtremities(message, tryCensor);
+		embeds.unshift(await messageToEmbed(message, censor));
 
 		return {
 			allowedMentions: { users: [] },
