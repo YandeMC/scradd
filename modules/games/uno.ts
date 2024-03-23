@@ -453,7 +453,7 @@ async function updateGame(board: Board, game: Game, thread: AnyThreadChannel) {
 						},
 					],
 				});
-			} 
+			}
 			return a.user.id == game.ids[game.turn];
 		},
 	});
