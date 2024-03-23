@@ -23,9 +23,9 @@
 	"prettier": "@redguy12/prettier-config",
 	"dependencies": {
 		"@fontsource-variable/sora": "5.0.17",
-		"@khanacademy/simple-markdown": "0.11.3",
+		"@khanacademy/simple-markdown": "0.11.4",
 		"@napi-rs/canvas": "0.1.51",
-		"@sa-community/addons-data": "1.35.1-1",
+		"@sa-community/addons-data": "1.36.0",
 		"@twemoji/parser": "15.0.0",
 		"chart.js": "4.4.2",
 		"didyoumean2": "6.0.1",
@@ -42,17 +42,17 @@
 	"devDependencies": {
 		"@redguy12/prettier-config": "2.0.2",
 		"@types/difflib": "<=0.2",
-		"@types/eslint": "<=8.56",
+		"@types/eslint": "<=8.57",
 		"@types/mustache": "<=4.2",
 		"@types/node": "<=20.10",
 		"@types/papaparse": "<=5.4",
 		"@typescript-eslint/eslint-plugin": "7.0.2",
-		"@typescript-eslint/parser": "7.2.0",
+		"@typescript-eslint/parser": "7.3.1",
 		"eslint": "8.57.0",
 		"eslint-plugin-unicorn": "51.0.1",
 		"nodemon": "3.1.0",
 		"prettier": "2.8.0",
-		"typescript": "5.4.2"
+		"typescript": "5.4.3"
 	},
 	"engines": {
 		"node": ">=20.10.0",

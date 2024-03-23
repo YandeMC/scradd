@@ -2,7 +2,7 @@ import { unifiedDiff } from "difflib";
 import {
 	Colors,
 	messageLink,
-	type Collection,
+	type ReadonlyCollection,
 	type GuildTextBasedChannel,
 	type Message,
 	type MessageReaction,
@@ -64,7 +64,7 @@ export async function messageDelete(message: Message | PartialMessage): Promise<
 	);
 }
 export async function messageDeleteBulk(
-	messages: Collection<string, Message | PartialMessage>,
+	messages: ReadonlyCollection<string, Message | PartialMessage>,
 	channel: GuildTextBasedChannel,
 ): Promise<void> {
 	if (!shouldLog(channel)) return;
@@ -96,7 +96,9 @@ export async function messageDeleteBulk(
 	const unknownCount = allAuthors.filter((author) => !author).length;
 	const authors = [
 		...new Set(allAuthors.filter(Boolean)),
-		...(unknownCount ? [`${unknownCount} unknown users`] : []),
+		...(unknownCount
+			? [`at least ${unknownCount} unknown user${unknownCount === 1 ? "" : "s"}`]
+			: []),
 	];
 
 	const url = messages.first()?.url;
@@ -113,7 +115,7 @@ export async function messageDeleteBulk(
 }
 export async function messageReactionRemoveAll(
 	partialMessage: Message | PartialMessage,
-	reactions: Collection<string, MessageReaction>,
+	reactions: ReadonlyCollection<string, MessageReaction>,
 ): Promise<void> {
 	const message = partialMessage.partial ? await partialMessage.fetch() : partialMessage;
 
