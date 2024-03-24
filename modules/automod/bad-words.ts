@@ -6,7 +6,7 @@
  *
  * All RegExps are ROT13-encoded. Additionally, RegExp character classes are not supported here. Use capture groups instead.
  */
-const badWords: [RegExp[]?, RegExp[]?, RegExp[]?][] = [
+const badWords: [RegExp[]?, RegExp[]?, RegExp[]?][] =   [
 	[
 		[
 			/cbea/,
@@ -61,7 +61,7 @@ const badWords: [RegExp[]?, RegExp[]?, RegExp[]?][] = [
 			/(?:ovt ?)?qvp?xr?(?: ?(?:q|l|evat|ef?|urnqf?|vre?|vat|f|jnqf?))?/,
 			/(?:8|o)=+Q/,
 			/fzhg+(?:e|fg?|l|vr)?/,
-			/pbpx(?: ?svtug|fhpx|(?:fhpx|svtug)(?:re|vat)|znafuvc|hc)?f?/,
+			/pbpx(?: ?svtug|(?:svtug)(?:re|vat)|znafuvc|hc)?f?/,
 			/onfgneq(?:vfz|(?:e|y)?l|evrf|f)?/,
 			/phagf?/,
 			/shx/,

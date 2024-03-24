@@ -6,7 +6,40 @@ import constants from "../../common/constants.js";
 import { disableComponents } from "../../util/discord.js";
 import hangman from "./hangman.js";
 import { uno } from "./uno.js";
-
+import rps from "./rps.js";
+import ttt from "./tic-tac-toe.js";
+defineChatCommand(
+	{
+		name: "rps",
+		description: "Play Rock Paper Scissors against someone(or the bot)",
+		options: {
+			opponent: {
+				description: "Opponent (leave blank for solo)",
+				type: ApplicationCommandOptionType.User,
+			},
+			rounds: {
+				description: "Number of rounds",
+				type: ApplicationCommandOptionType.Integer,
+				minValue: 1,
+				maxValue: 31,
+			},
+		},
+	},
+	rps,
+);
+defineChatCommand(
+	{
+		name: "tic-tac-toe",
+		description: "Play Tic Tac Toe against someone(or the bot)",
+		options: {
+			opponent: {
+				description: "Opponent (leave blank for solo)",
+				type: ApplicationCommandOptionType.User,
+			},
+		},
+	},
+	ttt,
+);
 
 defineChatCommand(
 	{ name: "hangman", description: "Guess who from the server I’m thinking of" },
