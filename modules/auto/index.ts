@@ -16,7 +16,6 @@ import { client, defineEvent } from "strife.js";
 import { getMatches, handleMatch } from "./scratch.js";
 import constants from "../../common/constants.js";
 
-
 const ignoreTriggers = [
 	/\bkill/i,
 	/\bsuicid/i,
@@ -43,10 +42,6 @@ defineEvent("messageCreate", async (message) => {
 		await message.react(BOARD_EMOJI).catch(() => void 0);
 		reactions++;
 	}
-
-	
-
-	
 });
 
 defineEvent("messageUpdate", async (_, message) => {
@@ -105,8 +100,6 @@ async function handleMutatable(message: Message) {
 	if (ignored) return true;
 
 	if (!canDoSecrets(message, true)) return;
-
-	
 }
 
 defineEvent("messageDelete", async (message) => {
