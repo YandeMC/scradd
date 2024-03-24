@@ -16,6 +16,36 @@ import warn from "../punishments/warn.js";
 import { getLevelForXp } from "../xp/misc.js";
 import { xpDatabase } from "../xp/util.js";
 import tryCensor, { badWordRegexps, badWordsAllowed } from "./misc.js";
+import { stripMarkdown } from "../../util/markdown.js";
+import { joinWithAnd } from "../../util/text.js";
+import { createWorker } from "tesseract.js";
+
+const worker = await createWorker("eng");
+async function getMessageImageText(message: Message): Promise<string[]> {
+	const imageTextPromises = message.attachments
+		.filter((attachment) => attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i))
+		.map(async ({ url }) => {
+			if (url) {
+				const ret = await worker.recognize(url);
+				return ret.data.text;
+			}
+		})
+		.filter(Boolean);
+
+	const imageTextResults = await Promise.all(imageTextPromises);
+	return imageTextResults as string[];
+}
+
+const WHITELISTED_INVITE_GUILDS = new Set([
+	config.guild.id,
+	...config.otherGuildIds,
+	"898383289059016704", // Scratch Addons SMP Archive
+	"837024174865776680", // TurboWarp
+	"945340853189247016", // ScratchTools
+	"461575285364752384", // 9th Tail Bot Hub
+	"333355888058302465", // DISBOARD
+	undefined, // Invalid links
+]);
 
 export default async function automodMessage(message: Message): Promise<boolean> {
 	const allowBadWords = badWordsAllowed(message.channel);
