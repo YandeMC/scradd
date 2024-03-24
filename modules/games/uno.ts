@@ -308,7 +308,7 @@ async function drawText(
 	}
 	if (text.text == "any") return;
 	ctx.textAlign = align.x;
-	ctx.font = `${size}px uno`;
+	ctx.font = `${size}px Sora`;
 	ctx.strokeStyle = outline.color;
 	ctx.lineWidth = outline.stroke;
 	ctx.textBaseline = align.y;

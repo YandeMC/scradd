@@ -6,7 +6,6 @@ import {
 	GlobalAnimatedEmoji,
 	GlobalBotInvitesPattern,
 	InvitesPattern,
-	getAllMessages,
 	getBaseChannel,
 } from "../../util/discord.js";
 import { stripMarkdown } from "../../util/markdown.js";
@@ -18,34 +17,11 @@ import { getLevelForXp } from "../xp/misc.js";
 import { xpDatabase } from "../xp/util.js";
 import tryCensor, { badWordRegexps, badWordsAllowed } from "./misc.js";
 
-const { threads } = (await config.channels.servers?.threads.fetchActive()) ?? {};
-const whitelistedLinks = await Promise.all(
-	threads?.map(async (thread) =>
-		(
-			await getAllMessages(thread)
-		).flatMap(
-			({ content }) =>
-				content.match(InvitesPattern)?.map((link) => link.split("/").at(-1) ?? link) ?? [],
-		),
-	) ?? [],
-);
-
-const WHITELISTED_INVITE_GUILDS = new Set([
-	config.guild.id,
-	...config.otherGuildIds,
-	...(await Promise.all(
-		whitelistedLinks
-			.flat()
-			.map(async (link) => (await client.fetchInvite(link).catch(() => void 0))?.guild?.id),
-	)),
-	undefined, // Invalid links
-]);
-
 export default async function automodMessage(message: Message): Promise<boolean> {
 	const allowBadWords = badWordsAllowed(message.channel);
 	const baseChannel = getBaseChannel(message.channel);
 	const pings = message.mentions.users.size
-		? ` (ghost pinged ${joinWithAnd(message.mentions.users.map((user) => user.toString()))})`
+		? ` (ghost pinged ${joinWithAnd(message.mentions.users.map((user: { toString: () => any; }) => user.toString()))})`
 		: "";
 
 	let needsDelete = false;
@@ -91,7 +67,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 	const inviteLinks = message.content.match(InvitesPattern) ?? [];
 	const invites = await Promise.all(
 		inviteLinks.map(
-			async (link) =>
+			async (link: string) =>
 				[
 					link,
 					await client.fetchInvite(link.split("/").at(-1) ?? link).catch(() => void 0),
@@ -109,7 +85,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 		const badInvites = [
 			...new Set(
 				invites
-					.filter(([, invite]) => !WHITELISTED_INVITE_GUILDS.has(invite?.guild?.id))
+					
 					.map(([link]) => link),
 			),
 		];
@@ -192,7 +168,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 				? bad
 				: {
 						strikes: bad.strikes + censored.strikes,
-						words: bad.words.map((words, index) => [
+						words: bad.words.map((words: any, index: number) => [
 							...words,
 							...(censored.words[index] ?? []),
 						]),
@@ -201,42 +177,16 @@ export default async function automodMessage(message: Message): Promise<boolean>
 	);
 	if (badWords.strikes) needsDelete = true;
 
-	const badEmbedWords = message.embeds
-		.flatMap((embed) => [
-			embed.description,
-			embed.title,
-			embed.footer?.text,
-			embed.author?.name,
-			...embed.fields.flatMap((field) => [field.name, field.value]),
-		])
-		.reduce(
-			(bad, current) => {
-				const censored = tryCensor(current || "", 1);
-				return censored
-					? {
-							strikes: bad.strikes + censored.strikes,
-							words: bad.words.map((words, index) => [
-								...words,
-								...(censored.words[index] ?? []),
-							]),
-					  }
-					: bad;
-			},
-			{
-				strikes: 0,
-				words: Array.from<string[]>({ length: badWordRegexps.length }).fill([]),
-			},
-		);
+	
 
 	if (
-		badEmbedWords.strikes &&
 		!([...Constants.NonSystemMessageTypes] as const).includes(message.type)
 	)
 		needsDelete = true;
 
-	const languageStrikes = badWords.strikes + badEmbedWords.strikes;
+	const languageStrikes = badWords.strikes;
 	if (languageStrikes) {
-		const words = [...badWords.words.flat(), ...badEmbedWords.words.flat()];
+		const words = [...badWords.words.flat()];
 		await warn(
 			message.interaction?.user ?? message.author,
 			words.length === 1 ? "Used a banned word" : "Used banned words",
@@ -262,13 +212,6 @@ export default async function automodMessage(message: Message): Promise<boolean>
 			`${LoggingErrorEmoji} Unable to delete ${message.url} (${deletionMessage.trim()})`,
 			LogSeverity.Alert,
 		);
-	} else if (badEmbedWords.strikes) {
-		const publicWarn = await message.reply({
-			content: `${constants.emojis.statuses.no}${deletionMessage}`,
-			allowedMentions: { users: [], repliedUser: true },
-		});
-		await message.suppressEmbeds();
-		setTimeout(() => publicWarn.delete(), 300_000);
 	}
 
 	return true;

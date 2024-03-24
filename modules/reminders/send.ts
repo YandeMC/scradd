@@ -121,18 +121,16 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 						},
 					];
 
-					const count = await gracefulFetch<{ count: number; _chromeCountDate: string }>(
-						`${constants.urls.usercountJson}?date=${Date.now()}`,
-					);
+					const count = config.guild.memberCount
 					if (!count) continue;
 
 					await channel.setName(
-						`Scratch Addons - ${count.count.toLocaleString([], {
+						`💬Chat - ${count.toLocaleString([], {
 							compactDisplay: "short",
 							maximumFractionDigits: 1,
-							minimumFractionDigits: +(count.count > 999),
+							minimumFractionDigits: +(count > 1000),
 							notation: "compact",
-						})} users`,
+						})} members`,
 						"Automated update to sync count",
 					);
 					continue;

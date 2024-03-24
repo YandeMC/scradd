@@ -1,6 +1,5 @@
 import {
 	ApplicationCommandOptionType,
-	ChannelType,
 	ComponentType,
 	TextInputStyle,
 } from "discord.js";
@@ -16,7 +15,6 @@ import {
 import poll from "./poll.js";
 import { addQuestion, listQuestions, removeQuestion, viewQuestion } from "./qotd.js";
 import { DEFAULT_SHAPES } from "./misc.js";
-import config from "../../common/config.js";
 
 defineChatCommand(
 	{
@@ -76,9 +74,8 @@ defineEvent("messageReactionAdd", async (partialReaction, partialUser) => {
 
 	if (message.author.id !== client.user.id || user.id === client.user.id) return;
 	if (
-		(message.interaction?.commandName !== "poll" || !message.embeds[0]?.footer?.text) &&
-		(message.channel.type !== ChannelType.PublicThread ||
-			message.channel.parent?.id !== config.channels.qotd)
+		(message.interaction?.commandName !== "poll" || !message.embeds[0]?.footer?.text)
+		
 	)
 		return;
 

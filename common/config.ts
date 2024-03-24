@@ -44,15 +44,15 @@ async function getConfig() {
 			server: "1138116320249000077",
 			welcome: getChannel("welcome", ChannelType.GuildText),
 			verify: getChannel("verify", ChannelType.GuildText),
-			mod: getChannel("mod-talk", ChannelType.GuildText),
+			mod: getChannel("mod", ChannelType.GuildText),
 			modlogs:
 				guild?.publicUpdatesChannel || getChannel("logs", ChannelType.GuildText, "end"),
 			exec: getChannel("exec", ChannelType.GuildText, "start"),
 			admin: getChannel("admin", ChannelType.GuildText, "start"),
-
+intros: getChannel("intro", ChannelType.GuildText, "start"),
 			general: getChannel("general", ChannelType.GuildText),
 			trivia: getChannel("trivia", ChannelType.GuildText),
-			support: "826250884279173162",
+			support:  getChannel("support", ChannelType.GuildText),
 			updates: getChannel("updates", ChannelType.GuildText, "partial"),
 			suggestions: getChannel("suggestions", ChannelType.GuildForum),
 			bugs: getChannel("bug", ChannelType.GuildForum, "start"),
@@ -81,7 +81,7 @@ async function getConfig() {
 	function getChannel<T extends ChannelType>(
 		name: string,
 		type: T | T[] = [],
-		matchType: "end" | "full" | "partial" | "start" = "full",
+		matchType: "end" | "full" | "partial" | "start" = "partial",
 	): Extract<NonThreadGuildBasedChannel, { type: T }> | undefined {
 		const types = new Set<ChannelType>([type].flat());
 		return channels.find(

@@ -112,7 +112,7 @@ export default async function getWeekly(nextWeeklyDate: Date): Promise<string> {
 	);
 	const ids = new Set(weeklyWinners.map((gain) => gain.user));
 
-	const role = config.roles.weeklyWinner;
+	const role = config.roles.weekly_winner;
 	if (role) {
 		for (const [, weeklyMember] of role.members) {
 			if (!ids.has(weeklyMember.id))
