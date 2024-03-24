@@ -7,7 +7,6 @@ import { disableComponents } from "../../util/discord.js";
 import hangman from "./hangman.js";
 import { uno } from "./uno.js";
 
-
 defineChatCommand(
 	{ name: "hangman", description: "Guess who from the server I’m thinking of" },
 	hangman,
