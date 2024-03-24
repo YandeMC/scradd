@@ -1,8 +1,4 @@
-import {
-	ApplicationCommandOptionType,
-	ComponentType,
-	TextInputStyle,
-} from "discord.js";
+import { ApplicationCommandOptionType, ComponentType, TextInputStyle } from "discord.js";
 import {
 	client,
 	defineButton,
@@ -73,11 +69,7 @@ defineEvent("messageReactionAdd", async (partialReaction, partialUser) => {
 	const user = partialUser.partial ? await partialUser.fetch() : partialUser;
 
 	if (message.author.id !== client.user.id || user.id === client.user.id) return;
-	if (
-		(message.interaction?.commandName !== "poll" || !message.embeds[0]?.footer?.text)
-		
-	)
-		return;
+	if (message.interaction?.commandName !== "poll" || !message.embeds[0]?.footer?.text) return;
 
 	const emojis = (message.embeds[0]?.description ?? message.content).match(/^\S+/gm);
 	if (!reaction.emoji.name || !emojis?.includes(reaction.emoji.name)) return;

@@ -34,12 +34,13 @@ async function getMessageImageText(message: Message): Promise<string[]> {
 	return imageTextResults as string[];
 }
 
-
 export default async function automodMessage(message: Message): Promise<boolean> {
 	const allowBadWords = badWordsAllowed(message.channel);
 	const baseChannel = getBaseChannel(message.channel);
 	const pings = message.mentions.users.size
-		? ` (ghost pinged ${joinWithAnd(message.mentions.users.map((user: { toString: () => any; }) => user.toString()))})`
+		? ` (ghost pinged ${joinWithAnd(
+				message.mentions.users.map((user: { toString: () => any }) => user.toString()),
+		  )})`
 		: "";
 
 	let needsDelete = false;
@@ -100,13 +101,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 		!baseChannel.isDMBased() &&
 		baseChannel.permissionsFor(baseChannel.guild.id)?.has("SendMessages")
 	) {
-		const badInvites = [
-			...new Set(
-				invites
-					
-					.map(([link]) => link),
-			),
-		];
+		const badInvites = [...new Set(invites.map(([link]) => link))];
 
 		if (badInvites.length) {
 			needsDelete = true;
@@ -180,7 +175,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 		tryCensor(stripMarkdown(message.content)),
 		...message.stickers.map(({ name }) => tryCensor(name)),
 		...invites.map(([, invite]) => !!invite?.guild && tryCensor(invite.guild.name)),
-		...(await getMessageImageText(message)).map((content) => tryCensor(content))
+		...(await getMessageImageText(message)).map((content) => tryCensor(content)),
 	].reduce(
 		(bad, censored) =>
 			typeof censored === "boolean"
@@ -196,12 +191,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 	);
 	if (badWords.strikes) needsDelete = true;
 
-	
-
-	if (
-		!([...Constants.NonSystemMessageTypes] as const).includes(message.type)
-	)
-		needsDelete = true;
+	if (!([...Constants.NonSystemMessageTypes] as const).includes(message.type)) needsDelete = true;
 
 	const languageStrikes = badWords.strikes;
 	if (languageStrikes) {

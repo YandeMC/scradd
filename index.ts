@@ -33,9 +33,7 @@ if (process.env.CANVAS !== "false") {
 		"SoraExt",
 	);
 	GlobalFonts.registerFromPath(
-		fileURLToPath(
-			import.meta.resolve("./modules/games/unoPhotos/Cabin-SemiBold.ttf"),
-		),
+		fileURLToPath(import.meta.resolve("./modules/games/unoPhotos/Cabin-SemiBold.ttf")),
 		"Uno",
 	);
 	// eslint-disable-next-line @typescript-eslint/naming-convention
