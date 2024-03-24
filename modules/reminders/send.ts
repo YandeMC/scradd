@@ -1,29 +1,29 @@
+import { client } from "strife.js";
 import {
-	ActivityType,
+	BUMPING_THREAD,
+	COMMAND_ID,
+	type Reminder,
+	SpecialReminders,
+	remindersDatabase,
+} from "./misc.js";
+import getWeekly, { getChatters } from "../xp/weekly.js";
+import { convertBase, nth } from "../../util/numbers.js";
+import {
 	ChannelType,
 	MessageFlags,
 	TimestampStyles,
 	chatInputApplicationCommandMention,
 	time,
 	userMention,
+	ActivityType,
+	Message,
 } from "discord.js";
-import { client } from "strife.js";
-import config from "../../common/config.js";
 import constants from "../../common/constants.js";
 import { backupDatabases, cleanDatabaseListeners } from "../../common/database.js";
-import { statuses } from "../../common/strings.js";
-import { convertBase } from "../../util/numbers.js";
+import config from "../../common/config.js";
 import { gracefulFetch } from "../../util/promises.js";
 import { syncRandomBoard } from "../board/update.js";
-import getWeekly, { getChatters } from "../xp/weekly.js";
-import {
-	BUMPING_THREAD,
-	COMMAND_ID,
-	SpecialReminders,
-	remindersDatabase,
-	type Reminder,
-} from "./misc.js";
-import sendQuestion from "../polls/qotd.js";
+import updateTrivia from "../trivia.js";
 
 let nextReminder: NodeJS.Timeout | undefined;
 export default async function queueReminders(): Promise<NodeJS.Timeout | undefined> {
@@ -39,6 +39,21 @@ export default async function queueReminders(): Promise<NodeJS.Timeout | undefin
 		return nextReminder;
 	}
 }
+
+const STATUSES = [
+	"Watching the SA server!",
+	"Hope for no bugs…",
+	"Dating Yande",
+	"e",
+	"Moderating Scratch Coders",
+	"Hi, I’m Scrub!",
+	"Rico, status",
+	"beep boop beep",
+	"ims scradd",
+	"alan 👑",
+	"strawberries 😌",
+	"Farming dangos",
+].toSorted(() => Math.random() - 0.5);
 
 async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 	if (nextReminder) clearTimeout(nextReminder);
@@ -62,6 +77,8 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 				case SpecialReminders.Weekly: {
 					if (!channel?.isTextBased()) continue;
 
+					const date = new Date();
+					date.setUTCDate(date.getUTCDate() - 7);
 					const nextWeeklyDate = new Date(reminder.date);
 					nextWeeklyDate.setUTCDate(nextWeeklyDate.getUTCDate() + 7);
 
@@ -69,10 +86,22 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					const message = await channel.send(await getWeekly(nextWeeklyDate));
 					if (!chatters) continue;
 					const thread = await message.startThread({
-						name: `🏆 Weekly Winners week of ${new Date().toLocaleString([], {
-							month: "long",
-							day: "numeric",
-						})}`,
+						name: `🏆 Weekly Winners week of ${
+							[
+								"January",
+								"February",
+								"March",
+								"April",
+								"May",
+								"June",
+								"July",
+								"August",
+								"September",
+								"October",
+								"November",
+								"December",
+							][date.getUTCMonth()] || ""
+						} ${nth(date.getUTCDate())}`,
 						reason: "To send all chatters",
 					});
 					await thread.send(chatters);
@@ -184,7 +213,7 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					continue;
 				}
 				case SpecialReminders.ChangeStatus: {
-					const next = (Number(reminder.reminder) + 1) % statuses.length;
+					const next = (Number(reminder.reminder) + 1) % STATUSES.length;
 
 					remindersDatabase.data = [
 						...remindersDatabase.data,
@@ -200,24 +229,86 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					client.user.setActivity({
 						type: ActivityType.Custom,
 						name: "status",
-						state: statuses[next],
+						state: STATUSES[next],
 					});
 					continue;
 				}
-				case SpecialReminders.QOTD: {
-					if (!channel?.isThreadOnly()) continue;
+				case SpecialReminders.UpdateVerificationStatus: {
 					remindersDatabase.data = [
 						...remindersDatabase.data,
 						{
-							channel: channel.id,
-							date: reminder.date + 86_400_000,
-							reminder: undefined,
-							id: SpecialReminders.QOTD,
+							channel: "0",
+							date: Date.now() + 60000 * 5,
+							id: SpecialReminders.UpdateVerificationStatus,
 							user: client.user.id,
 						},
 					];
-					await sendQuestion(channel);
+
+					const ScratchOauth = await gracefulFetch(
+						"https://stats.uptimerobot.com/api/getMonitorList/K2V4js80Pk",
+					);
+					if (!ScratchOauth) return;
+					let fields: any[] = [];
+
+					for (const monitor of ScratchOauth.psp.monitors) {
+						const re = await gracefulFetch(
+							`https://stats.uptimerobot.com/api/getMonitor/K2V4js80Pk?m=${monitor.monitorId}`,
+						);
+						const statusEmoji =
+							re.monitor.statusClass == "success"
+								? "<:green:1196987578881150976>"
+								: "<:icons_outage:1199113890584342628>";
+						fields.push({
+							name: `${statusEmoji} ${re.monitor.name}`,
+							value:
+								re.monitor.statusClass == "success"
+									? constants.zws
+									: re.monitor.logs[0]
+									? `Down for ${re.monitor.logs[0]?.duration}(${re.monitor.logs[0]?.reason?.code})`
+									: `No logs.`,
+						});
+					}
+					if (!config.channels.verify) return;
+					let verifyMessages: any = await config.channels.verify?.messages.fetch({
+						limit: 10,
+					});
+					if (!verifyMessages) return;
+					let messgae: any = verifyMessages.find(
+						(msg: Message) => msg.author.id == client.user.id,
+					);
+					if (!messgae) {
+						messgae = await config.channels.verify?.send({ content: "..." });
+					}
+					const downCount: number = ScratchOauth.statistics.counts.down;
+					fields.push({
+						name: `Next update <t:${Math.floor(Date.now() / 1000) + 60 * 5}:R>.`,
+						value: constants.zws,
+					});
+					messgae.edit({
+						content: ``,
+						embeds: [
+							{
+								fields: fields,
+
+								author: {
+									name: "Verification Status",
+								},
+								title:
+									downCount != 0
+										? `Uh oh! ${downCount} service${
+												downCount == 1 ? " is" : "s are"
+										  } down! `
+										: "All good!",
+								color: 16754688,
+							},
+						],
+					});
+
 					continue;
+				}
+				case SpecialReminders.trivia: {
+					await config.channels.trivia?.send("<@&1203131252547395665> new trivia");
+					await updateTrivia();
 				}
 			}
 		}
@@ -241,7 +332,7 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 	return await queueReminders();
 }
 
-function getNextInterval(): number | undefined {
+function getNextInterval() {
 	const [reminder] = remindersDatabase.data.toSorted((one, two) => one.date - two.date);
 	if (!reminder) return;
 	return reminder.date - Date.now();

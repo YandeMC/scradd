@@ -1,11 +1,12 @@
 import { ApplicationCommandOptionType, ApplicationCommandType } from "discord.js";
+import guessAddon from "./guessAddon.js";
+import memoryMatch, { showMemoryInstructions } from "./memoryMatch.js";
 import { defineButton, defineChatCommand, defineMenuCommand } from "strife.js";
+import { CURRENTLY_PLAYING } from "./misc.js";
 import constants from "../../common/constants.js";
 import { disableComponents } from "../../util/discord.js";
-import guessAddon from "./guess-addon.js";
 import hangman from "./hangman.js";
-import memoryMatch, { showMemoryInstructions } from "./memory-match.js";
-import { CURRENTLY_PLAYING } from "./misc.js";
+import { uno } from "./uno.js";
 
 defineChatCommand(
 	{ name: "guess-addon", description: "Think of an addon for me to guess it", access: true },
@@ -80,3 +81,11 @@ defineButton("endGame", async (interaction, users) => {
 	await interaction.deferUpdate();
 	return current.end();
 });
+
+defineChatCommand(
+	{
+		name: "uno",
+		description: "Start a game of Uno!",
+	},
+	uno,
+);

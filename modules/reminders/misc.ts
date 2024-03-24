@@ -1,7 +1,7 @@
 import type { Snowflake } from "discord.js";
-import { client } from "strife.js";
-import config from "../../common/config.js";
 import Database from "../../common/database.js";
+import config from "../../common/config.js";
+import { client } from "strife.js";
 
 export enum SpecialReminders {
 	Weekly,
@@ -14,7 +14,8 @@ export enum SpecialReminders {
 	BackupDatabases,
 	SyncRandomBoard,
 	ChangeStatus,
-	QOTD,
+	UpdateVerificationStatus,
+	trivia,
 }
 export type Reminder = {
 	channel: Snowflake;
@@ -31,13 +32,44 @@ export const BUMPING_THREAD = "881619501018394725",
 export const remindersDatabase = new Database<Reminder>("reminders");
 await remindersDatabase.init();
 
-export function getUserReminders(id: string): Reminder[] {
+export function getUserReminders(id: string) {
 	return remindersDatabase.data
 		.filter((reminder) => reminder.user === id)
 		.toSorted((one, two) => one.date - two.date);
 }
+if (
+	process.env.NODE_ENV === "production" &&
+	!remindersDatabase.data.some(
+		(reminder) => reminder.id === SpecialReminders.UpdateVerificationStatus,
+	)
+) {
+	remindersDatabase.data = [
+		...remindersDatabase.data,
+		{
+			channel: "0",
+			date: Date.now(),
+			reminder: undefined,
+			id: SpecialReminders.UpdateVerificationStatus,
+			user: client.user.id,
+		},
+	];
+}
 
-const date = new Date();
+if (!remindersDatabase.data.some((reminder) => reminder.id === SpecialReminders.trivia)) {
+	remindersDatabase.data = [
+		...remindersDatabase.data.filter(
+			(reminder) =>
+				!(reminder.id === SpecialReminders.trivia && reminder.user === client.user.id),
+		),
+		{
+			channel: "0",
+			date: Date.now() + 0,
+			reminder: undefined,
+			id: SpecialReminders.trivia,
+			user: client.user.id,
+		},
+	];
+}
 
 if (
 	config.channels.announcements &&
@@ -47,12 +79,7 @@ if (
 		...remindersDatabase.data,
 		{
 			channel: config.channels.announcements.id,
-			date: +new Date(+date + ((7 - date.getUTCDay()) % 7) * 86_400_000).setUTCHours(
-				0,
-				0,
-				0,
-				0,
-			),
+			date: Date.now() + 302_400_000,
 			reminder: undefined,
 			id: SpecialReminders.Weekly,
 			user: client.user.id,
@@ -68,7 +95,7 @@ if (
 		...remindersDatabase.data,
 		{
 			channel: config.channels.suggestions.parent.id,
-			date: +date,
+			date: Date.now(),
 			reminder: undefined,
 			id: SpecialReminders.UpdateSACategory,
 			user: client.user.id,
@@ -84,7 +111,7 @@ if (
 		...remindersDatabase.data,
 		{
 			channel: BUMPING_THREAD,
-			date: +date + 3_600_000,
+			date: Date.now() + 3_600_000,
 			reminder: undefined,
 			id: SpecialReminders.Bump,
 			user: client.user.id,
@@ -100,7 +127,7 @@ if (
 		...remindersDatabase.data,
 		{
 			channel: BACKUPS_THREAD,
-			date: +date,
+			date: Date.now(),
 			reminder: undefined,
 			id: SpecialReminders.BackupDatabases,
 			user: client.user.id,
@@ -116,7 +143,7 @@ if (
 		...remindersDatabase.data,
 		{
 			channel: config.channels.board.id,
-			date: +date,
+			date: Date.now(),
 			id: SpecialReminders.SyncRandomBoard,
 			user: client.user.id,
 		},
@@ -131,25 +158,9 @@ remindersDatabase.data = [
 	...remindersDatabase.data.filter((reminder) => reminder.id !== SpecialReminders.ChangeStatus),
 	{
 		channel: "0",
-		date: +date,
+		date: Date.now(),
 		reminder: +(nextChange?.reminder ?? 0),
 		id: SpecialReminders.ChangeStatus,
 		user: client.user.id,
 	},
 ];
-
-if (
-	config.channels.qotd &&
-	!remindersDatabase.data.some((reminder) => reminder.id === SpecialReminders.QOTD)
-) {
-	remindersDatabase.data = [
-		...remindersDatabase.data,
-		{
-			channel: config.channels.qotd.id,
-			date: date.setUTCHours(12, 0, 0, 0) + (date.getUTCHours() >= 12 ? 86_400_000 : 0),
-			reminder: undefined,
-			id: SpecialReminders.QOTD,
-			user: client.user.id,
-		},
-	];
-}
