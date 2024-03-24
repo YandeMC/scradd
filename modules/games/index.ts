@@ -8,7 +8,40 @@ import hangman from "./hangman.js";
 import memoryMatch, { showMemoryInstructions } from "./memory-match.js";
 import { CURRENTLY_PLAYING } from "./misc.js";
 import { uno } from "./uno.js";
-
+import rps from "./rps.js";
+import ttt from "./tic-tac-toe.js";
+defineChatCommand(
+	{
+		name: "rps",
+		description: "Play Rock Paper Scissors against someone(or the bot)",
+		options: {
+			opponent: {
+				description: "Opponent (leave blank for solo)",
+				type: ApplicationCommandOptionType.User,
+			},
+			rounds: {
+				description: "Number of rounds",
+				type: ApplicationCommandOptionType.Integer,
+				minValue: 1,
+				maxValue: 31,
+			},
+		},
+	},
+	rps,
+);
+defineChatCommand(
+	{
+		name: "tic-tac-toe",
+		description: "Play Tic Tac Toe against someone(or the bot)",
+		options: {
+			opponent: {
+				description: "Opponent (leave blank for solo)",
+				type: ApplicationCommandOptionType.User,
+			},
+		},
+	},
+	ttt,
+);
 
 defineChatCommand(
 	{ name: "hangman", description: "Guess who from the server I’m thinking of" },

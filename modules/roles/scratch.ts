@@ -47,6 +47,9 @@ export default async function linkScratchRole(
 		response_type: "code",
 		scope: OAuth2Scopes.Identify + " " + OAuth2Scopes.RoleConnectionsWrite,
 	}).toString()}`;
+	const scratchUrl = `https://oauth.fly.dev/auth/?name=${encodeURIComponent(
+		client.user.displayName,
+	)}&redirect=${Buffer.from(redirectUri).toString("base64")}`;
 	const discordHtml = `<meta http-equiv="refresh" content="0;url=${discordUrl}">`; // eslint-disable-line unicorn/string-content
 
 	const search = new URLSearchParams(requestUrl.search);

@@ -161,7 +161,17 @@ let templateMessage =
 		(message) =>
 			message.author.id === client.user.id &&
 			message.embeds[0]?.title === "Introduction Template",
-	) ?? (await config.channels.intros?.send(introTemplate));
+	) ??
+	(await config.channels.intros?.send({
+		embeds: [
+			{
+				title: "Introduction Template",
+				color: constants.themeColor,
+				description:
+					"```md\n- Name/Nickname: \n- Pronouns: \n- Age: \n- Scratch profile: https://scratch.mit.edu/users/\n- Country/Location: \n- Hobbies: \n- Extra: \n```",
+			},
+		],
+	}));
 defineEvent("messageCreate", async (message) => {
 	if (message.channel.id !== config.channels.intros?.id) return;
 
