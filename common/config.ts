@@ -87,8 +87,8 @@ verify: getChannel("verify",ChannelType.GuildText),
 			admin: getChannel("admin", ChannelType.GuildText, "start") ?? modChannel,
 
 			general: getChannel("general", ChannelType.GuildText),
-
-			support: getChannel("support", ChannelType.GuildText, "partial"),
+			trivia: getChannel("trivia", ChannelType.GuildText),
+			support: "826250884279173162",
 			updates: getChannel("updates", ChannelType.GuildText, "partial"),
 			suggestions: getChannel("suggestions", ChannelType.GuildForum),
 			bugs: getChannel("bug", ChannelType.GuildForum, "start"),
