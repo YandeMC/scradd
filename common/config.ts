@@ -84,11 +84,11 @@ async function getConfig() {
 verify: getChannel("verify",ChannelType.GuildText),
 			
 			exec: getChannel("exec", ChannelType.GuildText, "start"),
-			admin: getChannel("admin", ChannelType.GuildText, "start") ?? modChannel,
-
+			admin: getChannel("admin", ChannelType.GuildText, "start"),
+			intros: getChannel("intro", ChannelType.GuildText, "start"),
 			general: getChannel("general", ChannelType.GuildText),
 			trivia: getChannel("trivia", ChannelType.GuildText),
-			support:  getChannel("support", ChannelType.GuildText),
+			support: getChannel("support", ChannelType.GuildText),
 			updates: getChannel("updates", ChannelType.GuildText, "partial"),
 			suggestions: getChannel("suggestions", ChannelType.GuildForum),
 			bugs: getChannel("bug", ChannelType.GuildForum, "start"),

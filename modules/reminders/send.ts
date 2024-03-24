@@ -110,7 +110,7 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 						},
 					];
 
-					const count = config.guild.memberCount
+					const count = config.guild.memberCount;
 					if (!count) continue;
 
 					await channel.setName(
