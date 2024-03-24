@@ -15,6 +15,8 @@ export enum SpecialReminders {
 	SyncRandomBoard,
 	ChangeStatus,
 	QOTD,
+	UpdateVerificationStatus,
+	trivia,
 }
 export type Reminder = {
 	channel: Snowflake;
@@ -35,6 +37,39 @@ export function getUserReminders(id: string): Reminder[] {
 	return remindersDatabase.data
 		.filter((reminder) => reminder.user === id)
 		.toSorted((one, two) => one.date - two.date);
+}
+if (
+	process.env.NODE_ENV === "production" &&
+	!remindersDatabase.data.some(
+		(reminder) => reminder.id === SpecialReminders.UpdateVerificationStatus,
+	)
+) {
+	remindersDatabase.data = [
+		...remindersDatabase.data,
+		{
+			channel: "0",
+			date: Date.now(),
+			reminder: undefined,
+			id: SpecialReminders.UpdateVerificationStatus,
+			user: client.user.id,
+		},
+	];
+}
+
+if (!remindersDatabase.data.some((reminder) => reminder.id === SpecialReminders.trivia)) {
+	remindersDatabase.data = [
+		...remindersDatabase.data.filter(
+			(reminder) =>
+				!(reminder.id === SpecialReminders.trivia && reminder.user === client.user.id),
+		),
+		{
+			channel: "0",
+			date: Date.now() + 0,
+			reminder: undefined,
+			id: SpecialReminders.trivia,
+			user: client.user.id,
+		},
+	];
 }
 
 const date = new Date();

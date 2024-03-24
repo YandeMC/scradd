@@ -81,6 +81,8 @@ async function getConfig() {
 
 			mod: modChannel,
 			modlogs: assertOutsideTests(modlogsChannel ?? modChannel),
+verify: getChannel("verify",ChannelType.GuildText),
+			
 			exec: getChannel("exec", ChannelType.GuildText, "start"),
 			admin: getChannel("admin", ChannelType.GuildText, "start") ?? modChannel,
 

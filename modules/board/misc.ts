@@ -15,8 +15,8 @@ import Database from "../../common/database.js";
 import { extractMessageExtremities, getBaseChannel, messageToEmbed } from "../../util/discord.js";
 import tryCensor, { censor } from "../automod/misc.js";
 
-export const BOARD_EMOJI = process.env.NODE_ENV === "production" ? "🥔" : "⭐",
-	REACTIONS_NAME = process.env.NODE_ENV === "production" ? "Potatoes" : "Stars";
+export const BOARD_EMOJI = process.env.NODE_ENV === "production" ? "🍉" : "⭐",
+	REACTIONS_NAME = process.env.NODE_ENV === "production" ? "Melons" : "Stars";
 
 /** Number of days for required potato count to double. */
 const DECAY_SPEED = 750;
