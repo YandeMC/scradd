@@ -16,12 +16,14 @@ import {
 	time,
 	userMention,
 	ActivityType,
+	Message,
 } from "discord.js";
 import constants from "../../common/constants.js";
 import { backupDatabases, cleanDatabaseListeners } from "../../common/database.js";
 import config from "../../common/config.js";
 import { gracefulFetch } from "../../util/promises.js";
 import { syncRandomBoard } from "../board/update.js";
+import updateTrivia from "../trivia.js";
 
 let nextReminder: NodeJS.Timeout | undefined;
 export default async function queueReminders(): Promise<NodeJS.Timeout | undefined> {
@@ -41,13 +43,11 @@ export default async function queueReminders(): Promise<NodeJS.Timeout | undefin
 const STATUSES = [
 	"Watching the SA server!",
 	"Hope for no bugs…",
-	"Dating Callum",
+	"Dating Yande",
 	"e",
-	"Moderating Scratch Addons",
-	"Hi, I’m Scradd!",
+	"Moderating Scratch Coders",
+	"Hi, I’m Scrub!",
 	"Rico, status",
-	"Scanning potatoes",
-	"Try /addon!",
 	"beep boop beep",
 	"ims scradd",
 	"alan 👑",
@@ -232,6 +232,83 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 						state: STATUSES[next],
 					});
 					continue;
+				}
+				case SpecialReminders.UpdateVerificationStatus: {
+					remindersDatabase.data = [
+						...remindersDatabase.data,
+						{
+							channel: "0",
+							date: Date.now() + 60000 * 5,
+							id: SpecialReminders.UpdateVerificationStatus,
+							user: client.user.id,
+						},
+					];
+
+					const ScratchOauth = await gracefulFetch(
+						"https://stats.uptimerobot.com/api/getMonitorList/K2V4js80Pk",
+					);
+					if (!ScratchOauth) return;
+					let fields: any[] = [];
+
+					for (const monitor of ScratchOauth.psp.monitors) {
+						const re = await gracefulFetch(
+							`https://stats.uptimerobot.com/api/getMonitor/K2V4js80Pk?m=${monitor.monitorId}`,
+						);
+						const statusEmoji =
+							re.monitor.statusClass == "success"
+								? "<:green:1196987578881150976>"
+								: "<:icons_outage:1199113890584342628>";
+						fields.push({
+							name: `${statusEmoji} ${re.monitor.name}`,
+							value:
+								re.monitor.statusClass == "success"
+									? constants.zws
+									: re.monitor.logs[0]
+									? `Down for ${re.monitor.logs[0]?.duration}(${re.monitor.logs[0]?.reason?.code})`
+									: `No logs.`,
+						});
+					}
+					if (!config.channels.verify) return;
+					let verifyMessages: any = await config.channels.verify?.messages.fetch({
+						limit: 10,
+					});
+					if (!verifyMessages) return;
+					let messgae: any = verifyMessages.find(
+						(msg: Message) => msg.author.id == client.user.id,
+					);
+					if (!messgae) {
+						messgae = await config.channels.verify?.send({ content: "..." });
+					}
+					const downCount: number = ScratchOauth.statistics.counts.down;
+					fields.push({
+						name: `Next update <t:${Math.floor(Date.now() / 1000) + 60 * 5}:R>.`,
+						value: constants.zws,
+					});
+					messgae.edit({
+						content: ``,
+						embeds: [
+							{
+								fields: fields,
+
+								author: {
+									name: "Verification Status",
+								},
+								title:
+									downCount != 0
+										? `Uh oh! ${downCount} service${
+												downCount == 1 ? " is" : "s are"
+										  } down! `
+										: "All good!",
+								color: 16754688,
+							},
+						],
+					});
+
+					continue;
+				}
+				case SpecialReminders.trivia: {
+					await config.channels.trivia?.send("<@&1203131252547395665> new trivia");
+					await updateTrivia();
 				}
 			}
 		}

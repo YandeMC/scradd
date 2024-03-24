@@ -15,8 +15,8 @@ import { extractMessageExtremities, getBaseChannel, messageToEmbed } from "../..
 import tryCensor, { censor } from "../automod/misc.js";
 import { client } from "strife.js";
 
-export const BOARD_EMOJI = process.env.NODE_ENV === "production" ? "🥔" : "⭐",
-	REACTIONS_NAME = process.env.NODE_ENV === "production" ? "Potatoes" : "Stars";
+export const BOARD_EMOJI = process.env.NODE_ENV === "production" ? "🍉" : "⭐",
+	REACTIONS_NAME = process.env.NODE_ENV === "production" ? "Melons" : "Stars";
 
 export const boardDatabase = new Database<{
 	/** The number of reactions this message has. */

@@ -43,7 +43,7 @@ async function getConfig() {
 			tickets: getChannel("contact", ChannelType.GuildText, "start"),
 			server: "1138116320249000077",
 			welcome: getChannel("welcome", ChannelType.GuildText),
-
+verify: getChannel("verify",ChannelType.GuildText),
 			mod: getChannel("mod-talk", ChannelType.GuildText),
 			modlogs:
 				guild?.publicUpdatesChannel || getChannel("logs", ChannelType.GuildText, "end"),
@@ -51,7 +51,7 @@ async function getConfig() {
 			admin: getChannel("admin", ChannelType.GuildText, "start"),
 
 			general: getChannel("general", ChannelType.GuildText),
-
+trivia:getChannel("trivia",ChannelType.GuildText),
 			support: "826250884279173162",
 			updates: getChannel("updates", ChannelType.GuildText, "partial"),
 			suggestions: getChannel("suggestions", ChannelType.GuildForum),
