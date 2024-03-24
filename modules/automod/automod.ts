@@ -16,8 +16,6 @@ import warn from "../punishments/warn.js";
 import { getLevelForXp } from "../xp/misc.js";
 import { xpDatabase } from "../xp/util.js";
 import tryCensor, { badWordRegexps, badWordsAllowed } from "./misc.js";
-import { stripMarkdown } from "../../util/markdown.js";
-import { joinWithAnd } from "../../util/text.js";
 import { createWorker } from "tesseract.js";
 
 const worker = await createWorker("eng");
@@ -36,16 +34,6 @@ async function getMessageImageText(message: Message): Promise<string[]> {
 	return imageTextResults as string[];
 }
 
-const WHITELISTED_INVITE_GUILDS = new Set([
-	config.guild.id,
-	...config.otherGuildIds,
-	"898383289059016704", // Scratch Addons SMP Archive
-	"837024174865776680", // TurboWarp
-	"945340853189247016", // ScratchTools
-	"461575285364752384", // 9th Tail Bot Hub
-	"333355888058302465", // DISBOARD
-	undefined, // Invalid links
-]);
 
 export default async function automodMessage(message: Message): Promise<boolean> {
 	const allowBadWords = badWordsAllowed(message.channel);
@@ -192,6 +180,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 		tryCensor(stripMarkdown(message.content)),
 		...message.stickers.map(({ name }) => tryCensor(name)),
 		...invites.map(([, invite]) => !!invite?.guild && tryCensor(invite.guild.name)),
+		...(await getMessageImageText(message)).map((content) => tryCensor(content))
 	].reduce(
 		(bad, censored) =>
 			typeof censored === "boolean"
