@@ -47,7 +47,7 @@ export default async function suggestionsPage(
 	if (
 		!thread?.isThread() ||
 		!thread.parentId ||
-		![config.channels.suggestions?.id, config.channels.oldSuggestions?.id].includes(
+		![config.channels.suggestions?.id, config.channels.old_suggestions?.id].includes(
 			thread.parentId,
 		)
 	)
@@ -63,34 +63,39 @@ export default async function suggestionsPage(
 	const starterMessage = await thread.fetchStarterMessage().catch(() => void 0);
 
 	const member =
-		config.channels.oldSuggestions?.id === thread.parentId ?
-			await config.guild.members.fetch(suggestion.author.valueOf()).catch(() => ({
-				displayHexColor: `#${(starterMessage?.embeds[0]?.color ?? 0)
-					.toString(16)
-					.padStart(6, "0")}`,
-				user: undefined,
-				roles: undefined,
-			}))
-		:	undefined;
+		config.channels.old_suggestions?.id === thread.parentId
+			? await config.guild.members.fetch(suggestion.author.valueOf()).catch(() => ({
+					displayHexColor: `#${(starterMessage?.embeds[0]?.color ?? 0)
+						.toString(16)
+						.padStart(6, "0")}`,
+					user: undefined,
+					roles: undefined,
+			  }))
+			: undefined;
 	const messages = [
-		!starterMessage || config.channels.oldSuggestions?.id === thread.parentId ?
-			{
-				createdAt: (starterMessage ?? thread).createdAt,
-				id: (starterMessage ?? thread).id,
-				attachments: starterMessage?.attachments,
-				embeds: starterMessage?.embeds,
-				content:
-					starterMessage?.content ||
-					starterMessage?.embeds[0]?.description ||
-					(starterMessage?.attachments.size ? "" : `${suggestion.title}`),
-				member,
-				author:
-					member?.user ??
-					(typeof suggestion.author === "string" ?
-						await client.users.fetch(suggestion.author)
-					:	suggestion.author),
-			}
-		:	starterMessage,
+		!starterMessage || config.channels.old_suggestions?.id === thread.parentId
+			? {
+					interaction: starterMessage?.interaction,
+					createdAt: (starterMessage ?? thread).createdAt,
+					id: (starterMessage ?? thread).id,
+					attachments: starterMessage?.embeds[0]?.image
+						? new Collection<Snowflake, Attachment | EmbedAssetData>([
+								...starterMessage.attachments,
+								["0", starterMessage.embeds[0].image],
+						  ])
+						: starterMessage?.attachments,
+					content:
+						starterMessage?.content ||
+						starterMessage?.embeds[0]?.description ||
+						(starterMessage?.attachments.size ? "" : `${suggestion.title}`),
+					member,
+					author:
+						member?.user ??
+						(typeof suggestion.author === "string"
+							? await client.users.fetch(suggestion.author)
+							: suggestion.author),
+			  }
+			: starterMessage,
 
 		...(await thread.messages.fetchPinned())
 			.filter(

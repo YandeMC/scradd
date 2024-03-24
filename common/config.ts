@@ -88,7 +88,7 @@ verify: getChannel("verify",ChannelType.GuildText),
 
 			general: getChannel("general", ChannelType.GuildText),
 			trivia: getChannel("trivia", ChannelType.GuildText),
-			support: "826250884279173162",
+			support:  getChannel("support", ChannelType.GuildText),
 			updates: getChannel("updates", ChannelType.GuildText, "partial"),
 			suggestions: getChannel("suggestions", ChannelType.GuildForum),
 			bugs: getChannel("bug", ChannelType.GuildForum, "start"),
@@ -120,7 +120,7 @@ verify: getChannel("verify",ChannelType.GuildText),
 	function getChannel<T extends ChannelType>(
 		name: string,
 		type: T | T[] = [],
-		matchType: "end" | "full" | "partial" | "start" = "full",
+		matchType: "end" | "full" | "partial" | "start" = "partial",
 	): Extract<NonThreadGuildBasedChannel, { type: T }> | undefined {
 		const types = new Set<ChannelType>([type].flat());
 		return channels.find(

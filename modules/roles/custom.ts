@@ -278,7 +278,7 @@ export async function qualifiesForRole(member: GuildMember): Promise<boolean> {
 				command,
 				member,
 				undefined,
-				config.roles.weeklyWinner && new Set([config.roles.weeklyWinner.id]),
-			)
-		:	false;
+				config.roles.weekly_winner && new Set(config.roles.weekly_winner.id),
+		  )
+		: false;
 }
