@@ -6,6 +6,7 @@ import { CURRENTLY_PLAYING } from "./misc.js";
 import constants from "../../common/constants.js";
 import { disableComponents } from "../../util/discord.js";
 import hangman from "./hangman.js";
+import { uno } from "./uno.js";
 
 defineChatCommand(
 	{ name: "guess-addon", description: "Think of an addon for me to guess it", access: true },
@@ -80,3 +81,11 @@ defineButton("endGame", async (interaction, users) => {
 	await interaction.deferUpdate();
 	return current.end();
 });
+
+defineChatCommand(
+	{
+		name: "uno",
+		description: "Start a game of Uno!",
+	},
+	uno,
+);
