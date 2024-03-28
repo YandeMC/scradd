@@ -8,16 +8,7 @@
  */
 const badWords: [RegExp[]?, RegExp[]?, RegExp[]?][] = [
 	[
-		[
-			/cbea/,
-			/grfgvpyr/,
-			/erpghz/,
-			/ihyin/,
-			/🖕/,
-			/卐/,
-			/fjnfgvxn/,
-			/卍/,
-		],
+		[/cbea/, /grfgvpyr/, /erpghz/, /ihyin/, /🖕/, /卐/, /fjnfgvxn/, /卍/],
 		[
 			/intva(?:f|l|n|r|y)+/,
 			/(?:urzv ?)?cravf(?:rf)?/,
