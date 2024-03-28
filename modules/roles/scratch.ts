@@ -227,7 +227,7 @@ export async function proveOwnership(button: ButtonInteraction) {
 								style: ButtonStyle.Primary,
 								label: "Done",
 								custom_id: `${data.privateCode}_finishverify`,
-							}
+							},
 						],
 					},
 				],
@@ -256,7 +256,7 @@ export async function proveOwnership(button: ButtonInteraction) {
 								style: ButtonStyle.Primary,
 								label: "Done",
 								custom_id: `${data.privateCode}_finishverify`,
-							}
+							},
 						],
 					},
 				],
@@ -303,7 +303,9 @@ export async function proveOwnership(button: ButtonInteraction) {
 			);
 			if (!data) return;
 			button.reply({
-				content: `Copy the number and paste it into your [profile comments](https://scratch.mit.edu/users/${modalInteraction?.fields.getTextInputValue("username")})\n\`\`\`${data.publicCode}\`\`\`\nClick done when youre done`,
+				content: `Copy the number and paste it into your [profile comments](https://scratch.mit.edu/users/${modalInteraction?.fields.getTextInputValue(
+					"username",
+				)})\n\`\`\`${data.publicCode}\`\`\`\nClick done when youre done`,
 				components: [
 					{
 						type: ComponentType.ActionRow,
