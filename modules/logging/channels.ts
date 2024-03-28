@@ -23,23 +23,23 @@ import log, { LogSeverity, LoggingEmojis, extraAuditLogsInfo, type AuditLog } fr
 
 export async function channelCreate(entry: AuditLog<AuditLogEvent.ChannelCreate>): Promise<void> {
 	await log(
-		entry.target instanceof BaseChannel
-			? `${LoggingEmojis.Channel} ${
-					{
-						[ChannelType.GuildText]: "Text",
-						[ChannelType.GuildVoice]: "Voice",
-						[ChannelType.GuildCategory]: "Category",
-						[ChannelType.GuildAnnouncement]: "Announcement",
-						[ChannelType.GuildStageVoice]: "Stage",
-						[ChannelType.GuildForum]: "Forum",
-						[ChannelType.GuildMedia]: "Media",
-					}[entry.target.type]
-			  } channel ${entry.target.toString()} (#${entry.target.name}) created${
-					entry.target.parent ? ` under ${entry.target.parent.toString()}` : ""
-			  }${extraAuditLogsInfo(entry)}`
-			: `${LoggingEmojis.Channel} Unknown channel ${channelMention(
-					entry.target.id,
-			  )} created${extraAuditLogsInfo(entry)}`,
+		entry.target instanceof BaseChannel ?
+			`${LoggingEmojis.Channel} ${
+				{
+					[ChannelType.GuildText]: "Text",
+					[ChannelType.GuildVoice]: "Voice",
+					[ChannelType.GuildCategory]: "Category",
+					[ChannelType.GuildAnnouncement]: "Announcement",
+					[ChannelType.GuildStageVoice]: "Stage",
+					[ChannelType.GuildForum]: "Forum",
+					[ChannelType.GuildMedia]: "Media",
+				}[entry.target.type]
+			} channel ${entry.target.toString()} (#${entry.target.name}) created${
+				entry.target.parent ? ` under ${entry.target.parent.toString()}` : ""
+			}${extraAuditLogsInfo(entry)}`
+		:	`${LoggingEmojis.Channel} Unknown channel ${channelMention(
+				entry.target.id,
+			)} created${extraAuditLogsInfo(entry)}`,
 		LogSeverity.ImportantUpdate,
 	);
 }
@@ -59,11 +59,9 @@ export async function channelOverwriteCreate(
 ): Promise<void> {
 	await log(
 		`${LoggingEmojis.Channel} Permissions for ${
-			entry.extra instanceof Base
-				? entry.extra.toString()
-				: entry.extra.type === AuditLogOptionsType.Member
-				? userMention(entry.extra.id)
-				: roleMention(entry.extra.id)
+			entry.extra instanceof Base ? entry.extra.toString()
+			: entry.extra.type === AuditLogOptionsType.Member ? userMention(entry.extra.id)
+			: roleMention(entry.extra.id)
 		} in ${channelMention(entry.target.id)} changed${extraAuditLogsInfo(entry)}`,
 		LogSeverity.ServerChange,
 	);
@@ -73,11 +71,9 @@ export async function channelOverwriteUpdate(
 ): Promise<void> {
 	await log(
 		`${LoggingEmojis.Channel} Permissions for ${
-			entry.extra instanceof Base
-				? entry.extra.toString()
-				: entry.extra.type === AuditLogOptionsType.Member
-				? userMention(entry.extra.id)
-				: roleMention(entry.extra.id)
+			entry.extra instanceof Base ? entry.extra.toString()
+			: entry.extra.type === AuditLogOptionsType.Member ? userMention(entry.extra.id)
+			: roleMention(entry.extra.id)
 		} in ${channelMention(entry.target.id)} changed${extraAuditLogsInfo(entry)}`,
 		LogSeverity.ServerChange,
 	);
@@ -87,11 +83,9 @@ export async function channelOverwriteDelete(
 ): Promise<void> {
 	await log(
 		`${LoggingEmojis.Channel} Permissions for ${
-			entry.extra instanceof Base
-				? entry.extra.toString()
-				: entry.extra.type === AuditLogOptionsType.Member
-				? userMention(entry.extra.id)
-				: roleMention(entry.extra.id)
+			entry.extra instanceof Base ? entry.extra.toString()
+			: entry.extra.type === AuditLogOptionsType.Member ? userMention(entry.extra.id)
+			: roleMention(entry.extra.id)
 		} in ${channelMention(entry.target.id)} changed${extraAuditLogsInfo(entry)}`,
 		LogSeverity.ServerChange,
 	);
@@ -282,7 +276,15 @@ export async function channelUpdate(
 		);
 	}
 
-	if (!oldChannel.isThreadOnly() || oldChannel.type !== newChannel.type) return;
+	if (oldChannel.defaultThreadRateLimitPerUser !== newChannel.defaultThreadRateLimitPerUser)
+		await log(
+			`${LoggingEmojis.Channel} ${newChannel.toString()}’s message slowmode set to ${
+				newChannel.defaultThreadRateLimitPerUser ?? 0
+			} seconds`,
+			LogSeverity.ServerChange,
+		);
+
+	if (!oldChannel.isThreadOnly() || !newChannel.isThreadOnly()) return;
 
 	if (
 		oldChannel.defaultReactionEmoji?.id !== newChannel.defaultReactionEmoji?.id ||
@@ -290,21 +292,13 @@ export async function channelUpdate(
 	) {
 		await log(
 			`${LoggingEmojis.Channel} ${newChannel.toString()}’s default reaction was ${
-				newChannel.defaultReactionEmoji
-					? `set to ${formatAnyEmoji(newChannel.defaultReactionEmoji)}`
-					: "removed"
+				newChannel.defaultReactionEmoji ?
+					`set to ${formatAnyEmoji(newChannel.defaultReactionEmoji)}`
+				:	"removed"
 			}`,
 			LogSeverity.ServerChange,
 		);
 	}
-
-	if (oldChannel.rateLimitPerUser !== newChannel.rateLimitPerUser)
-		await log(
-			`${LoggingEmojis.Channel} ${newChannel.toString()}’s message slowmode set to ${
-				newChannel.defaultThreadRateLimitPerUser ?? 0
-			} seconds`,
-			LogSeverity.ServerChange,
-		);
 
 	if (oldChannel.defaultSortOrder !== newChannel.defaultSortOrder)
 		await log(

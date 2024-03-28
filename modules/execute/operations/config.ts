@@ -35,15 +35,15 @@ const data: CustomOperation = {
 		switch (subcommand) {
 			case "dynamic": {
 				const isStaff =
-					config.roles.staff &&
-					(interaction.member instanceof GuildMember
-						? interaction.member.roles.resolve(config.roles.staff.id)
-						: interaction.member.roles.includes(config.roles.staff.id));
+					interaction.member instanceof GuildMember ?
+						interaction.member.roles.resolve(config.roles.staff.id)
+					:	interaction.member.roles.includes(config.roles.staff.id);
 				await interaction.reply({
 					embeds: getDynamicConfig(),
 
-					components: isStaff
-						? [
+					components:
+						isStaff ?
+							[
 								{
 									type: ComponentType.ActionRow,
 									components: [
@@ -55,8 +55,8 @@ const data: CustomOperation = {
 										},
 									],
 								},
-						  ]
-						: [],
+							]
+						:	[],
 				});
 				break;
 			}
@@ -101,7 +101,7 @@ function getDynamicConfig(): APIEmbed[] {
 				.filter(
 					(
 						channel,
-					): channel is [typeof channel[0], Exclude<typeof channel[1], Snowflake>] =>
+					): channel is [(typeof channel)[0], Exclude<(typeof channel)[1], Snowflake>] =>
 						typeof channel[1] !== "string",
 				)
 				.map((channel) => ({
@@ -131,10 +131,9 @@ function getDynamicConfig(): APIEmbed[] {
 
 export async function syncConfigButton(interaction: ButtonInteraction): Promise<void> {
 	if (
-		config.roles.staff &&
-		(interaction.member instanceof GuildMember
-			? interaction.member.roles.resolve(config.roles.staff.id)
-			: interaction.member?.roles.includes(config.roles.staff.id))
+		interaction.member instanceof GuildMember ?
+			interaction.member.roles.resolve(config.roles.staff.id)
+		:	interaction.member?.roles.includes(config.roles.staff.id)
 	) {
 		await syncConfig();
 		await interaction.message.edit({ embeds: getDynamicConfig() });

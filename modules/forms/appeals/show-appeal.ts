@@ -46,6 +46,8 @@ export default async function appealRequest(
 ): Promise<ServerResponse> {
 	if (!process.env.CLIENT_SECRET)
 		return response.writeHead(501, { "content-type": "text/plain" }).end("501 Not Implemented");
+	if (request.method === "OPTIONS")
+		return response.writeHead(201, { "content-type": "text/plain" }).end("201 No Content");
 
 	const requestUrl = getRequestUrl(request);
 	const redirectUri = requestUrl.origin + requestUrl.pathname;
@@ -237,16 +239,16 @@ export default async function appealRequest(
 						customId: `${user.id}_xp`,
 						label: "XP",
 					},
-					...(totalStrikeCount
-						? [
-								{
-									style: ButtonStyle.Secondary,
-									type: ComponentType.Button,
-									customId: `${user.id}_viewStrikes`,
-									label: "Strikes",
-								} as const,
-						  ]
-						: []),
+					...(totalStrikeCount ?
+						[
+							{
+								style: ButtonStyle.Secondary,
+								type: ComponentType.Button,
+								customId: `${user.id}_viewStrikes`,
+								label: "Strikes",
+							} as const,
+						]
+					:	[]),
 				],
 			},
 		],

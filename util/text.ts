@@ -1,4 +1,5 @@
 import type { IncomingMessage } from "node:http";
+import constants from "../common/constants.js";
 
 /**
  * Generate a short, random string based off the date. Note that the length is not fixed.
@@ -6,9 +7,7 @@ import type { IncomingMessage } from "node:http";
  * Intended for use on `APIBaseComponent#customId`s.
  *
  * @deprecated Use `Interaction#id` instead.
- *
  * @param prefix - An optional prefix to the hash.
- *
  * @returns Hash.
  */
 export function generateHash(prefix = ""): string {
@@ -22,7 +21,6 @@ export function generateHash(prefix = ""): string {
  *
  * @param array - The array to join.
  * @param stringify - A function to convert each item to a string.
- *
  * @returns The joined string.
  */
 export function joinWithAnd<Item extends { toString(): string }>(
@@ -45,12 +43,12 @@ export function joinWithAnd(
 	if (array.length === 1) return stringify(last, 0, array);
 
 	return `${
-		array.length === 2
-			? `${array[0] ? stringify(array[0], 0, array) : ""} `
-			: array
-					.slice(0, -1)
-					.map((item, index) => `${stringify(item, index, array)}, `)
-					.join("")
+		array.length === 2 ?
+			`${array[0] ? stringify(array[0], 0, array) : ""} `
+		:	array
+				.slice(0, -1)
+				.map((item, index) => `${stringify(item, index, array)}, `)
+				.join("")
 	}and ${stringify(last, 0, array)}`;
 }
 
@@ -59,7 +57,6 @@ export function joinWithAnd(
  *
  * @param text - The string to truncate.
  * @param maxLength - The maximum length of the string.
- *
  * @returns The truncated string.
  */
 export function truncateText(text: string, maxLength: number, multiline = false): string {
@@ -70,9 +67,9 @@ export function truncateText(text: string, maxLength: number, multiline = false)
 
 	if (trimmed.length > maxLength) segments.pop();
 	const output = segments.join("").trim();
-	return output === text
-		? output
-		: output.slice(0, output.length === maxLength ? -1 : undefined) + "…";
+	return output === text ? output : (
+			output.slice(0, output.length === maxLength ? -1 : undefined) + "…"
+		);
 }
 
 /**
@@ -80,7 +77,6 @@ export function truncateText(text: string, maxLength: number, multiline = false)
  *
  * @param text - The text to encode.
  * @param rot - The rotate shift.
- *
  * @returns The encoded text.
  */
 export function caesar(text: string, rot = 13): string {
@@ -95,7 +91,6 @@ export function caesar(text: string, rot = 13): string {
  * Normalize a string.
  *
  * @param text - The string to normalize.
- *
  * @returns The normalized string.
  */
 export function normalize(text: string): string {
@@ -110,7 +105,6 @@ export function normalize(text: string): string {
  * Trims the patch version off of a Semver.
  *
  * @param full - The full version.
- *
  * @returns The patchless version.
  */
 export function trimPatchVersion(full: string): string {
@@ -121,8 +115,14 @@ export function getRequestUrl(request: IncomingMessage): URL {
 	return new URL(
 		request.url ?? "",
 		`${
-			request.headers["x-forwarded-proto"]?.toString() ||
+			(process.env.NODE_ENV !== "production" &&
+				request.headers["x-forwarded-proto"]?.toString()) ||
 			`http${"encrypted" in request.socket ? "s" : ""}`
-		}://${request.headers["x-forwarded-host"]?.toString() || request.headers.host || ""}`,
+		}://${
+			(process.env.NODE_ENV !== "production" &&
+				request.headers["x-forwarded-host"]?.toString()) ||
+			request.headers.host ||
+			constants.domains.scradd
+		}`,
 	);
 }

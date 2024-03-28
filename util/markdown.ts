@@ -37,13 +37,13 @@ export function formatAnyEmoji(
 		| null
 		| undefined,
 ): string {
-	return typeof options?.id === "string"
-		? formatEmoji({
+	return typeof options?.id === "string" ?
+			formatEmoji({
 				...options,
 				animated: options.animated ?? false,
 				name: options.name ?? undefined,
-		  })
-		: options?.name ?? "_";
+			})
+		:	options?.name ?? "_";
 }
 
 const DATE_TYPE_FORMATS = {
@@ -72,9 +72,9 @@ export const rules = {
 	blockQuote: {
 		...markdown.defaultRules.blockQuote,
 		match: (source, { inQuote }, previous) =>
-			inQuote || !/(?:^|(?:\n|\s*[*-])\s*)$/.test(previous)
-				? undefined
-				: /^ *(?:>>> [^]*|> .*(?:\n *> .*)*\n?)/.exec(source),
+			inQuote || !/(?:^|(?:\n|\s*[*-])\s*)$/.test(previous) ?
+				undefined
+			:	/^ *(?:>>> [^]*|> .*(?:\n *> .*)*\n?)/.exec(source),
 		parse: ([capture = ""], parse, state) => ({
 			content: parse(
 				capture.replace(capture.trim().startsWith(">>>") ? /^ *>>> ?/ : /^ *> ?/gm, ""),
@@ -154,11 +154,8 @@ export const rules = {
 		parse: (capture) => ({ content: capture[0] }),
 		html(node) {
 			const content = typeof node.content === "string" ? node.content : "";
-			const codePoints = toCodePoints(
-				content.includes("\u200D") ? content : content.replaceAll("\uFE0F", ""),
-			).join("-");
 			return markdown.htmlTag("img", "", {
-				src: `https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/svg/${codePoints}.svg`,
+				src: getTwemojiUrl(content),
 				alt: content,
 				draggable: false,
 				class: "discord-custom-emoji",
@@ -175,9 +172,10 @@ export const rules = {
 		html: (node) => {
 			const name = `:${(typeof node.name === "string" && node.name) || "_"}:`;
 			return markdown.htmlTag("img", "", {
-				src: `https://cdn.discordapp.com/emojis/${
-					(typeof node.id === "string" && node.id) || "0"
-				}.${node.animated ? "gif" : "webp"}?size=96&quality=lossless`,
+				src: client.rest.cdn.emoji(typeof node.id === "string" ? node.id : "0", {
+					size: 128,
+					extension: node.animated ? "gif" : "webp",
+				}),
 				alt: name,
 				draggable: false,
 				class: "discord-custom-emoji",
@@ -200,10 +198,12 @@ export const rules = {
 		html: (node, output, state) => {
 			const date = new Date(+(typeof node.timestamp === "string" && node.timestamp) * 1000);
 			const format =
-				typeof node.format === "string" &&
-				Object.keys(DATE_TYPE_FORMATS).includes(node.format)
-					? node.format
-					: "f";
+				(
+					typeof node.format === "string" &&
+					Object.keys(DATE_TYPE_FORMATS).includes(node.format)
+				) ?
+					node.format
+				:	"f";
 			const formatOptions = DATE_TYPE_FORMATS[format];
 
 			return markdown.htmlTag(
@@ -228,21 +228,20 @@ export const rules = {
 					{
 						type: "text",
 						content:
-							channel && !channel.isDMBased()
-								? `#${channel.name}`
-								: typeof node.content === "string"
-								? node.content
-								: "",
+							channel && !channel.isDMBased() ? `#${channel.name}`
+							: typeof node.content === "string" ? node.content
+							: "",
 					},
 					state,
 				),
 				{
 					class: "discord-mention",
-					href: channel
-						? !channel.isDMBased() && channel.guild.id === config.guild.id
-							? `/suggestions/${channel.id}`
-							: channel.url
-						: "",
+					href:
+						channel ?
+							!channel.isDMBased() && channel.guild.id === config.guild.id ?
+								`/suggestions/${channel.id}`
+							:	channel.url
+						:	"",
 					target: "_blank",
 					rel: "noreferrer",
 				},
@@ -297,10 +296,9 @@ export const rules = {
 				output(
 					{
 						type: "text",
-						content: role
-							? `@${role.name}`
-							: typeof node.content === "string"
-							? node.content
+						content:
+							role ? `@${role.name}`
+							: typeof node.content === "string" ? node.content
 							: "",
 					},
 					state,
@@ -323,10 +321,9 @@ export const rules = {
 				output(
 					{
 						type: "text",
-						content: user
-							? `@${user.displayName}`
-							: typeof node.content === "string"
-							? node.content
+						content:
+							user ? `@${user.displayName}`
+							: typeof node.content === "string" ? node.content
 							: "",
 					},
 					state,
@@ -345,3 +342,8 @@ const rawOutputter = markdown.outputFor(rules, "html");
 export function markdownToHtml(source: string): string {
 	return rawOutputter(parseMarkdown(source));
 }
+
+export const getTwemojiUrl = (emoji: string) =>
+	`https://cdn.jsdelivr.net/gh/jdecked/twemoji@latest/assets/svg/${toCodePoints(
+		emoji.includes("\u200D") ? emoji : emoji.replaceAll("\uFE0F", ""),
+	).join("-")}.svg` as const;

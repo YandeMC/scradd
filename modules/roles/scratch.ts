@@ -38,6 +38,8 @@ export default async function linkScratchRole(
 ): Promise<ServerResponse> {
 	if (!process.env.CLIENT_SECRET)
 		return response.writeHead(501, { "content-type": "text/plain" }).end("501 Not Implemented");
+	if (request.method === "OPTIONS")
+		return response.writeHead(201, { "content-type": "text/plain" }).end("201 No Content");
 
 	const ipHash = createHash("sha384")
 		.update(request.socket.remoteAddress ?? "")
@@ -107,7 +109,7 @@ export default async function linkScratchRole(
 
 	const { username } = await fetch(
 		`https://auth-api.itinerary.eu.org/auth/verifyToken/${encodeURI(scratchToken)}`,
-	).then((response) => response.json<{ username: string | null }>());
+	).then((verification) => verification.json<{ username: string | null }>());
 	const scratch = username && (await fetchUser(username));
 	if (!scratch) return response.writeHead(401, { "content-type": "text/html" }).end(scratchHtml);
 
@@ -136,7 +138,9 @@ export default async function linkScratchRole(
 	await log(
 		`${LoggingEmojis.Integration} ${userMention(
 			user.id,
-		)} linked their Scratch account [${username}](${constants.urls.scratch}/users/${username})`,
+		)} linked their Scratch account [${username}](${
+			constants.domains.scratch
+		}/users/${username})`,
 		LogSeverity.ServerChange,
 		{ embeds: [await handleUser(["", "", username])] },
 	);

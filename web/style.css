@@ -139,6 +139,8 @@ label {
 	position: fixed;
 	user-select: none;
 	width: 2em;
-	z-index: 2147483647;
-	transition: 16ms opacity, 16ms transform;
+	z-index: 10;
+	transition:
+		16ms opacity,
+		16ms transform;
 }

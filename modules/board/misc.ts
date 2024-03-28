@@ -45,7 +45,6 @@ const COUNTS = {
  * Determines the board reaction count for a channel.
  *
  * @param channel - The channel to determine reaction count for.
- *
  * @returns The reaction count.
  */
 export function boardReactionCount(channel?: TextBasedChannel, time?: number): number;
@@ -66,7 +65,9 @@ export function boardReactionCount(
 	const baseChannel = getBaseChannel(channel);
 	if (!baseChannel || baseChannel.isDMBased()) return shift(COUNTS.default);
 	if (baseChannel.guild.id !== config.guild.id)
-		return shift(COUNTS[baseChannel.guild.id === config.testingGuild?.id ? "testing" : "misc"]);
+		return shift(
+			COUNTS[baseChannel.guild.id === config.guilds.testing.id ? "testing" : "misc"],
+		);
 	if (!baseChannel.isTextBased()) return shift(COUNTS.default);
 	if (baseChannel.isVoiceBased()) return shift(COUNTS.misc);
 
@@ -74,7 +75,7 @@ export function boardReactionCount(
 		baseReactionCount(baseChannel.id) ??
 			{
 				[config.channels.info?.id || ""]: COUNTS.info,
-				[config.channels.modlogs?.parent?.id || ""]: COUNTS.misc,
+				[config.channels.modlogs.parent?.id || ""]: COUNTS.misc,
 				"866028754962612294": COUNTS.misc, // #The Cache
 			}[baseChannel.parent?.id || ""] ??
 			COUNTS.default,
@@ -82,9 +83,9 @@ export function boardReactionCount(
 
 	function shift(count: number): number {
 		const privateThread =
-			channel instanceof BaseChannel && channel.type === ChannelType.PrivateThread
-				? 2 / 3
-				: 1;
+			channel instanceof BaseChannel && channel.type === ChannelType.PrivateThread ?
+				2 / 3
+			:	1;
 		/** 500 = number of days for required potato count to double. */
 		const timeShift = (Date.now() - +time) / 86_400_000 / 500 + 1;
 		return Math.max(2, Math.round(count * privateThread * timeShift));
@@ -94,7 +95,7 @@ function baseReactionCount(id: Snowflake): number | undefined {
 	return {
 		[config.channels.tickets?.id || ""]: COUNTS.default,
 		[config.channels.exec?.id || ""]: COUNTS.private,
-		[config.channels.admin?.id || ""]: COUNTS.admins,
+		[config.channels.admin.id || ""]: COUNTS.admins,
 		"853256939089559583": COUNTS.private, // #ba-doosters
 		[config.channels.devs?.id || ""]: COUNTS.private,
 		"811065897057255424": COUNTS.memes, // #memes
@@ -111,11 +112,10 @@ function baseReactionCount(id: Snowflake): number | undefined {
  *
  * @param info - Info to generate a message from.
  * @param extraButtons - Extra custom buttons to show.
- *
  * @returns The representation of the message.
  */
 export async function generateBoardMessage(
-	info: Message | typeof boardDatabase.data[number],
+	info: (typeof boardDatabase.data)[number] | Message,
 	extraButtons: { pre?: APIButtonComponent[]; post?: APIButtonComponent[] } = {},
 ): Promise<BaseMessageOptions | undefined> {
 	const count =
@@ -125,7 +125,6 @@ export async function generateBoardMessage(
 	 * Convert a message to an embed and button representation.
 	 *
 	 * @param message - The message to convert.
-	 *
 	 * @returns The converted message.
 	 */
 	async function messageToBoardData(message: Message): Promise<BaseMessageOptions> {
@@ -166,16 +165,15 @@ export async function generateBoardMessage(
 	if (onBoard) {
 		const linkButton = onBoard.components[0]?.components?.[0];
 		const buttons =
-			linkButton?.type === ComponentType.Button
-				? [...(extraButtons.pre ?? []), linkButton.toJSON(), ...(extraButtons.post ?? [])]
-				: [...(extraButtons.pre ?? []), ...(extraButtons.post ?? [])];
+			linkButton?.type === ComponentType.Button ?
+				[...(extraButtons.pre ?? []), linkButton.toJSON(), ...(extraButtons.post ?? [])]
+			:	[...(extraButtons.pre ?? []), ...(extraButtons.post ?? [])];
 
 		return {
 			allowedMentions: { users: [] },
 
-			components: buttons.length
-				? [{ type: ComponentType.ActionRow, components: buttons }]
-				: [],
+			components:
+				buttons.length ? [{ type: ComponentType.ActionRow, components: buttons }] : [],
 
 			content: onBoard.content,
 			embeds: onBoard.embeds.map((oldEmbed) => oldEmbed.data),
@@ -197,7 +195,7 @@ function formatChannel(channel: TextBasedChannel): string {
 	const otherServer =
 		!channel.isDMBased() &&
 		channel.guild.id !== config.guild.id &&
-		(channel.guild.id === "751206349614088204" ? "SA Dev" : config.guild.name);
+		(channel.guild.id === config.guilds.development.id ? "SA Dev" : config.guild.name);
 
 	if (thread && otherServer) return `${channel.toString()} (${thread} - ${otherServer})`;
 	if (thread) return `${channel.toString()} (${thread})`;

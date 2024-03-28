@@ -2,6 +2,7 @@ import { Role, roleMention, type AuditLogEvent } from "discord.js";
 import config from "../../common/config.js";
 import { joinWithAnd } from "../../util/text.js";
 import log, { LogSeverity, LoggingEmojis, extraAuditLogsInfo, type AuditLog } from "./misc.js";
+import constants from "../../common/constants.js";
 
 export async function memberRoleUpdate(
 	entry: AuditLog<AuditLogEvent.MemberRoleUpdate, "$add" | "$remove">,
@@ -71,9 +72,9 @@ export async function roleUpdate(
 			case "color": {
 				await log(
 					`${LoggingEmojis.Role} ${roleMention(entry.target.id)}’s role color ${
-						typeof change.new === "number" && change.new
-							? `set to \`#${change.new.toString(16).padStart(6, "0")}\``
-							: "reset"
+						typeof change.new === "number" && change.new ?
+							`set to \`#${change.new.toString(16).padStart(6, "0")}\``
+						:	"reset"
 					}${extraAuditLogsInfo(entry)}`,
 					LogSeverity.ImportantUpdate,
 				);
@@ -105,17 +106,16 @@ export async function roleUpdate(
 						entry.target.id,
 					)}’s permissions changed${extraAuditLogsInfo(entry)}`,
 					LogSeverity.ImportantUpdate,
-					{
-						buttons:
-							change.new === undefined
-								? []
-								: [
-										{
-											label: "New Permissions",
-											url: `https://discordlookup.com/permissions-calculator/${change.new.valueOf()}`,
-										},
-								  ],
-					},
+					change.new === undefined ?
+						{}
+					:	{
+							buttons: [
+								{
+									label: "New Permissions",
+									url: `${constants.urls.permissions}/${change.new.valueOf()}`,
+								},
+							],
+						},
 				);
 				break;
 			}
@@ -133,14 +133,12 @@ export async function roleUpdate(
 	if (!iconChanged || !(entry.target instanceof Role)) return;
 	await log(
 		`${LoggingEmojis.Role} ${roleMention(entry.target.id)}’s role icon ${
-			entry.target.unicodeEmoji
-				? `set to ${entry.target.unicodeEmoji}`
-				: entry.target.icon
-				? "changed"
-				: "removed"
+			entry.target.unicodeEmoji ? `set to ${entry.target.unicodeEmoji}`
+			: entry.target.icon ? "changed"
+			: "removed"
 		}${extraAuditLogsInfo(entry)}`,
 		LogSeverity.ImportantUpdate,
-		{ files: entry.target.icon ? [entry.target.iconURL({ size: 128 }) ?? ""] : [] },
+		{ files: entry.target.icon ? [entry.target.iconURL({ size: 64 }) ?? ""] : [] },
 	);
 }
 

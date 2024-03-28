@@ -5,7 +5,7 @@ import { recentXpDatabase } from "./util.js";
 
 export default async function graph(interaction: AnySelectMenuInteraction): Promise<void> {
 	if (!interaction.isUserSelectMenu())
-		throw new TypeError("weeklyXpGraph SelectMenu not a UserSelectMenu!");
+		throw new TypeError("weeklyXpGraph is not a UserSelectMenu!");
 
 	if (interaction.user.id !== interaction.message.interaction?.user.id) return;
 
@@ -44,10 +44,7 @@ export default async function graph(interaction: AnySelectMenuInteraction): Prom
 	new Chart(context as CanvasRenderingContext2D & SKRSContext2D, {
 		options: {
 			parsing: false,
-			scales: {
-				x: { type: "time", grid: { display: false } },
-				y: { min: 0 },
-			},
+			scales: { x: { type: "time", grid: { display: false } }, y: { min: 0 } },
 			elements: { point: { radius: 0 } },
 		},
 		plugins: [

@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { client } from "strife.js";
 import config from "../common/config.js";
 import constants from "../common/constants.js";
-import { cleanDatabaseListeners } from "../common/database.js";
+import { prepareExit } from "../common/database.js";
 import appealRequest from "../modules/forms/appeals/show-appeal.js";
 import logError from "../modules/logging/errors.js";
 import linkScratchRole from "../modules/roles/scratch.js";
@@ -19,23 +19,25 @@ const CSS_FILE = (await fileSystem.readFile("./web/style.css", "utf8")).replaceA
 );
 const CLIENT_JS_FILE = await fileSystem.readFile("./dist/web/client.js", "utf8");
 const DISCORD_CSS_FILE = await fileSystem.readFile("./web/discord.css", "utf8");
-const SORA_DIRECTORY = path.dirname(
-	fileURLToPath(import.meta.resolve("@fontsource-variable/sora")),
-);
+const DIRECTORIES = {
+	images: path.resolve("./scripts/images"),
+	sora: path.dirname(fileURLToPath(import.meta.resolve("@fontsource-variable/sora"))),
+};
 const server = http.createServer(async (request, response) => {
 	try {
 		const requestUrl = getRequestUrl(request);
 		const pathname = (
-			requestUrl.pathname.endsWith("/") ? requestUrl.pathname : `${requestUrl.pathname}/`
-		).toLowerCase();
+			requestUrl.pathname.endsWith("/") ?
+				requestUrl.pathname
+			:	`${requestUrl.pathname}/`).toLowerCase();
 		switch (pathname) {
-			case "/clean-database-listeners/": {
+			case "/prepare-exit/": {
 				if (requestUrl.searchParams.get("auth") !== process.env.CDBL_AUTH)
 					return response
 						.writeHead(403, { "content-type": "text/plain" })
 						.end("403 Forbidden");
 
-				await cleanDatabaseListeners();
+				await prepareExit();
 				process.emitWarning("cleanDatabaseListeners ran");
 				response.writeHead(200, { "content-type": "text/plain" }).end("200 OK");
 
@@ -72,25 +74,20 @@ const server = http.createServer(async (request, response) => {
 		}
 
 		const segments = pathname.split("/");
-		switch (segments[1]) {
-			case "sora": {
-				const filePath = path.join(SORA_DIRECTORY, segments.slice(2).join("/"));
-				if (await fileSystem.access(filePath).catch(() => true)) break;
+		if (segments[1] && Object.keys(DIRECTORIES).includes(segments[1])) {
+			const filePath = path.join(DIRECTORIES[segments[1]], segments.slice(2).join("/"));
+			if (await fileSystem.access(filePath).then(() => true))
 				return createReadStream(filePath).pipe(response);
-			}
-			case "suggestions": {
-				return await suggestionsPage(request, response, segments[2]);
-			}
-			default: {
-				break;
-			}
+		} else if (segments[1] === "suggestions") {
+			return await suggestionsPage(request, response, segments[2]);
 		}
 
 		response
 			.writeHead(301, {
-				location: config.guild.features.includes("DISCOVERABLE")
-					? `https://discord.com/servers/${config.guild.id}`
-					: pkg.homepage,
+				location:
+					config.guild.features.includes("DISCOVERABLE") ?
+						`https://discord.com/servers/${config.guild.id}`
+					:	pkg.homepage,
 			})
 			.end();
 	} catch (error) {

@@ -17,7 +17,6 @@ import giveXp from "../xp/give-xp.js";
 import { getLevelForXp } from "../xp/misc.js";
 import { getWeeklyXp, xpDatabase } from "../xp/util.js";
 
-if (!config.channels.admin) throw new ReferenceError("Could not find admin channel");
 const thread =
 	getInitialChannelThreads(config.channels.admin).find(
 		(thread) => thread.name === "Moderator Interest Forms",
@@ -161,16 +160,17 @@ export async function submitInterest(interaction: ModalSubmitInteraction): Promi
 	const rank = allXp.findIndex((info) => info.user === interaction.user.id) + 1;
 
 	const strikes = strikeDatabase.data.filter((strike) => strike.user === interaction.user.id);
-	const totalStrikeCount = strikes.reduce(
-		(accumulator, { count, removed }) => count * Number(!removed) + accumulator,
-		0,
-	);
+	const totalStrikeCount = strikes
+		.reduce((accumulator, { count, removed }) => count * Number(!removed) + accumulator, 0)
+		.toLocaleString();
 	const recentStrikeCount = strikes
 		.filter((strike) => strike.date + EXPIRY_LENGTH > Date.now())
-		.reduce((accumulator, { count, removed }) => count * Number(!removed) + accumulator, 0);
+		.reduce((accumulator, { count, removed }) => count * Number(!removed) + accumulator, 0)
+		.toLocaleString();
 	const semiRecentStrikeCount = strikes
 		.filter((strike) => strike.date + EXPIRY_LENGTH * 2 > Date.now())
-		.reduce((accumulator, { count, removed }) => count * Number(!removed) + accumulator, 0);
+		.reduce((accumulator, { count, removed }) => count * Number(!removed) + accumulator, 0)
+		.toLocaleString();
 
 	const mention = interaction.user.toString();
 	const fields = {
@@ -215,7 +215,7 @@ export async function submitInterest(interaction: ModalSubmitInteraction): Promi
 					},
 					{
 						name: "Strikes",
-						value: `${totalStrikeCount.toLocaleString()} (${recentStrikeCount.toLocaleString()} in the past 3 weeks; ${semiRecentStrikeCount.toLocaleString()} in the past 6 weeks)`,
+						value: `${totalStrikeCount} (${recentStrikeCount} in the past 3 weeks; ${semiRecentStrikeCount} in the past 6 weeks)`,
 						inline: true,
 					},
 					{
@@ -254,28 +254,30 @@ export async function submitInterest(interaction: ModalSubmitInteraction): Promi
 						customId: `${interaction.user.id}_xp`,
 						label: "XP",
 					} as const,
-					...(totalStrikeCount
-						? ([
-								{
-									style: ButtonStyle.Secondary,
-									type: ComponentType.Button,
-									customId: `${interaction.user.id}_viewStrikes`,
-									label: "Strikes",
-								},
-						  ] as const)
-						: []),
-					...(config.channels.tickets
-						?.permissionsFor(interaction.member)
-						?.has("ViewChannel")
-						? ([
-								{
-									style: ButtonStyle.Secondary,
-									type: ComponentType.Button,
-									customId: `${interaction.user.id}_contactUser`,
-									label: "Contact User",
-								},
-						  ] as const)
-						: []),
+					...(totalStrikeCount === "0" ?
+						[]
+					:	([
+							{
+								style: ButtonStyle.Secondary,
+								type: ComponentType.Button,
+								customId: `${interaction.user.id}_viewStrikes`,
+								label: "Strikes",
+							},
+						] as const)),
+					...((
+						config.channels.tickets
+							?.permissionsFor(interaction.member)
+							?.has("ViewChannel")
+					) ?
+						([
+							{
+								style: ButtonStyle.Secondary,
+								type: ComponentType.Button,
+								customId: `${interaction.user.id}_contactUser`,
+								label: "Contact User",
+							},
+						] as const)
+					:	[]),
 				],
 			},
 		],

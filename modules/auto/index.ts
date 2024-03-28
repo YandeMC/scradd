@@ -7,7 +7,6 @@ import {
 	type APIEmbed,
 	type BaseMessageOptions,
 	type Message,
-	type PartialMessage,
 	type Snowflake,
 } from "discord.js";
 import { setTimeout as wait } from "node:timers/promises";
@@ -23,6 +22,7 @@ import autoreactions from "./autos-data.js";
 import scraddChat, { allowChat, denyChat, learn, removeResponse } from "./chat.js";
 import dad from "./dad.js";
 import { getMatches, handleMatch } from "./scratch.js";
+import github from "./github.js";
 
 const REACTION_CAP = 3;
 
@@ -39,6 +39,8 @@ const ignoreTriggers = [
 ];
 
 defineEvent("messageCreate", async (message) => {
+	await learn(message);
+
 	let reactions = 0;
 
 	if (
@@ -59,6 +61,7 @@ defineEvent("messageCreate", async (message) => {
 		const isArray = Array.isArray(response);
 		if (isArray) {
 			const reply = await message.reply(response[0]);
+			autoResponses.set(message.id, reply);
 			for (const action of response.slice(1)) {
 				if (typeof action === "number") {
 					await wait(action);
@@ -68,11 +71,8 @@ defineEvent("messageCreate", async (message) => {
 				const edited = await reply.edit(action).catch(() => void 0);
 				if (!edited) break;
 			}
-		} else await message.reply(response);
-		await learn(message);
-		return;
+		} else autoResponses.set(message.id, await message.reply(response));
 	}
-	await learn(message);
 
 	const settings = await getSettings(message.author);
 	if (!settings.autoreactions || !canDoSecrets(message)) return;
@@ -83,23 +83,22 @@ defineEvent("messageCreate", async (message) => {
 		if (emojis.some((emoji) => content.includes(emoji))) continue;
 
 		for (const requirement of requirements) {
-			const [rawMatch, type = "word"] = Array.isArray(requirement)
-				? requirement
-				: [requirement];
+			const [rawMatch, type = "word"] =
+				Array.isArray(requirement) ? requirement : [requirement];
 			const match = typeof rawMatch === "string" ? rawMatch : rawMatch.source;
 
-			if (type[1] === "ping") {
+			if (type === "ping") {
 				doReact ||= message.mentions.has(match, {
 					ignoreEveryone: true,
 					ignoreRoles: true,
 				});
 			} else {
 				const result = new RegExp(
-					type === "partial" || type === "raw"
-						? match
-						: `${type === "full" ? "^" : "\\b"}(?:${match})${
-								type === "plural" ? /(?:e?s)?/.source : ""
-						  }${type === "full" ? "$" : "\\b"}`,
+					type === "partial" || type === "raw" ?
+						match
+					:	`${type === "full" ? "^" : "\\b"}(?:${match})${
+							type === "plural" ? /(?:e?s)?/.source : ""
+						}${type === "full" ? "$" : "\\b"}`,
 					"iu",
 				).test(type === "raw" ? message.content : content);
 
@@ -120,23 +119,46 @@ defineEvent("messageCreate", async (message) => {
 defineEvent("messageUpdate", async (_, message) => {
 	if (message.partial) return;
 
-	const found = await getAutoResponse(message);
-	if (found === false) return;
+	const found = autoResponses.get(message.id);
+	if (!found && 1 > +"0" /* TODO: only return if there's new messages */) return;
 
 	const response = await handleMutatable(message);
 	const data = typeof response === "object" && !Array.isArray(response) && response;
 	if (found)
 		await found.edit(data || { content: constants.zws, components: [], embeds: [], files: [] });
-	else if (data) await message.reply(data);
+	else if (data) autoResponses.set(message.id, await message.reply(data));
 });
 
 async function handleMutatable(
 	message: Message,
 ): Promise<BaseMessageOptions | true | [BaseMessageOptions, ...(number | string)[]] | undefined> {
 	const baseChannel = getBaseChannel(message.channel);
-	if (config.channels.modlogs?.id === baseChannel?.id) return;
+	if (config.channels.modlogs.id === baseChannel?.id) return;
 
 	const settings = await getSettings(message.author);
+
+	const links = settings.github && github(message.content, message.guild?.id);
+	if (links)
+		return {
+			content: links,
+			components:
+				(await getSettings(message.author, false)).github === undefined ?
+					[
+						{
+							components: [
+								{
+									customId: "scratchEmbeds_toggleSetting",
+									type: ComponentType.Button as const,
+									label: `Disable GitHub Links`,
+									style: ButtonStyle.Success as const,
+								},
+							],
+							type: ComponentType.ActionRow,
+						},
+					]
+				:	[],
+		};
+
 	if (settings.scratchEmbeds) {
 		const notSet = (await getSettings(message.author, false)).scratchEmbeds === undefined;
 
@@ -155,8 +177,9 @@ async function handleMutatable(
 				content: "",
 				files: [],
 				embeds,
-				components: notSet
-					? [
+				components:
+					notSet ?
+						[
 							{
 								components: [
 									{
@@ -168,8 +191,8 @@ async function handleMutatable(
 								],
 								type: ComponentType.ActionRow,
 							},
-					  ]
-					: [],
+						]
+					:	[],
 			};
 	}
 
@@ -194,8 +217,8 @@ async function handleMutatable(
 
 		if (name && message.member) {
 			const response = dad(name, message.member);
-			return Array.isArray(response)
-				? ([
+			return Array.isArray(response) ?
+					([
 						{
 							content: response[0],
 							files: [],
@@ -204,20 +227,20 @@ async function handleMutatable(
 							allowedMentions: { users: [], repliedUser: true },
 						},
 						...response.slice(1),
-				  ] as const)
-				: {
+					] as const)
+				:	{
 						content: response,
 						files: [],
 						embeds: [],
 						components: [],
 						allowedMentions: { users: [], repliedUser: true },
-				  };
+					};
 		}
 	}
 }
 
 defineEvent("messageDelete", async (message) => {
-	const found = await getAutoResponse(message);
+	const found = autoResponses.get(message.id);
 	if (!found) return;
 
 	await found.delete();
@@ -225,24 +248,6 @@ defineEvent("messageDelete", async (message) => {
 });
 
 const autoResponses = new Map<Snowflake, Message>();
-async function getAutoResponse(
-	message: Message | PartialMessage,
-): Promise<Message | false | undefined> {
-	const cached = autoResponses.get(message.id);
-	if (cached) return cached;
-
-	const fetched = await message.channel.messages.fetch({ limit: 2, after: message.id });
-	const found = fetched.find(
-		(found) =>
-			found.reference?.messageId === message.id &&
-			found.author.id === client.user.id &&
-			found.createdTimestamp - message.createdTimestamp < 1000,
-	);
-
-	if (found) autoResponses.set(message.id, found);
-	if (fetched.size && !found) return false;
-	return found;
-}
 
 function canDoSecrets(message: Message, checkDads = false): boolean {
 	if (message.channel.isDMBased()) return false;
@@ -258,8 +263,8 @@ function canDoSecrets(message: Message, checkDads = false): boolean {
 	if (checkDads) {
 		const baseChannel = getBaseChannel(message.channel);
 		if (
-			(message.guild?.id === config.testingGuild?.id &&
-				message.guild?.id !== config.guild.id) ||
+			(message.guild?.id === config.guilds.testing.id &&
+				message.guild.id !== config.guild.id) ||
 			!baseChannel ||
 			baseChannel.type !== ChannelType.GuildText ||
 			!/\bbots?\b/i.test(baseChannel.name)

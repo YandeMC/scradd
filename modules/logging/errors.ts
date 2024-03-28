@@ -1,6 +1,6 @@
 import { inlineCode, type Message, type RepliableInteraction } from "discord.js";
 import { serializeError } from "serialize-error";
-import { cleanDatabaseListeners } from "../../common/database.js";
+import { prepareExit } from "../../common/database.js";
 import { commandInteractionToString } from "../../util/discord.js";
 import log, { LogSeverity, LoggingErrorEmoji } from "./misc.js";
 
@@ -13,7 +13,6 @@ process
  *
  * @param error - The error to log.
  * @param event - The event this error occurred in.
- *
  * @returns The logged message.
  */
 export default async function logError(
@@ -33,17 +32,15 @@ export default async function logError(
 
 		return await log(
 			`${LoggingErrorEmoji} **${name}** occurred in ${
-				typeof event == "string"
-					? inlineCode(event)
-					: event.isChatInputCommand()
-					? commandInteractionToString(event)
-					: inlineCode(
-							event.isCommand() && event.command
-								? `/${event.command.name}`
-								: `${event.constructor.name}${
-										event.isButton() ? `: ${event.customId}` : ""
-								  }`,
-					  )
+				typeof event == "string" ? inlineCode(event)
+				: event.isChatInputCommand() ? commandInteractionToString(event)
+				: inlineCode(
+						event.isCommand() && event.command ?
+							`/${event.command.name}`
+						:	`${event.constructor.name}${
+								event.isButton() ? `: ${event.customId}` : ""
+							}`,
+					)
 			}`,
 			LogSeverity.Alert,
 			{
@@ -57,7 +54,7 @@ export default async function logError(
 		);
 	} catch (loggingError) {
 		console.error(loggingError);
-		await cleanDatabaseListeners().catch(console.error);
+		await prepareExit().catch(console.error);
 		process.exit(1);
 	}
 }
@@ -67,7 +64,6 @@ export default async function logError(
  *
  * @param error The error to standardize.
  * @param returnObject Whether to return an object.
- *
  * @returns The standardized error.
  */
 export function generateError(error: unknown): object {
@@ -94,11 +90,11 @@ export function generateError(error: unknown): object {
 				.slice(1),
 			errors: subErrors?.map((sub) => generateError(sub)),
 			cause:
-				"cause" in error
-					? error.cause instanceof Error
-						? generateError(error.cause)
-						: error.cause
-					: undefined,
+				"cause" in error ?
+					error.cause instanceof Error ?
+						generateError(error.cause)
+					:	error.cause
+				:	undefined,
 			error: "error" in error ? generateError(error.error) : undefined,
 			surpressed: "surpressed" in error ? generateError(error.surpressed) : undefined,
 			reason: "reason" in error ? generateError(error.reason) : undefined,

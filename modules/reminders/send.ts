@@ -10,7 +10,7 @@ import {
 import { client } from "strife.js";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
-import { backupDatabases, cleanDatabaseListeners } from "../../common/database.js";
+import { backupDatabases, prepareExit } from "../../common/database.js";
 import { statuses } from "../../common/strings.js";
 import { convertBase } from "../../util/numbers.js";
 import { gracefulFetch } from "../../util/promises.js";
@@ -18,7 +18,7 @@ import { syncRandomBoard } from "../board/update.js";
 import getWeekly, { getChatters } from "../xp/weekly.js";
 import {
 	BUMPING_THREAD,
-	COMMAND_ID,
+	BUMP_COMMAND_ID,
 	SpecialReminders,
 	remindersDatabase,
 	type Reminder,
@@ -93,7 +93,7 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					];
 
 					const count = await gracefulFetch<{ count: number; _chromeCountDate: string }>(
-						`${constants.urls.usercountJson}?date=${Date.now()}`,
+						`${constants.urls.usercount}?date=${Date.now()}`,
 					);
 					if (!count) continue;
 
@@ -125,14 +125,14 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					await channel.send({
 						content: `🔔 @here ${chatInputApplicationCommandMention(
 							"bump",
-							COMMAND_ID,
+							BUMP_COMMAND_ID,
 						)} the server!`,
 						allowedMentions: { parse: ["everyone"] },
 					});
 					continue;
 				}
 				case SpecialReminders.RebootBot: {
-					await cleanDatabaseListeners();
+					await prepareExit();
 					process.emitWarning(`${client.user.tag} is killing the bot`);
 					process.exit(1);
 					// Fake “fall-through” since ESLint doesn’t realize this is unreacahble

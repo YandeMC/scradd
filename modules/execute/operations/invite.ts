@@ -13,7 +13,7 @@ const data: CustomOperation = {
 		const uses =
 			(
 				await Invite.aggregate<{ _id: null; totalUses: number }>([
-					{ $match: { member: "771422735486156811" } },
+					{ $match: { member: interaction.user.id } },
 					{ $group: { _id: null, totalUses: { $sum: "$uses" } } },
 				]).exec()
 			)[0]?.totalUses ?? 0;
@@ -35,9 +35,9 @@ const data: CustomOperation = {
 			if (invite.inviter?.id === interaction.user.id) return invite;
 
 			if (invite.inviter?.id !== client.user.id) return false;
-			return (await Invite.exists({ code: invite.code, member: interaction.user.id }))
-				? invite
-				: false;
+			return (await Invite.exists({ code: invite.code, member: interaction.user.id })) ?
+					invite
+				:	false;
 		}).next();
 
 		if (existing.value) {

@@ -28,9 +28,9 @@ export default async function credits(interaction: ChatInputCommandInteraction):
 
 			if (version.startsWith("git+")) {
 				const segments = version.split("+")[1]?.split("#");
-				return segments
-					? ([`${name}${segments[1] ? `@${segments[1]}` : ""}`, segments[0]] as const)
-					: ([name] as const);
+				return segments ?
+						([`${name}${segments[1] ? `@${segments[1]}` : ""}`, segments[0]] as const)
+					:	([name] as const);
 			}
 			if (version.startsWith("npm:")) {
 				const segments = version.split("@");
@@ -39,11 +39,11 @@ export default async function credits(interaction: ChatInputCommandInteraction):
 				}`;
 				return [
 					`${reference}@${segments.at(-1) ?? segments[0]}`,
-					`https://npm.im/${reference}`,
+					`${constants.domains.npm}/${reference}`,
 				] as const;
 			}
 
-			return [`${name}@${version}`, `https://npm.im/${name}`] as const;
+			return [`${name}@${version}`, `${constants.domains.npm}/${name}`] as const;
 		})
 		.toSorted(([one], [two]) => one.localeCompare(two));
 
@@ -51,7 +51,7 @@ export default async function credits(interaction: ChatInputCommandInteraction):
 		embeds: [
 			{
 				title: "Credits",
-				description: `Scradd is hosted on [Fly.io](https://fly.io/) using Node.JS ${process.version}.`,
+				description: `Scradd is hosted on [Railway](${constants.urls.railway}) using Node.JS ${process.version}.`,
 
 				fields: [
 					{ name: "🧑‍💻 Developers", value: await getRole(developers), inline: true },
@@ -76,7 +76,7 @@ export default async function credits(interaction: ChatInputCommandInteraction):
 	});
 
 	async function getRole(roleId: Snowflake): Promise<string> {
-		const role = await config.testingGuild?.roles.fetch(roleId);
+		const role = await config.guilds.testing.roles?.fetch(roleId);
 		const members: { user: User }[] = [...(role?.members.values() ?? [])];
 		if (roleId === designers)
 			members.push({ user: await client.users.fetch(constants.users.weirdo) });

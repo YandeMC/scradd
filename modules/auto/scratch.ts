@@ -67,12 +67,12 @@ export async function handleMatch(url: URL): Promise<APIEmbed | undefined> {
 	}
 }
 export async function handleProject(urlParts: string[]): Promise<APIEmbed | undefined> {
-	const project = await gracefulFetch(`${constants.urls.scratchApi}/projects/${urlParts[2]}/`);
+	const project = await gracefulFetch(`${constants.domains.scratchApi}/projects/${urlParts[2]}/`);
 	if (!project || project.code) return;
 
 	const parent =
 		project.remix.parent &&
-		(await gracefulFetch(`${constants.urls.scratchApi}/projects/${project.remix.parent}/`));
+		(await gracefulFetch(`${constants.domains.scratchApi}/projects/${project.remix.parent}/`));
 
 	const embed = {
 		title: project.title,
@@ -94,17 +94,17 @@ export async function handleProject(urlParts: string[]): Promise<APIEmbed | unde
 		thumbnail: { url: project.images["282x218"] },
 		author: {
 			name: project.author.username,
-			url: `${constants.urls.scratch}/users/${project.author.username}`,
+			url: `${constants.domains.scratch}/users/${project.author.username}`,
 			icon_url: project.author.profile.images["90x90"],
 		},
-		url: `${constants.urls.scratch}/projects/${urlParts[2]}`,
+		url: `${constants.domains.scratch}/projects/${urlParts[2]}`,
 		timestamp: new Date(project.history.shared).toISOString(),
 	};
 
 	if (parent) {
 		embed.fields.push({
 			name: "⬆️ Remix of",
-			value: `[${parent.title}](${constants.urls.scratch}/projects/${project.remix.parent}/)`,
+			value: `[${parent.title}](${constants.domains.scratch}/projects/${project.remix.parent}/)`,
 			inline: true,
 		});
 	}
@@ -131,36 +131,40 @@ export async function handleUser(urlParts: string[]): Promise<APIEmbed | undefin
 
 	const embed = {
 		title: `${user.username}${
-			("status" in user ? user.status == "Scratch Team" : user.scratchteam) ? "*" : ""
+			(
+				"status" in user ? user.status == "Scratch Team" : user.scratchteam
+			) ?
+				"*"
+			:	""
 		}`,
 		color: constants.scratchColor,
 
 		fields:
-			"statistics" in user && user.statistics
-				? [
-						{
-							name: `${constants.emojis.scratch.followers} Followers`,
-							value: `${user.statistics.followers.toLocaleString()} (ranked ${nth(
-								user.statistics.ranks.followers,
-							)})`,
-							inline: true,
-						},
-						{
-							name: `${constants.emojis.scratch.following} Following`,
-							value: user.statistics.following.toLocaleString(),
-							inline: true,
-						},
-				  ]
-				: [],
+			"statistics" in user && user.statistics ?
+				[
+					{
+						name: `${constants.emojis.scratch.followers} Followers`,
+						value: `${user.statistics.followers.toLocaleString()} (ranked ${nth(
+							user.statistics.ranks.followers,
+						)})`,
+						inline: true,
+					},
+					{
+						name: `${constants.emojis.scratch.following} Following`,
+						value: user.statistics.following.toLocaleString(),
+						inline: true,
+					},
+				]
+			:	[],
 		thumbnail: { url: `https://uploads.scratch.mit.edu/get_image/user/${user.id}_90x90.png` },
 		author: {
 			name: `${"country" in user ? user.country : user.profile.country}${
-				"status" in user && user.status == "New Scratcher"
-					? `${constants.footerSeperator}${user.status}`
-					: ""
+				"status" in user && user.status == "New Scratcher" ?
+					`${constants.footerSeperator}${user.status}`
+				:	""
 			}`,
 		},
-		url: `${constants.urls.scratch}/users/${user.username}`,
+		url: `${constants.domains.scratch}/users/${user.username}`,
 		timestamp: new Date("joined" in user ? user.joined : user.history.joined).toISOString(),
 	};
 
@@ -169,10 +173,10 @@ export async function handleUser(urlParts: string[]): Promise<APIEmbed | undefin
 			// eslint-disable-next-line unicorn/string-content
 			name: "🛠️ What I'm working on",
 			value: truncateText(
-				"profile" in user
-					? linkifyMentions(user.profile.status)
-					: htmlToMarkdown(user.work),
-				EMBED_LENGTH / 2,
+				"profile" in user ?
+					linkifyMentions(user.profile.status)
+				:	htmlToMarkdown(user.work),
+				EMBED_LENGTH / 2, // TODO: partition instead of just half and half
 				true,
 			),
 			inline: false,
@@ -193,7 +197,7 @@ export async function handleUser(urlParts: string[]): Promise<APIEmbed | undefin
 	return embed;
 }
 export async function handleStudio(urlParts: string[]): Promise<APIEmbed | undefined> {
-	const studio = await gracefulFetch(`${constants.urls.scratchApi}/studios/${urlParts[2]}/`);
+	const studio = await gracefulFetch(`${constants.domains.scratchApi}/studios/${urlParts[2]}/`);
 	if (!studio || studio.code) return;
 
 	return {
@@ -220,7 +224,7 @@ export async function handleStudio(urlParts: string[]): Promise<APIEmbed | undef
 		],
 		thumbnail: { url: studio.image },
 
-		url: `${constants.urls.scratch}/studios/${urlParts[2]}`,
+		url: `${constants.domains.scratch}/studios/${urlParts[2]}`,
 		timestamp: new Date(studio.history.created).toISOString(),
 	};
 }
@@ -232,20 +236,21 @@ export async function handleForumPost(
 	const id = urlParts[2] === "topic" && type == "post" ? hash.split("-")[1] ?? "" : urlParts[3];
 
 	const post =
-		type === "post"
-			? await gracefulFetch(`${constants.urls.scratchdb}/forum/post/info/${id}/`)
-			: type === "topic" &&
-			  (await gracefulFetch(
-					`${constants.urls.scratchdb}/forum/topic/posts/${id}?o=oldest`,
-			  ).then(([post]) => post));
+		type === "post" ?
+			await gracefulFetch(`${constants.domains.scratchdb}/forum/post/info/${id}/`)
+		:	type === "topic" &&
+			(await gracefulFetch(
+				`${constants.domains.scratchdb}/forum/topic/posts/${id}?o=oldest`,
+			).then(([post]) => post));
 	if (!post || post.error || post.deleted) return;
 
-	const editedString = post.editor
-		? `\n\n*Last edited by ${post.editor} (${time(
+	const editedString =
+		post.editor ?
+			`\n\n*Last edited by ${post.editor} (${time(
 				new Date(post.time.edited),
 				TimestampStyles.ShortDateTime,
-		  )})*`
-		: "";
+			)})*`
+		:	"";
 
 	return {
 		title: `${post.topic.closed ? "🔒 " : ""}${post.topic.title}${constants.footerSeperator}${
@@ -257,8 +262,8 @@ export async function handleForumPost(
 			true,
 		),
 		color: constants.scratchColor,
-		author: { name: post.username, url: `${constants.urls.scratch}/users/${post.username}` },
-		url: `${constants.urls.scratch}/discuss/topic/${post.topic.id}`,
+		author: { name: post.username, url: `${constants.domains.scratch}/users/${post.username}` },
+		url: `${constants.domains.scratch}/discuss/topic/${post.topic.id}`,
 		timestamp: new Date(post.time.posted).toISOString(),
 	};
 }
@@ -285,7 +290,7 @@ function nodesToText(node: NodeOrNodes, shouldEscape = true): string {
 		case "a": {
 			return `[${content}](${new URL(
 				node.attrs?.href?.toString() ?? "",
-				constants.urls.scratch,
+				constants.domains.scratch,
 			).toString()})`;
 		}
 		case "span": {
@@ -303,7 +308,7 @@ function nodesToText(node: NodeOrNodes, shouldEscape = true): string {
 			break;
 		}
 		case "img": {
-			const url = new URL(node.attrs?.src?.toString() ?? "", constants.urls.scratch);
+			const url = new URL(node.attrs?.src?.toString() ?? "", constants.domains.scratch);
 			return `[${
 				content || node.attrs?.alt || url.pathname.split("/").at(-1)
 			}](${url.toString()})`;
@@ -336,6 +341,6 @@ function nodesToText(node: NodeOrNodes, shouldEscape = true): string {
 export function linkifyMentions(string: string): string {
 	return escapeMessage(string).replaceAll(/@([\w\\-])+/g, (name) => {
 		name = name.replaceAll("\\", "");
-		return `[${name}](${constants.urls.scratch}/users/${name.slice(1)})`;
+		return `[${name}](${constants.domains.scratch}/users/${name.slice(1)})`;
 	});
 }

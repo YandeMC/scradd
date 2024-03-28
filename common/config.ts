@@ -1,37 +1,68 @@
+import assert from "node:assert";
 import {
 	ChannelType,
 	Collection,
 	type AnyThreadChannel,
 	type Channel,
+	type Guild,
 	type NonThreadGuildBasedChannel,
+	type Snowflake,
 	type ThreadManager,
 } from "discord.js";
 import { client } from "strife.js";
 import { CUSTOM_ROLE_PREFIX } from "../modules/roles/misc.js";
+import type { NonFalsy } from "./misc.js";
 
 const IS_TESTING = process.argv.some((file) => file.endsWith(".test.js"));
 
 const guild = IS_TESTING ? undefined : await client.guilds.fetch(process.env.GUILD_ID);
 if (guild && !guild.available) throw new ReferenceError("Main guild is unavailable!");
 
+function assertOutsideTests<T>(value: T): NonFalsy<T> {
+	if (!IS_TESTING) assert(value);
+	return value as NonFalsy<T>;
+}
+
+const guildIds = {
+	testing: "938438560925761619",
+	development: "751206349614088204",
+} as const;
+
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 async function getConfig() {
-	const channels = (await guild?.channels.fetch()) ?? new Collection();
-	const roles = ((await guild?.roles.fetch()) ?? new Collection()).filter(
-		(role) => role.editable && !role.name.startsWith(CUSTOM_ROLE_PREFIX),
-	);
-
 	const otherGuilds = guild && (await client.guilds.fetch());
 	if (otherGuilds) otherGuilds.delete(guild.id);
 
-	const mod = roles.find((role) => role.name.toLowerCase().startsWith("mod"));
-	const staff = roles.find((role) => role.name.toLowerCase().startsWith("staff")) ?? mod;
+	const channels = (await guild?.channels.fetch()) ?? new Collection();
+	const modlogsChannel =
+		guild?.publicUpdatesChannel ?? getChannel("logs", ChannelType.GuildText, "end");
+	const modChannel = assertOutsideTests(
+		getChannel("mod-talk", ChannelType.GuildText) ?? modlogsChannel,
+	);
+
+	const roles = ((await guild?.roles.fetch()) ?? new Collection()).filter(
+		(role) => role.editable && !role.name.startsWith(CUSTOM_ROLE_PREFIX),
+	);
+	const modRole = roles.find((role) => role.name.toLowerCase().startsWith("mod"));
+	const staffRole = assertOutsideTests(
+		roles.find((role) => role.name.toLowerCase().startsWith("staff")) ?? modRole,
+	);
+	const execRole = roles.find((role) => role.name.toLowerCase().includes("exec")) ?? staffRole;
+
 	return {
-		// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-		guild: guild!,
+		guild: assertOutsideTests(guild),
 		otherGuildIds: otherGuilds ? [...otherGuilds.keys()] : [],
-		testingGuild:
-			guild && (await client.guilds.fetch("938438560925761619").catch(() => void 0)),
+		guilds: Object.fromEntries(
+			await Promise.all(
+				Object.entries(guildIds).map(async ([key, id]) => {
+					const basic: Partial<Guild> & { id: Snowflake } = { id, valueOf: () => id };
+					return [
+						key,
+						guild ? await client.guilds.fetch(id).catch(() => basic) : basic,
+					] as const;
+				}),
+			),
+		),
 
 		channels: {
 			info: getChannel("Info", ChannelType.GuildCategory, "start"),
@@ -48,11 +79,10 @@ async function getConfig() {
 			welcome: getChannel("welcome", ChannelType.GuildText),
 			intros: getChannel("intro", ChannelType.GuildText, "partial"),
 
-			mod: getChannel("mod-talk", ChannelType.GuildText),
-			modlogs:
-				guild?.publicUpdatesChannel ?? getChannel("logs", ChannelType.GuildText, "end"),
+			mod: modChannel,
+			modlogs: assertOutsideTests(modlogsChannel ?? modChannel),
 			exec: getChannel("exec", ChannelType.GuildText, "start"),
-			admin: getChannel("admin", ChannelType.GuildText, "start"),
+			admin: getChannel("admin", ChannelType.GuildText, "start") ?? modChannel,
 
 			general: getChannel("general", ChannelType.GuildText),
 
@@ -72,9 +102,9 @@ async function getConfig() {
 		},
 
 		roles: {
-			mod,
-			exec: roles.find((role) => role.name.toLowerCase().includes("exec")) ?? staff,
-			staff,
+			mod: modRole ?? staffRole,
+			exec: execRole,
+			staff: staffRole,
 			weeklyWinner: roles.find((role) => role.name.toLowerCase().includes("weekly")),
 			dev: roles.find((role) => role.name.toLowerCase().startsWith("contributor")),
 			epic: roles.find((role) => role.name.toLowerCase().includes("epic")),
