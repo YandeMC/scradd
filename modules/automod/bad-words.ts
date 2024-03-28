@@ -14,15 +14,12 @@ const badWords: [RegExp[]?, RegExp[]?, RegExp[]?][] = [
 		[
 			/cbea/,
 			/grfgvpyr/,
-			/fpuzhpx/,
 			/erpghz/,
 			/ihyin/,
 			/🖕/,
 			/卐/,
 			/fjnfgvxn/,
 			/卍/,
-			/lvss/,
-			/ahg ?fnpx/,
 		],
 		[
 			/intva(?:f|l|n|r|y)+/,

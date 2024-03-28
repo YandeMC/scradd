@@ -175,6 +175,7 @@ defineChatCommand(
 			});
 
 		const words = result.words.flat();
+		const regexps = result.regexps.flat()
 		const strikes = Math.trunc(result.strikes);
 
 		const isMod =
@@ -187,9 +188,9 @@ defineChatCommand(
 
 			content:
 				`## ⚠️ ${words.length} bad word${words.length === 1 ? "s" : ""} detected!\n` +
-				(isMod ?
-					`That text gives **${strikes} strike${strikes === 1 ? "" : "s"}**.\n\n`
-				:	"") +
+				(isMod
+					? `That text gives **${strikes} strike${strikes === 1 ? "" : "s"}**.\nThese regexes triggerd: ${regexps.map((r)=>r.toString()).join(" ")}\n\n`
+					: "") +
 				`*I detected the following words as bad*: ${joinWithAnd(words, (word) =>
 					underline(escapeMessage(word)),
 				)}`,

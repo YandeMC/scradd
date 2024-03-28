@@ -10,6 +10,11 @@ import {
 	type RESTPostOAuth2RefreshTokenURLEncodedData,
 	type RESTPutAPICurrentUserApplicationRoleConnectionJSONBody,
 	type RESTPutAPICurrentUserApplicationRoleConnectionResult,
+	ChatInputCommandInteraction,
+	ComponentType,
+	ButtonStyle,
+	ButtonInteraction,
+	TextInputStyle,
 } from "discord.js";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { client } from "strife.js";
@@ -20,6 +25,7 @@ import { getRequestUrl } from "../../util/text.js";
 import { handleUser } from "../auto/scratch.js";
 import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { gracefulFetch } from "../../util/promises.js";
 
 await client.application.editRoleConnectionMetadataRecords([
 	{
@@ -164,4 +170,155 @@ function decodeString(encryptedText: string): string {
 	const iv = Buffer.from(parts.shift() ?? "", "hex");
 	const decipher = createDecipheriv("aes-256-cbc", secretKey, iv);
 	return decipher.update(parts.join(":"), "hex", "utf8") + decipher.final("utf8");
+}
+export function verifyCommand(interaction: ChatInputCommandInteraction) {
+	interaction.reply({
+		content: "what method would you like to use for verification",
+		components: [
+			{
+				type: ComponentType.ActionRow,
+				components: [
+					{
+						type: ComponentType.Button,
+						style: ButtonStyle.Primary,
+						label: "Cloud",
+						custom_id: "cloud_verify",
+					},
+					{
+						type: ComponentType.Button,
+						style: ButtonStyle.Secondary,
+						label: "Project comment",
+						custom_id: "project_verify",
+					},
+					{
+						type: ComponentType.Button,
+						style: ButtonStyle.Secondary,
+						label: "Profile comment",
+						custom_id: "profile_verify",
+					},
+				],
+			},
+		],
+	});
+}
+const baseUri =
+	"https://scratch-coders-auth-server.vercel.app/auth/gettokens?redirect=aHR0cHM6Ly9zY3J1Yi5mbHkuZGV2L2RvbmU=&";
+export async function proveOwnership(button: ButtonInteraction) {
+	switch (button.customId.split("_")[0]) {
+		case "cloud": {
+			const data:
+				| {
+						publicCode: string;
+						privateCode: string;
+						redirectLocation: string;
+						method: string;
+						authProject: number;
+				  }
+				| undefined = await gracefulFetch(baseUri + "method=cloud");
+			if (!data) return;
+			button.reply({
+				content: `Copy the number and paste it into the [project](https://scratch.mit.edu/projects/${data.authProject})\n\`\`\`${data.publicCode}\`\`\`\nClick done when youre done`,
+				components: [
+					{
+						type: ComponentType.ActionRow,
+						components: [
+							{
+								type: ComponentType.Button,
+								style: ButtonStyle.Primary,
+								label: "Done",
+								custom_id: `${data.privateCode}_finishverify`,
+							}
+						],
+					},
+				],
+			});
+			return;
+		}
+		case "project": {
+			const data:
+				| {
+						publicCode: string;
+						privateCode: string;
+						redirectLocation: string;
+						method: string;
+						authProject: number;
+				  }
+				| undefined = await gracefulFetch(baseUri + "method=comment");
+			if (!data) return;
+			button.reply({
+				content: `Copy the number and paste it into the [project](https://scratch.mit.edu/projects/${data.authProject})\n\`\`\`${data.publicCode}\`\`\`\nClick done when youre done`,
+				components: [
+					{
+						type: ComponentType.ActionRow,
+						components: [
+							{
+								type: ComponentType.Button,
+								style: ButtonStyle.Primary,
+								label: "Done",
+								custom_id: `${data.privateCode}_finishverify`,
+							}
+						],
+					},
+				],
+			});
+			return;
+		}
+		case "profile": {
+			await button.showModal({
+				title: "Scratch Username",
+				customId: button.user.id,
+				components: [
+					{
+						type: ComponentType.ActionRow,
+						components: [
+							{
+								type: ComponentType.TextInput,
+								style: TextInputStyle.Short,
+								label: "Enter scratch your username",
+								required: true,
+								customId: "username",
+							},
+						],
+					},
+				],
+			});
+			const modalInteraction = await button
+				.awaitModalSubmit({
+					time: constants.collectorTime,
+					filter: (modalInteraction) => modalInteraction.customId === button.user.id,
+				})
+				.catch(() => void 0);
+			const data:
+				| {
+						publicCode: string;
+						privateCode: string;
+						redirectLocation: string;
+						method: string;
+						authProject: number;
+				  }
+				| undefined = await gracefulFetch(
+				baseUri +
+					"method=profile-comment&username=" +
+					modalInteraction?.fields.getTextInputValue("username"),
+			);
+			if (!data) return;
+			button.reply({
+				content: `Copy the number and paste it into your [profile comments](https://scratch.mit.edu/users/${modalInteraction?.fields.getTextInputValue("username")})\n\`\`\`${data.publicCode}\`\`\`\nClick done when youre done`,
+				components: [
+					{
+						type: ComponentType.ActionRow,
+						components: [
+							{
+								type: ComponentType.Button,
+								style: ButtonStyle.Primary,
+								label: "Done",
+								custom_id: `${data.privateCode}_finishverify`,
+							},
+						],
+					},
+				],
+			});
+			return;
+		}
+	}
 }

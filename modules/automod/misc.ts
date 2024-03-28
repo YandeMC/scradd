@@ -58,43 +58,47 @@ export function decodeRegexp({ source }: RegExp): string {
 }
 
 export default function tryCensor(
-	text: string,
-	strikeShift = 0,
-): false | { censored: string; strikes: number; words: string[][] } {
-	const words: string[][] = [];
-	const censored = badWordRegexps.reduce((string, regexp, index) => {
-		words[index] ??= [];
+    text: string,
+    strikeShift = 0,
+):  false | { censored: string; strikes: number; words: string[][]; regexps:RegExp[][]} {
+    const words: string[][] = [];
+	const regexps: RegExp[][] = [];
+    const censored = badWordRegexps.reduce((string, regexp, index) => {
+        words[index] ??= [];
+		regexps[index] ??= [];
+        return string.replaceAll(regexp, (word) => {
+            if (
+                word.length < 3 ||
+                (word.match(/[\d!#*@|-]/gi)?.length ?? 0) > word.length * 0.5 + 1 ||
+                "-#*".includes(word[0] ?? word) ||
+                "-#*".includes(word.at(-1) ?? word)
+            )
+                return word;
 
-		return string.replaceAll(regexp, (word) => {
-			if (
-				(word.match(/[\d!#*@|-]/gi)?.length ?? 0) > word.length * 0.5 + 1 ||
-				"-#*".includes(word[0] ?? word) ||
-				"-#*".includes(word.at(-1) ?? word)
-			)
-				return word;
+            words[index]?.push(word);
+			regexps[index]?.push(regexp);
+            return word.length < 4
+                ? "#".repeat(word.length)
+                : word[0] + "#".repeat(word.length - 1);
+        });
+    }, normalize(text));
 
-			words[index]?.push(word);
-			return word.length < 4 ?
-					"#".repeat(word.length)
-				:	word[0] + "#".repeat(word.length - 1);
-		});
-	}, normalize(text));
+    return (
+        !!words.flat().length && {
+            censored,
 
-	return (
-		!!words.flat().length && {
-			censored,
-
-			strikes: words.reduce(
-				(accumulator, current, index) =>
-					current.length * Math.max(index - strikeShift, PARTIAL_STRIKE_COUNT) +
-					accumulator,
-				0,
-			),
-
-			words,
-		}
-	);
+            strikes: words.reduce(
+                (accumulator, current, index) =>
+                    current.length * Math.max(index - strikeShift, PARTIAL_STRIKE_COUNT) +
+                    accumulator,
+                0,
+            ),
+regexps,
+            words,
+        }
+    );
 }
+
 
 export function censor(text: string): string {
 	const censored = tryCensor(text);
