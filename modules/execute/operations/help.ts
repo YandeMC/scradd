@@ -9,6 +9,7 @@ import {
 import constants from "../../../common/constants.js";
 import { OPERATION_PREFIX, splitFirstArgument } from "../misc.js";
 import type { CustomOperation } from "../util.js";
+import { columnize } from "../../../util/discord.js";
 
 export const getSchemasFromInteraction = async (
 	interaction: ChatInputCommandInteraction,
@@ -28,6 +29,7 @@ const data: CustomOperation = {
 			required: false,
 		},
 	],
+	permissions: () => true,
 	async command(interaction, { operation: rawOperation } = {}) {
 		await interaction.deferReply();
 
@@ -50,7 +52,7 @@ const data: CustomOperation = {
 			embeds: [
 				operation ?
 					getHelpForOperation(operation, schemas, operationName)
-				:	listOperations(schemas),
+				:	await listOperations(schemas),
 			],
 		});
 	},
@@ -98,15 +100,19 @@ export function getHelpForOperation(
 	};
 }
 
-export function listOperations(
+export async function listOperations(
 	schemas: Record<string, ApplicationCommand | CustomOperation>,
-): APIEmbed {
+): Promise<APIEmbed> {
 	return {
 		color: constants.themeColor,
 		title: "Available Operations",
-		description: Object.values(schemas)
-			.toSorted(({ name: one }, { name: two }) => one.localeCompare(two))
-			.map((schema) => inlineCode(OPERATION_PREFIX + schema.name) + ": " + schema.description)
-			.join("\n"),
+		fields: await columnize(
+			Object.values(schemas)
+				.toSorted(({ name: one }, { name: two }) => one.localeCompare(two))
+				.map(
+					(schema) =>
+						inlineCode(OPERATION_PREFIX + schema.name) + ": " + schema.description,
+				),
+		),
 	};
 }

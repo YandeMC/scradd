@@ -32,6 +32,7 @@ defineChatCommand(
 				required: true,
 			},
 		},
+		access: true,
 	},
 	async (interaction, { operation }) => {
 		const [commandName, args] = splitFirstArgument(operation);
@@ -52,7 +53,7 @@ defineChatCommand(
 			return await interaction.reply({
 				ephemeral: true,
 				content: `${constants.emojis.statuses.no} Could not find the \`${OPERATION_PREFIX}${commandName}\` operation!`,
-				embeds: [listOperations(await getSchemasFromInteraction(interaction))],
+				embeds: [await listOperations(await getSchemasFromInteraction(interaction))],
 			});
 		}
 
@@ -95,7 +96,7 @@ defineChatCommand(
 
 		const permission = await hasPermission(
 			schema,
-			interaction.member,
+			interaction.member ?? interaction.user,
 			interaction.channel ?? undefined,
 		);
 		if (!permission) {

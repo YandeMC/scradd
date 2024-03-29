@@ -18,39 +18,39 @@ jobs:
             - name: Setup Node.JS
               uses: actions/setup-node@v4.0.2
               with:
-                  node-version: "20.6.0"
+                  node-version: 20.6.0
                   cache: npm
 
             - name: Download autos data
               run:
-                  curl "https://gist.githubusercontent.com/{{ secrets.PRIVATE_GIST
-                  }}/raw/autos-data.ts" --output modules/automod/autos-data.ts
+                  curl "https://gist.githubusercontent.com/${{ secrets.PRIVATE_GIST
+                  }}/raw/autos-data.ts" --output modules/auto/autos-data.ts
 
             - name: Download bad words
               run:
-                  curl "https://gist.githubusercontent.com/{{ secrets.PRIVATE_GIST
+                  curl "https://gist.githubusercontent.com/${{ secrets.PRIVATE_GIST
                   }}/raw/bad-words.ts" --output modules/automod/bad-words.ts
 
             - name: Download dad
               run:
-                  curl "https://gist.githubusercontent.com/{{ secrets.PRIVATE_GIST }}/raw/dad.ts"
+                  curl "https://gist.githubusercontent.com/${{ secrets.PRIVATE_GIST }}/raw/dad.ts"
                   --output modules/auto/dad.ts
 
             - name: Download strings
               run:
-                  curl "https://gist.githubusercontent.com/{{ secrets.PRIVATE_GIST
+                  curl "https://gist.githubusercontent.com/${{ secrets.PRIVATE_GIST
                   }}/raw/strings.ts" --output common/strings.ts
+
+            - name: Checkout images
+              run: git clone https://gist.github.com/${{ secrets.IMAGES_GIST }}.git scripts/images
 
             - name: Install
               run: npm ci --force
 
-            - name: Link
-              run: npx railway link --environment production b8b10332-30c2-4b72-8999-78c69ddcd63a
-              env:
-                  RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-
             - name: Deploy
-              run: npx railway up --detach
+              run:
+                  npx railway up --detach --service afdb8def-13c6-4650-af4e-ef60d2009b56
+                  --environment production
               env:
                   RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
 
