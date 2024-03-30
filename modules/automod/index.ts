@@ -192,7 +192,7 @@ defineChatCommand(
 					? `That text gives **${strikes} strike${
 							strikes === 1 ? "" : "s"
 					  }**.\nThese regexes triggerd: ${regexps
-							.map((r: { toString: () => any; }) => r.toString())
+							.map((r: { toString: () => any }) => r.toString())
 							.join(" ")}\n\n`
 					: "") +
 				`*I detected the following words as bad*: ${joinWithAnd(words, (word) =>

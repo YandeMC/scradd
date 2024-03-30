@@ -74,7 +74,7 @@ async function settingsCommand(
 			useMentions: options["use-mentions"],
 			dmReminders: options["dm-reminders"],
 			scratchEmbeds: options["scratch-embeds"],
-			leaderPassPings: options["leader-pass-pings"]
+			leaderPassPings: options["leader-pass-pings"],
 		}),
 	);
 }
@@ -280,7 +280,6 @@ export async function updateSettings(
 			settings.scratchEmbeds === "toggle"
 				? !old.scratchEmbeds
 				: settings.scratchEmbeds ?? old.scratchEmbeds,
-				
 	};
 
 	userSettingsDatabase.updateById(updated, old);
