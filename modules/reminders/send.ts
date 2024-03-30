@@ -1,3 +1,14 @@
+import { client } from "strife.js";
+import {
+	BUMPING_THREAD,
+	COMMAND_ID,
+	type Reminder,
+	SpecialReminders,
+	remindersDatabase,
+} from "./misc.js";
+import getWeekly, { getChatters } from "../xp/weekly.js";
+import { convertBase, nth } from "../../util/numbers.js";
+import type { Message } from "discord.js";
 import {
 	ActivityType,
 	ChannelType,
@@ -7,7 +18,6 @@ import {
 	time,
 	userMention,
 	ActivityType,
-	Message,
 } from "discord.js";
 import { client } from "strife.js";
 import config from "../../common/config.js";
@@ -231,7 +241,7 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 							id: SpecialReminders.QOTD,
 							user: client.user.id,
 						},
-					];
+					]; 	
 					await sendQuestion(channel);
 					continue;
 				}

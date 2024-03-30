@@ -40,25 +40,43 @@ const SETTINGS = {
 } as const;
 export async function getDefaultSettings(user: {
 	id: Snowflake;
-}): Promise<Required<Omit<(typeof userSettingsDatabase.data)[number], "id">>> {
-	const member = await config.guild.members.fetch(user.id).catch(() => void 0);
-	const isDev =
-		(await config.guilds.development.members?.fetch(user.id).then(
-			() => true,
-			() => false,
-		)) ?? !member;
-	return {
-		autoreactions: true,
-		boardPings: process.env.NODE_ENV === "production",
-		dmReminders: true,
-		execute: false,
-		github: !member || (getWeeklyXp(user.id) < 100 && isDev),
-		levelUpPings: process.env.NODE_ENV === "production",
-		preDango: false,
-		scraddChat: false,
-		scratchEmbeds: true,
-		useMentions: getWeeklyXp(user.id) > 100 || isDev,
-	};
+	/** Whether to ping the user when their message gets on the board. */
+	boardPings?: boolean;
+	/** Whether to ping the user when they level up. */
+	levelUpPings?: boolean;
+	/** Whether to automatically react to their messages with random emojis. */
+	autoreactions?: boolean;
+	useMentions?: boolean;
+	dmReminders?: boolean;
+	scratchEmbeds?: boolean;
+	scraddChat?: boolean;
+	leaderPassPings?: boolean;
+}>("user_settings");
+await userSettingsDatabase.init();
+
+async function settingsCommand(
+	interaction: RepliableInteraction,
+	options: {
+		"board-pings"?: boolean;
+		"level-up-pings"?: boolean;
+		"autoreactions"?: boolean;
+		"use-mentions"?: boolean;
+		"dm-reminders"?: boolean;
+		"scratch-embeds"?: boolean;
+		"leader-pass-pings"?: boolean;
+	},
+): Promise<void> {
+	await interaction.reply(
+		await updateSettings(interaction.user, {
+			autoreactions: options.autoreactions,
+			boardPings: options["board-pings"],
+			levelUpPings: options["level-up-pings"],
+			useMentions: options["use-mentions"],
+			dmReminders: options["dm-reminders"],
+			scratchEmbeds: options["scratch-embeds"],
+			leaderPassPings: options["leader-pass-pings"]
+		}),
+	);
 }
 
 defineChatCommand(
@@ -89,12 +107,11 @@ defineChatCommand(
 				type: ApplicationCommandOptionType.Boolean,
 				description: "Show information about Scratch links you send",
 			},
-			"use-mentions": {
+			"leader-pass-pings": {
 				type: ApplicationCommandOptionType.Boolean,
-				description:
-					"Use mentions instead of usernames in embeds so you can view profiles (prone to Discord glitches)",
+				description: "Ping you when you pass someone on the leaderboard",
 			},
-		} satisfies Partial<Record<CamelToKebab<keyof typeof SETTINGS>, BasicOption>>,
+		},
 	},
 	settingsCommand,
 );
@@ -123,11 +140,11 @@ defineChatCommand(
 				type: ApplicationCommandOptionType.Boolean,
 				description: "Show information about Scratch links you send",
 			},
-			"use-mentions": {
+			"leader-pass-pings": {
 				type: ApplicationCommandOptionType.Boolean,
-				description: "Replace mentions with usernames in embeds to avoid seeing raw IDs",
+				description: "Ping you when you pass someone on the leaderboard",
 			},
-		} satisfies Partial<Record<CamelToKebab<keyof typeof SETTINGS>, BasicOption>>,
+		},
 	},
 	settingsCommand,
 );
@@ -220,15 +237,114 @@ defineButton("toggleSetting", async (interaction, data) => {
 		});
 });
 
-export const userSettingsDatabase = new Database<
-	{
-		id: Snowflake;
-		execute?: boolean;
-		preDango?: boolean;
-		scraddChat?: boolean;
-	} & { [key in keyof typeof SETTINGS]?: boolean }
->("user_settings");
-await userSettingsDatabase.init();
+export async function updateSettings(
+	user: User,
+	settings: {
+		autoreactions?: boolean | "toggle";
+		boardPings?: boolean | "toggle";
+		levelUpPings?: boolean | "toggle";
+		useMentions?: boolean | "toggle";
+		dmReminders?: boolean | "toggle";
+		scratchEmbeds?: boolean | "toggle";
+		leaderPassPings?: boolean | "toggle";
+	},
+): Promise<InteractionReplyOptions> {
+	const old = await getSettings(user);
+	const updated = {
+		id: user.id,
+		leaderPassPings:
+			settings.leaderPassPings === "toggle"
+				? !old.leaderPassPings
+				: settings.leaderPassPings ?? old.leaderPassPings,
+		boardPings:
+			settings.boardPings === "toggle"
+				? !old.boardPings
+				: settings.boardPings ?? old.boardPings,
+		levelUpPings:
+			settings.levelUpPings === "toggle"
+				? !old.levelUpPings
+				: settings.levelUpPings ?? old.levelUpPings,
+		autoreactions:
+			settings.autoreactions === "toggle"
+				? !old.autoreactions
+				: settings.autoreactions ?? old.autoreactions,
+		useMentions:
+			settings.useMentions === "toggle"
+				? !old.useMentions
+				: settings.useMentions ?? old.useMentions,
+		dmReminders:
+			settings.dmReminders === "toggle"
+				? !old.dmReminders
+				: settings.dmReminders ?? old.dmReminders,
+		scratchEmbeds:
+			settings.scratchEmbeds === "toggle"
+				? !old.scratchEmbeds
+				: settings.scratchEmbeds ?? old.scratchEmbeds,
+				
+	};
+
+	userSettingsDatabase.updateById(updated, old);
+
+	return {
+		ephemeral: true,
+		content: `${constants.emojis.statuses.yes} Updated your settings!`,
+
+		components: [
+			...(await config.guild.members.fetch(user.id).then(
+				() => [
+					{
+						type: ComponentType.ActionRow,
+						components: [
+							{
+								customId: "levelUpPings_toggleSetting",
+								type: ComponentType.Button,
+								label: "Level Up Pings",
+								style: ButtonStyle[updated.levelUpPings ? "Success" : "Danger"],
+							} as const,
+							{
+								customId: "boardPings_toggleSetting",
+								type: ComponentType.Button,
+								label: "Board Pings",
+								style: ButtonStyle[updated.boardPings ? "Success" : "Danger"],
+							} as const,
+						],
+					},
+				],
+				() => [],
+			)),
+			{
+				type: ComponentType.ActionRow,
+				components: [
+					{
+						customId: "scratchEmbeds_toggleSetting",
+						type: ComponentType.Button,
+						label: "Scratch Link Embeds",
+						style: ButtonStyle[updated.scratchEmbeds ? "Success" : "Danger"],
+					},
+					{
+						customId: "dmReminders_toggleSetting",
+						type: ComponentType.Button,
+						label: "DM Reminders",
+						style: ButtonStyle[updated.dmReminders ? "Success" : "Danger"],
+					},
+					{
+						customId: "autoreactions_toggleSetting",
+						type: ComponentType.Button,
+						label: "Autoreactions",
+						style: ButtonStyle[updated.autoreactions ? "Success" : "Danger"],
+					},
+					{
+						customId: "useMentions_toggleSetting",
+						type: ComponentType.Button,
+						label: "Use Mentions",
+						style: ButtonStyle[updated.useMentions ? "Success" : "Danger"],
+					},
+				],
+			},
+		],
+	};
+}
+
 export async function getSettings(
 	user: { id: Snowflake },
 	defaults?: true,
@@ -242,9 +358,16 @@ export async function getSettings(
 	defaults = true,
 ): Promise<(typeof userSettingsDatabase.data)[number]> {
 	return {
-		id: user.id,
-		...(defaults && (await getDefaultSettings(user))),
-		...userSettingsDatabase.data.find((settings) => settings.id === user.id),
+		autoreactions: true,
+		dmReminders: true,
+		boardPings: process.env.NODE_ENV === "production",
+		levelUpPings: process.env.NODE_ENV === "production",
+		useMentions:
+			getWeeklyXp(user.id) > 100 ||
+			!(await config.guild.members.fetch(user.id).catch(() => void 0)),
+		scratchEmbeds: true,
+		scraddChat: false,
+		leaderPassPings: true,
 	};
 }
 

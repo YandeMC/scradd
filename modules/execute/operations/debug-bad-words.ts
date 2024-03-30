@@ -27,10 +27,22 @@ const data: CustomOperation = {
 
 	async command(interaction, { string }) {
 		assert(typeof string === "string");
+		
+		if (
+			config.roles.staff &&
+			!(interaction.member instanceof GuildMember
+				? interaction.member.roles.resolve(config.roles.staff.id)
+				: interaction.member.roles.includes(config.roles.staff.id))
+		)
+			await interaction.reply({
+				ephemeral: true,
+				content: `${constants.emojis.statuses.no} You don’t have permission to execute this operation!`,
+			});
 
 		const matches = badWords
 			.flat(2)
 			.map((regex) => {
+				if (!regex) return 
 				if (new RegExp(caesar(regex.source), regexpFlags).test(string))
 					return { regex: regex.source, raw: true };
 				if (new RegExp(decodeRegexp(regex), regexpFlags).test(string))

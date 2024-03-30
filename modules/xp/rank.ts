@@ -14,7 +14,7 @@ import { getAllMembers, paginate } from "../../util/discord.js";
 import { nth } from "../../util/numbers.js";
 import { getSettings, mentionUser } from "../settings.js";
 import { getLevelForXp, getXpForLevel } from "./misc.js";
-import { getFullWeeklyData, xpDatabase } from "./util.js";
+import { getFullWeeklyData, getRank, xpDatabase } from "./util.js";
 
 export default async function getUserRank(
 	interaction: RepliableInteraction,
@@ -31,7 +31,7 @@ export default async function getUserRank(
 	const increment = xpForNextLevel - xpForPreviousLevel;
 	const xpGained = xp - xpForPreviousLevel;
 	const progress = xpGained / increment;
-	const rank = allXp.findIndex((info) => info.user === user.id) + 1;
+	const rank = getRank(xpDatabase,user.id) + 1;
 	const weeklyRank = getFullWeeklyData().findIndex((entry) => entry.user === user.id) + 1;
 	const approximateWeeklyRank = Math.ceil(weeklyRank / 10) * 10;
 
