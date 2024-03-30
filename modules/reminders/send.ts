@@ -8,6 +8,7 @@ import {
 } from "./misc.js";
 import getWeekly, { getChatters } from "../xp/weekly.js";
 import { convertBase, nth } from "../../util/numbers.js";
+import type { Message } from "discord.js";
 import {
 	ChannelType,
 	MessageFlags,
@@ -16,7 +17,6 @@ import {
 	time,
 	userMention,
 	ActivityType,
-	Message,
 } from "discord.js";
 import constants from "../../common/constants.js";
 import { backupDatabases, cleanDatabaseListeners } from "../../common/database.js";

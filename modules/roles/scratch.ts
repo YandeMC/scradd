@@ -10,11 +10,6 @@ import {
 	type RESTPostOAuth2RefreshTokenURLEncodedData,
 	type RESTPutAPICurrentUserApplicationRoleConnectionJSONBody,
 	type RESTPutAPICurrentUserApplicationRoleConnectionResult,
-	ChatInputCommandInteraction,
-	ComponentType,
-	ButtonStyle,
-	ButtonInteraction,
-	TextInputStyle,
 } from "discord.js";
 import { createHash, randomBytes } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
@@ -25,7 +20,6 @@ import { fetchUser } from "../../util/scratch.js";
 import { getRequestUrl } from "../../util/text.js";
 import { handleUser } from "../auto/scratch.js";
 import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
-import { gracefulFetch } from "../../util/promises.js";
 
 await client.application.editRoleConnectionMetadataRecords([
 	{
@@ -113,7 +107,7 @@ export default async function linkScratchRole(
 
 	const { username } = await fetch(
 		`https://scratch-coders-auth-server.vercel.app/auth/verifyToken/${encodeURI(scratchToken)}`,
-	).then((response) => response.json<{ username: string | null }>());
+	).then((responsea) => responsea.json<{ username: string | null }>());
 	const scratch = username && (await fetchUser(username));
 	if (!scratch) return response.writeHead(401, { "content-type": "text/html" }).end(scratchHtml);
 
@@ -147,157 +141,4 @@ export default async function linkScratchRole(
 		{ embeds: [await handleUser(["", "", username])] },
 	);
 	return response.writeHead(303, { location: config.guild.rulesChannel?.url }).end();
-}
-export function verifyCommand(interaction: ChatInputCommandInteraction) {
-	interaction.reply({
-		content: "what method would you like to use for verification",
-		components: [
-			{
-				type: ComponentType.ActionRow,
-				components: [
-					{
-						type: ComponentType.Button,
-						style: ButtonStyle.Primary,
-						label: "Cloud",
-						custom_id: "cloud_verify",
-					},
-					{
-						type: ComponentType.Button,
-						style: ButtonStyle.Secondary,
-						label: "Project comment",
-						custom_id: "project_verify",
-					},
-					{
-						type: ComponentType.Button,
-						style: ButtonStyle.Secondary,
-						label: "Profile comment",
-						custom_id: "profile_verify",
-					},
-				],
-			},
-		],
-	});
-}
-const baseUri =
-	"https://scratch-coders-auth-server.vercel.app/auth/gettokens?redirect=aHR0cHM6Ly9zY3J1Yi5mbHkuZGV2L2RvbmU=&";
-export async function proveOwnership(button: ButtonInteraction) {
-	switch (button.customId.split("_")[0]) {
-		case "cloud": {
-			const data:
-				| {
-						publicCode: string;
-						privateCode: string;
-						redirectLocation: string;
-						method: string;
-						authProject: number;
-				  }
-				| undefined = await gracefulFetch(baseUri + "method=cloud");
-			if (!data) return;
-			button.reply({
-				content: `Copy the number and paste it into the [project](https://scratch.mit.edu/projects/${data.authProject})\n\`\`\`${data.publicCode}\`\`\`\nClick done when youre done`,
-				components: [
-					{
-						type: ComponentType.ActionRow,
-						components: [
-							{
-								type: ComponentType.Button,
-								style: ButtonStyle.Primary,
-								label: "Done",
-								custom_id: `${data.privateCode}_finishverify`,
-							},
-						],
-					},
-				],
-			});
-			return;
-		}
-		case "project": {
-			const data:
-				| {
-						publicCode: string;
-						privateCode: string;
-						redirectLocation: string;
-						method: string;
-						authProject: number;
-				  }
-				| undefined = await gracefulFetch(baseUri + "method=comment");
-			if (!data) return;
-			button.reply({
-				content: `Copy the number and paste it into the [project](https://scratch.mit.edu/projects/${data.authProject})\n\`\`\`${data.publicCode}\`\`\`\nClick done when youre done`,
-				components: [
-					{
-						type: ComponentType.ActionRow,
-						components: [
-							{
-								type: ComponentType.Button,
-								style: ButtonStyle.Primary,
-								label: "Done",
-								custom_id: `${data.privateCode}_finishverify`,
-							},
-						],
-					},
-				],
-			});
-			return;
-		}
-		case "profile": {
-			await button.showModal({
-				title: "Scratch Username",
-				customId: button.user.id,
-				components: [
-					{
-						type: ComponentType.ActionRow,
-						components: [
-							{
-								type: ComponentType.TextInput,
-								style: TextInputStyle.Short,
-								label: "Enter scratch your username",
-								required: true,
-								customId: "username",
-							},
-						],
-					},
-				],
-			});
-			const modalInteraction = await button
-				.awaitModalSubmit({
-					time: constants.collectorTime,
-					filter: (modalInteraction) => modalInteraction.customId === button.user.id,
-				})
-				.catch(() => void 0);
-			const data:
-				| {
-						publicCode: string;
-						privateCode: string;
-						redirectLocation: string;
-						method: string;
-						authProject: number;
-				  }
-				| undefined = await gracefulFetch(
-				baseUri +
-					"method=profile-comment&username=" +
-					modalInteraction?.fields.getTextInputValue("username"),
-			);
-			if (!data) return;
-			button.reply({
-				content: `Copy the number and paste it into your [profile comments](https://scratch.mit.edu/users/${modalInteraction?.fields.getTextInputValue(
-					"username",
-				)})\n\`\`\`${data.publicCode}\`\`\`\nClick done when youre done`,
-				components: [
-					{
-						type: ComponentType.ActionRow,
-						components: [
-							{
-								type: ComponentType.Button,
-								style: ButtonStyle.Primary,
-								label: "Done",
-								custom_id: `${data.privateCode}_finishverify`,
-							},
-						],
-					},
-				],
-			});
-			return;
-		}
-	}
 }

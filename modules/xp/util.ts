@@ -39,3 +39,14 @@ export function getFullWeeklyData(): { xp: number; user: string }[] {
 		.filter((entry) => entry.xp > 0)
 		.toSorted((one, two) => two.xp - one.xp);
 }
+
+export function getRank(
+	database:Database<{
+		user: Snowflake;
+		xp: number;
+	}>,
+	userId: string,
+): number {
+	const allXp = database.data.toSorted((one, two) => two.xp - one.xp);
+	return allXp.findIndex((info) => info.user === userId);
+}

@@ -32,6 +32,7 @@ export const userSettingsDatabase = new Database<{
 	dmReminders?: boolean;
 	scratchEmbeds?: boolean;
 	scraddChat?: boolean;
+	leaderPassPings?: boolean;
 }>("user_settings");
 await userSettingsDatabase.init();
 
@@ -44,6 +45,7 @@ async function settingsCommand(
 		"use-mentions"?: boolean;
 		"dm-reminders"?: boolean;
 		"scratch-embeds"?: boolean;
+		"leader-pass-pings"?: boolean;
 	},
 ): Promise<void> {
 	await interaction.reply(
@@ -54,6 +56,7 @@ async function settingsCommand(
 			useMentions: options["use-mentions"],
 			dmReminders: options["dm-reminders"],
 			scratchEmbeds: options["scratch-embeds"],
+			leaderPassPings: options["leader-pass-pings"]
 		}),
 	);
 }
@@ -90,6 +93,10 @@ defineChatCommand(
 				type: ApplicationCommandOptionType.Boolean,
 				description: "Send information about Scratch links found in your messages",
 			},
+			"leader-pass-pings": {
+				type: ApplicationCommandOptionType.Boolean,
+				description: "Ping you when you pass someone on the leaderboard",
+			},
 		},
 	},
 	settingsCommand,
@@ -119,6 +126,10 @@ defineChatCommand(
 			"scratch-embeds": {
 				type: ApplicationCommandOptionType.Boolean,
 				description: "Send information about Scratch links found in your messages",
+			},
+			"leader-pass-pings": {
+				type: ApplicationCommandOptionType.Boolean,
+				description: "Ping you when you pass someone on the leaderboard",
 			},
 		},
 	},
@@ -153,11 +164,16 @@ export async function updateSettings(
 		useMentions?: boolean | "toggle";
 		dmReminders?: boolean | "toggle";
 		scratchEmbeds?: boolean | "toggle";
+		leaderPassPings?: boolean | "toggle";
 	},
 ): Promise<InteractionReplyOptions> {
 	const old = await getSettings(user);
 	const updated = {
 		id: user.id,
+		leaderPassPings:
+			settings.leaderPassPings === "toggle"
+				? !old.leaderPassPings
+				: settings.leaderPassPings ?? old.leaderPassPings,
 		boardPings:
 			settings.boardPings === "toggle"
 				? !old.boardPings
@@ -182,6 +198,7 @@ export async function updateSettings(
 			settings.scratchEmbeds === "toggle"
 				? !old.scratchEmbeds
 				: settings.scratchEmbeds ?? old.scratchEmbeds,
+				
 	};
 
 	userSettingsDatabase.updateById(updated, old);
@@ -283,6 +300,7 @@ export async function getDefaultSettings(user: {
 			!(await config.guild.members.fetch(user.id).catch(() => void 0)),
 		scratchEmbeds: true,
 		scraddChat: false,
+		leaderPassPings: true,
 	};
 }
 

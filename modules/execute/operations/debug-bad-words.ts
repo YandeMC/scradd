@@ -23,7 +23,7 @@ const data: CustomOperation = {
 
 	async command(interaction, { string }) {
 		assert(typeof string === "string");
-
+		
 		if (
 			config.roles.staff &&
 			!(interaction.member instanceof GuildMember
@@ -38,6 +38,7 @@ const data: CustomOperation = {
 		const matches = badWords
 			.flat(2)
 			.map((regex) => {
+				if (!regex) return 
 				if (new RegExp(caesar(regex.source), regexpFlags).test(string))
 					return { regex: `/${regex.source}/`, raw: true };
 				if (new RegExp(decodeRegexp(regex), regexpFlags).test(string))

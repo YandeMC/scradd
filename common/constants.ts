@@ -1,4 +1,17 @@
+/* eslint-disable sort-keys */
 import addons from "@sa-community/addons-data" assert { type: "json" };
+
+const domains = {
+	npm: "https://npm.im",
+	scradd:
+		process.env.NODE_ENV === "production" || !process.env.PORT
+			? "https://sa-discord.up.railway.app"
+			: (`http://localhost:${process.env.PORT}` as const),
+	scratch: "https://scratch.mit.edu",
+	scratchAddons: "https://scratchaddons.com",
+	scratchApi: "https://api.scratch.mit.edu",
+	scratchdb: "https://scratchdb.lefty.one/v3",
+} as const;
 
 export default {
 	addonSearchOptions: {
@@ -16,6 +29,8 @@ export default {
 
 	collectorTime: 45_000,
 	defaultPunishment: "No reason given.",
+
+	domains,
 
 	emojis: {
 		message: {
