@@ -41,7 +41,7 @@ export function getFullWeeklyData(): { xp: number; user: string }[] {
 }
 
 export function getRank(
-	database:Database<{
+	database: Database<{
 		user: Snowflake;
 		xp: number;
 	}>,

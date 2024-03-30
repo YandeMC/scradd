@@ -106,7 +106,12 @@ export default async function giveXp(
 			await config.channels.bots?.send({
 				content: `<@${user.id}>, You passed ${joinWithAnd(
 					passedUsers.map((id) => `<@${id.user}>`),
-				)} on the leaderboard!`,allowedMentions: (await getSettings(user)).leaderPassPings ? undefined : { users: [] },
+				)} on the leaderboard!`,
+				allowedMentions: (
+					await getSettings(user)
+				).leaderPassPings
+					? undefined
+					: { users: [] },
 			});
 	}
 	const member =

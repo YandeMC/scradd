@@ -195,9 +195,7 @@ export async function generateBoardMessage(
 function formatChannel(channel: TextBasedChannel): string {
 	const thread = channel.isThread() && channel.parent?.toString();
 	const otherServer =
-		!channel.isDMBased() &&
-		channel.guild.id !== config.guild.id &&
-		(config.guild.name);
+		!channel.isDMBased() && channel.guild.id !== config.guild.id && config.guild.name;
 
 	if (thread && otherServer) return `${channel.toString()} (${thread} - ${otherServer})`;
 	if (thread) return `${channel.toString()} (${thread})`;
