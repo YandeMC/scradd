@@ -25,10 +25,8 @@ await login({
 		presence: { status: "dnd" },
 	},
 	commandErrorMessage: `${constants.emojis.statuses.no} An error occurred.`,
-}).catch((e)=>{console.log(e);
-})
-
-
-
+}).catch((e) => {
+	console.log(e);
+});
 
 client.user.setStatus("online");

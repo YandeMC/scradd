@@ -17,8 +17,7 @@ if (guilds) guilds.delete(guild.id);
 
 async function getConfig() {
 	const channels = (await guild?.channels.fetch()) ?? new Collection();
-	const roles =
-		(await guild?.roles.fetch()) ?? new Collection();
+	const roles = (await guild?.roles.fetch()) ?? new Collection();
 
 	const mod = roles.find((role) => role.name.toLowerCase().startsWith("mod"));
 	return {

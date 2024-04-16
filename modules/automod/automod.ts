@@ -12,16 +12,24 @@ import { stripMarkdown } from "../../util/markdown.js";
 import { joinWithAnd } from "../../util/text.js";
 import tryCensor, { badWordRegexps, badWordsAllowed } from "./misc.js";
 import { createWorker } from "tesseract.js";
-const DEFAULT_STRIKES = 1
-export function warn(user: GuildMember | User,
+const DEFAULT_STRIKES = 1;
+export function warn(
+	user: GuildMember | User,
 	reason: string,
 	rawStrikes: number = DEFAULT_STRIKES,
-	contextOrModerator: User | string = client.user) {
-	config.channels.modlogs?.send("WARN " + JSON.stringify({
-		user, reason, rawStrikes, contextOrModerator
-	}))
+	contextOrModerator: User | string = client.user,
+) {
+	config.channels.modlogs?.send(
+		"WARN " +
+			JSON.stringify({
+				user,
+				reason,
+				rawStrikes,
+				contextOrModerator,
+			}),
+	);
 }
-const PARTIAL_STRIKE_COUNT = 1
+const PARTIAL_STRIKE_COUNT = 1;
 const worker = await createWorker("eng");
 async function getMessageImageText(message: Message): Promise<string[]> {
 	const imageTextPromises = message.attachments
@@ -43,8 +51,8 @@ export default async function automodMessage(message: Message): Promise<boolean>
 	const baseChannel = getBaseChannel(message.channel);
 	const pings = message.mentions.users.size
 		? ` (ghost pinged ${joinWithAnd(
-			message.mentions.users.map((user: { toString: () => any }) => user.toString()),
-		)})`
+				message.mentions.users.map((user: { toString: () => any }) => user.toString()),
+		  )})`
 		: "";
 
 	let needsDelete = false;
@@ -71,7 +79,6 @@ export default async function automodMessage(message: Message): Promise<boolean>
 	if (allowBadWords) {
 		if (!needsDelete) return true;
 		if (!message.deletable) {
-
 			return true;
 		}
 
@@ -138,12 +145,12 @@ export default async function automodMessage(message: Message): Promise<boolean>
 			typeof censored === "boolean"
 				? bad
 				: {
-					strikes: bad.strikes + censored.strikes,
-					words: bad.words.map((words: any, index: number) => [
-						...words,
-						...(censored.words[index] ?? []),
-					]),
-				},
+						strikes: bad.strikes + censored.strikes,
+						words: bad.words.map((words: any, index: number) => [
+							...words,
+							...(censored.words[index] ?? []),
+						]),
+				  },
 		{ strikes: 0, words: Array.from<string[]>({ length: badWordRegexps.length }).fill([]) },
 	);
 	if (badWords.strikes) needsDelete = true;

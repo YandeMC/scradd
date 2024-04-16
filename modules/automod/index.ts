@@ -15,13 +15,21 @@ import { joinWithAnd } from "../../util/text.js";
 import automodMessage from "./automod.js";
 import tryCensor, { badWordsAllowed } from "./misc.js";
 import changeNickname from "./nicknames.js";
-export function warn(user: GuildMember | User,
+export function warn(
+	user: GuildMember | User,
 	reason: string,
 	rawStrikes: number = 1,
-	contextOrModerator: User | string = client.user) {
-	config.channels.modlogs?.send("WARN " + JSON.stringify({
-		user, reason, rawStrikes, contextOrModerator
-	}))
+	contextOrModerator: User | string = client.user,
+) {
+	config.channels.modlogs?.send(
+		"WARN " +
+			JSON.stringify({
+				user,
+				reason,
+				rawStrikes,
+				contextOrModerator,
+			}),
+	);
 }
 defineEvent.pre("interactionCreate", async (interaction) => {
 	if (

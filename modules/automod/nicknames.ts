@@ -70,7 +70,7 @@ export default async function changeNickname(member: GuildMember): Promise<void>
 			const oldest = unchanged.firstKey();
 			if (oldest) unchanged.delete(oldest);
 		}
-		}
+	}
 }
 
 async function setNickname(
@@ -80,7 +80,7 @@ async function setNickname(
 ): Promise<void> {
 	await (member.moderatable && newNickname.length <= 32
 		? member.setNickname(member.user.displayName === newNickname ? null : newNickname, reason)
-		: void 0)
+		: void 0);
 }
 
 function findName(member: GuildMember): string {

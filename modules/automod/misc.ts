@@ -88,8 +88,7 @@ export default function tryCensor(
 
 			strikes: words.reduce(
 				(accumulator, current, index) =>
-					current.length * Math.max(index - strikeShift, 1) +
-					accumulator,
+					current.length * Math.max(index - strikeShift, 1) + accumulator,
 				0,
 			),
 			regexps,
