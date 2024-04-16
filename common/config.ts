@@ -41,7 +41,7 @@ async function getConfig() {
 	);
 
 	const roles = ((await guild?.roles.fetch()) ?? new Collection()).filter(
-		(role) => role.editable && !role.name.startsWith(CUSTOM_ROLE_PREFIX),
+		(role) => !role.managed && !role.name.startsWith(CUSTOM_ROLE_PREFIX),
 	);
 	const modRole = roles.find((role) => role.name.toLowerCase().startsWith("mod"));
 	const staffRole = assertOutsideTests(
@@ -107,10 +107,11 @@ async function getConfig() {
 			exec: execRole,
 			staff: staffRole,
 			weeklyWinner: roles.find((role) => role.name.toLowerCase().includes("weekly")),
-			dev: roles.find((role) => role.name.toLowerCase().startsWith("contributor")),
+			dev: roles.find((role) => role.name.toLowerCase().startsWith("dev")),
 			epic: roles.find((role) => role.name.toLowerCase().includes("epic")),
 			booster: roles.find((role) => role.name.toLowerCase().includes("booster")),
 			active: roles.find((role) => role.name.toLowerCase().includes("active")),
+			established: roles.find((role) => role.name.toLowerCase().includes("established")),
 		},
 	};
 

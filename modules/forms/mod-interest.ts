@@ -155,7 +155,7 @@ export async function submitInterest(interaction: ModalSubmitInteraction): Promi
 		throw new TypeError("interaction.member is not a GuildMember");
 
 	const allXp = xpDatabase.data.toSorted((one, two) => two.xp - one.xp);
-	const xp = Math.floor(allXp.find((entry) => entry.user === interaction.user.id)?.xp ?? 0);
+	const xp = allXp.find((entry) => entry.user === interaction.user.id)?.xp ?? 0;
 	const level = getLevelForXp(xp);
 	const rank = allXp.findIndex((info) => info.user === interaction.user.id) + 1;
 
@@ -197,7 +197,7 @@ export async function submitInterest(interaction: ModalSubmitInteraction): Promi
 							[
 								...interaction.member.roles
 									.valueOf()
-									.toSorted((one, two) => two.comparePositionTo(one))
+									.sorted((one, two) => two.comparePositionTo(one))
 									.filter(({ id }) => id !== config.guild.id)
 									.values(),
 							].join(" ") || "*No roles*",
@@ -220,7 +220,7 @@ export async function submitInterest(interaction: ModalSubmitInteraction): Promi
 					},
 					{
 						name: "XP",
-						value: `${rank}) Level ${level} - ${xp.toLocaleString()} XP`,
+						value: `${rank}) Level ${level} - ${Math.floor(xp).toLocaleString()} XP`,
 						inline: true,
 					},
 					{

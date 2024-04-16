@@ -70,26 +70,28 @@ export async function messageDeleteBulk(
 	if (!shouldLog(channel)) return;
 	const messagesInfo = (
 		await Promise.all(
-			messages.toReversed().map(async (message) => {
-				const embeds = `${message.embeds.length ? `${message.embeds.length} embed` : ""}${
-					message.embeds.length > 1 ? "s" : ""
-				}`;
-				const attachments = `${
-					message.attachments.size ? `${message.attachments.size} attachment` : ""
-				}${message.attachments.size > 1 ? "s" : ""}`;
-				const extremities =
-					message.embeds.length || message.attachments.size ?
-						` (${embeds}${embeds && attachments && ", "}${attachments})`
-					:	"";
+			messages
+				.map(async (message) => {
+					const embeds = `${message.embeds.length ? `${message.embeds.length} embed` : ""}${
+						message.embeds.length > 1 ? "s" : ""
+					}`;
+					const attachments = `${
+						message.attachments.size ? `${message.attachments.size} attachment` : ""
+					}${message.attachments.size > 1 ? "s" : ""}`;
+					const extremities =
+						message.embeds.length || message.attachments.size ?
+							` (${embeds}${embeds && attachments && ", "}${attachments})`
+						:	"";
 
-				const author =
-					message.author ?
-						`${message.author.tag} - ${message.author.id}`
-					:	"[unknown author]";
-				const content = !message.partial && (await messageToText(message));
+					const author =
+						message.author ?
+							`${message.author.tag} - ${message.author.id}`
+						:	"[unknown author]";
+					const content = !message.partial && (await messageToText(message));
 
-				return `${author}${extremities}${content ? `:\n${content}` : ""}`;
-			}),
+					return `${author}${extremities}${content ? `:\n${content}` : ""}`;
+				})
+				.toReversed(),
 		)
 	).join("\n\n---\n\n");
 
@@ -126,9 +128,7 @@ export async function messageReactionRemoveAll(
 	await log(
 		`${
 			LoggingEmojis.Expression
-		} Reactions purged on message by ${message.author.toString()} in ${message.channel.toString()} (ID: ${
-			message.id
-		})`,
+		} Reactions purged on [message](<${message.url}>) by ${message.author.toString()} in ${message.channel.toString()}`,
 		LogSeverity.ContentEdit,
 		{
 			embeds: [
@@ -141,8 +141,6 @@ export async function messageReactionRemoveAll(
 					color: Colors.Blurple,
 				},
 			],
-
-			buttons: [{ label: "Message", url: message.url }],
 		},
 	);
 }
@@ -157,22 +155,17 @@ export async function messageUpdate(
 		await log(
 			`${
 				LoggingEmojis.MessageUpdate
-			} Message by ${newMessage.author.toString()} in ${newMessage.channel.toString()} (ID: ${
-				newMessage.id
-			}) ${newMessage.flags.has("Crossposted") ? "" : "un"}published`,
+			} [Message](<${newMessage.url}>) by ${newMessage.author.toString()} in ${newMessage.channel.toString()} ${newMessage.flags.has("Crossposted") ? "" : "un"}published`,
 			LogSeverity.ServerChange,
-			{ buttons: [{ label: "Message", url: newMessage.url }] },
 		);
 	}
 	if (oldMessage.flags.has("SuppressEmbeds") !== newMessage.flags.has("SuppressEmbeds")) {
 		await log(
 			`${LoggingEmojis.MessageUpdate} Embeds ${
 				newMessage.flags.has("SuppressEmbeds") ? "removed from" : "shown on"
-			} message by ${newMessage.author.toString()} in ${newMessage.channel.toString()} (ID: ${
-				newMessage.id
-			})`,
+			} [message](<${newMessage.url}>) by ${newMessage.author.toString()} in ${newMessage.channel.toString()}`,
 			LogSeverity.ContentEdit,
-			{ buttons: [{ label: "Message", url: newMessage.url }], embeds: oldMessage.embeds },
+			{ embeds: oldMessage.embeds },
 		);
 	}
 
@@ -180,11 +173,8 @@ export async function messageUpdate(
 		await log(
 			`${
 				LoggingEmojis.MessageUpdate
-			} Message by ${newMessage.author.toString()} in ${newMessage.channel.toString()} (ID: ${
-				newMessage.id
-			}) ${newMessage.pinned ? "" : "un"}pinned`,
-			LogSeverity.ImportantUpdate,
-			{ buttons: [{ label: "Message", url: newMessage.url }] },
+			} [Message](<${newMessage.url}>) by ${newMessage.author.toString()} in ${newMessage.channel.toString()} ${newMessage.pinned ? "" : "un"}pinned`,
+			LogSeverity.ServerChange,
 		);
 	}
 
@@ -199,22 +189,20 @@ export async function messageUpdate(
 				.replace(/^-{3} \n\+{3} \n/, "");
 		if (contentDiff) files.push({ content: contentDiff, extension: "diff" });
 
-		const changedFiles = new Set(newMessage.attachments.map((attachment) => attachment.url));
+		const changedFiles = new Set(newMessage.attachments.map((attachment) => attachment.id));
 		files.push(
 			...oldMessage.attachments
-				.map((attachment) => attachment.url)
+				.map((attachment) => attachment.id)
 				.filter((attachment) => !changedFiles.has(attachment)),
 		);
 
 		if (files.length) {
 			await log(
-				`${LoggingEmojis.MessageEdit} ${
+				`${LoggingEmojis.MessageEdit} [${
 					oldMessage.partial ? "Unknown message" : "Message"
-				} by ${newMessage.author.toString()} in ${newMessage.channel.toString()} (ID: ${
-					newMessage.id
-				}) edited`,
+				}](<${newMessage.url}>) by ${newMessage.author.toString()} in ${newMessage.channel.toString()} edited`,
 				LogSeverity.ContentEdit,
-				{ buttons: [{ label: "Message", url: newMessage.url }], files },
+				{ files },
 			);
 		}
 	}

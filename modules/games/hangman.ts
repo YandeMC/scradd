@@ -1,21 +1,20 @@
 import {
 	ButtonStyle,
 	ComponentType,
+	Guild,
 	TextInputStyle,
 	inlineCode,
 	type ChatInputCommandInteraction,
 	type GuildMember,
-	type Snowflake,
 	type User,
 } from "discord.js";
 import fileSystem from "node:fs/promises";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
-import { disableComponents } from "../../util/discord.js";
+import { disableComponents, getAllMembers } from "../../util/discord.js";
 import { joinWithAnd } from "../../util/text.js";
 import tryCensor from "../automod/misc.js";
 import warn from "../punishments/warn.js";
-import { recentXpDatabase } from "../xp/util.js";
 import { CURRENTLY_PLAYING, GAME_COLLECTOR_TIME, checkIfUserPlaying } from "./misc.js";
 
 const MAX_WRONGS = 7,
@@ -73,7 +72,7 @@ export default async function hangman(
 	let color: number | undefined;
 
 	const guesses: ((typeof CHARACTERS)[number] | Lowercase<string>)[] = [];
-	const message = await interaction.reply({ embeds: [{ title: "Hangman" }], fetchReply: true });
+	const message = await interaction.deferReply({ fetchReply: true });
 	await tick();
 
 	const collector = message
@@ -317,22 +316,19 @@ const ROLES = [
 	config.roles.active?.id,
 ];
 async function getMember(player: User): Promise<GuildMember> {
-	const members = await config.guild.members.fetch();
-	const testers = await config.guilds.testing.members?.fetch();
-	const xp = recentXpDatabase.data.reduce<Record<Snowflake, number>>((accumulator, gain) => {
-		accumulator[gain.user] = (accumulator[gain.user] ?? 0) + gain.xp;
-		return accumulator;
-	}, {});
+	const members = await getAllMembers(config.guild);
+	const testers =
+		config.guilds.testing instanceof Guild ?
+			await getAllMembers(config.guilds.testing)
+		:	undefined;
 
 	const member = members
 		.filter(
 			(member) =>
-				member.user.discriminator === "0" &&
-				member.user.username.length > 5 &&
 				member.id !== player.id &&
+				/^[\w.]{5,}$/i.test(member.user.username) &&
 				!tryCensor(member.user.username) &&
 				(process.env.NODE_ENV !== "production" ||
-					(xp[member.id] ?? 0) >= 200 ||
 					testers?.get(member.id)?.displayColor ||
 					ROLES.some((role) => role && member.roles.resolve(role))),
 		)

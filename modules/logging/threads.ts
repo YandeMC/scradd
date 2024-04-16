@@ -59,7 +59,7 @@ export async function threadUpdate(
 			`${LoggingEmojis.Thread} ${
 				newThread.archived ? `${newThread.url} closed` : `${newThread.toString()} opened`
 			}`,
-			LogSeverity.ServerChange,
+			LogSeverity.ContentEdit,
 		);
 
 	if (oldThread.autoArchiveDuration !== newThread.autoArchiveDuration) {
@@ -79,8 +79,8 @@ export async function threadUpdate(
 	if (oldThread.flags.has("ActiveChannelsRemoved") !== removedActive) {
 		await log(
 			`${LoggingEmojis.Channel} ${newThread.toString()} ${
-				removedActive ? "removed from" : "re-added to"
-			} Active Channels`,
+				removedActive ? "hidden in" : "shown in"
+			} Active Now`,
 			LogSeverity.ServerChange,
 		);
 	}
@@ -124,7 +124,7 @@ export async function threadUpdate(
 			`${LoggingEmojis.Thread} ${newThread.toString()} ${
 				newThread.locked ? "locked" : "unlocked"
 			}`,
-			LogSeverity.ServerChange,
+			LogSeverity.ContentEdit,
 		);
 
 	if (oldThread.rateLimitPerUser !== newThread.rateLimitPerUser) {

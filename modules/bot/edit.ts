@@ -12,12 +12,15 @@ import { databaseThread } from "../../common/database.js";
 import { getBaseChannel, getMessageJSON } from "../../util/discord.js";
 import { generateError } from "../logging/errors.js";
 import log, { LogSeverity, LoggingEmojis, shouldLog } from "../logging/misc.js";
+import { chatThread } from "../auto/chat.js";
 
 export default async function editMessage(
 	interaction: MessageContextMenuCommandInteraction,
 ): Promise<InteractionResponse | undefined> {
 	if (
 		!interaction.targetMessage.editable ||
+		!interaction.targetMessage.interaction ||
+		chatThread?.id === interaction.channel?.id ||
 		config.channels.board?.id === interaction.channel?.id ||
 		(config.channels.modlogs.id === getBaseChannel(interaction.channel)?.id &&
 			databaseThread.id !== interaction.channel?.id)
@@ -145,14 +148,11 @@ export async function submitEdit(interaction: ModalSubmitInteraction, id: string
 		await log(
 			`${
 				LoggingEmojis.MessageEdit
-			} Message by ${edited.author.toString()} in ${edited.channel.toString()} (ID: ${
-				edited.id
-			}) edited by ${interaction.user.toString()}`,
+			} [Message](<${edited.url}>) by ${edited.author.toString()} in ${edited.channel.toString()} edited by ${interaction.user.toString()}`,
 			(interaction.guild?.id !== config.guild.id &&
 				interaction.guild?.publicUpdatesChannel) ||
 				LogSeverity.ServerChange,
 			{
-				buttons: [{ label: "Message", url: edited.url }],
 				files:
 					interaction.guild?.id !== config.guild.id || shouldLog(edited.channel) ?
 						files

@@ -18,6 +18,9 @@ import tryCensor, { censor } from "../automod/misc.js";
 export const BOARD_EMOJI = process.env.NODE_ENV === "production" ? "🥔" : "⭐",
 	REACTIONS_NAME = process.env.NODE_ENV === "production" ? "Potatoes" : "Stars";
 
+/** Number of days for required potato count to double. */
+const DECAY_SPEED = 750;
+
 export const boardDatabase = new Database<{
 	/** The number of reactions this message has. */
 	reactions: number;
@@ -86,8 +89,7 @@ export function boardReactionCount(
 			channel instanceof BaseChannel && channel.type === ChannelType.PrivateThread ?
 				2 / 3
 			:	1;
-		/** 500 = number of days for required potato count to double. */
-		const timeShift = (Date.now() - +time) / 86_400_000 / 500 + 1;
+		const timeShift = (Date.now() - +time) / 86_400_000 / DECAY_SPEED + 1;
 		return Math.max(2, Math.round(count * privateThread * timeShift));
 	}
 }
@@ -194,7 +196,7 @@ function formatChannel(channel: TextBasedChannel): string {
 	const otherServer =
 		!channel.isDMBased() &&
 		channel.guild.id !== config.guild.id &&
-		(channel.guild.id === config.guilds.development.id ? "SA Dev" : config.guild.name);
+		(channel.guild.id === config.guilds.development.id ? "SA Dev" : channel.guild.name);
 
 	if (thread && otherServer) return `${channel.toString()} (${thread} - ${otherServer})`;
 	if (thread) return `${channel.toString()} (${thread})`;

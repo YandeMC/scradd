@@ -29,8 +29,10 @@ import tryCensor, { censor } from "../automod/misc.js";
 import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
 import { getSettings, userSettingsDatabase } from "../settings.js";
 
+export const chatName = `${client.user.displayName} Chat` as const;
+
 const Chat = mongoose.model("Chat", new mongoose.Schema({ prompt: String, response: String }));
-const dictionary = (await Chat.find({}))
+const chats = (await Chat.find({}))
 	.map((chat) => ({ response: chat.response, prompt: chat.prompt ?? "" }))
 	.filter(
 		(chat): chat is { response: string; prompt: string } =>
@@ -40,18 +42,17 @@ const dictionary = (await Chat.find({}))
 export default function scraddChat(message: Message): string | undefined {
 	if (
 		message.author.id === client.user.id ||
-		message.channel.id !== thread?.id ||
-		(message.mentions.users.size > +message.mentions.has(message.author) &&
-			!message.mentions.has(client.user))
+		message.channel.id !== chatThread?.id ||
+		(message.mentions.users.size && !message.mentions.has(client.user))
 	)
 		return;
 	const prompt = stripMarkdown(normalize(messageToText(message, false).toLowerCase()));
 
-	const responses = didYouMean(prompt, dictionary, {
+	const responses = didYouMean(prompt, chats, {
 		matchPath: ["prompt"],
 		returnType: ReturnTypeEnums.ALL_CLOSEST_MATCHES,
 		thresholdType: ThresholdTypeEnums.SIMILARITY,
-		threshold: 0.6,
+		threshold: 0.5,
 	})
 		.toSorted(() => Math.random() - 0.5)
 		.filter(
@@ -68,6 +69,8 @@ export default function scraddChat(message: Message): string | undefined {
 
 const previousMessages: Record<Snowflake, Message> = {};
 export async function learn(message: Message): Promise<void> {
+	if (message.channel.id === chatThread?.id) return;
+
 	const previous = previousMessages[message.channel.id];
 	previousMessages[message.channel.id] = message;
 
@@ -110,26 +113,25 @@ export async function learn(message: Message): Promise<void> {
 
 	if (reference?.author.id === message.author.id || prompt === undefined || prompt === response)
 		return;
-	dictionary.push({ prompt, response });
+	chats.push({ prompt, response });
 	await new Chat({ prompt, response }).save();
 }
 
-const thread = await getThread();
+export const chatThread = await getThread();
 async function getThread(): Promise<ThreadChannel | undefined> {
 	if (!config.channels.bots) return;
 
-	const intitialThread = getInitialChannelThreads(config.channels.bots).find(
-		({ name }) => name === "Scradd Chat",
+	const intitialThread = getInitialChannelThreads(config.channels.bots).find(({ name }) =>
+		name.startsWith(chatName),
 	);
 	if (intitialThread) return intitialThread;
 
 	const createdThread = await config.channels.bots.threads.create({
-		name: "Scradd Chat",
-		reason: "For Scradd Chat",
+		name: `${chatName} (Check pins!)`,
+		reason: `For ${chatName}`,
 	});
 	const message = await createdThread.send({
-		content:
-			"## Scradd Chat\n### Basic regurgitating chatbot\nScradd Chat learns by tracking messages across all channels. Your messages will only be stored if you give express permission by selecting a button below. You will be able to change your decision at any time, however any past messages can’t be deleted, as message authors are not stored. By default, your messages are not saved. If you consent to these terms, you may select the appropriate button below.",
+		content: `## ${chatName}\n### Basic regurgitating chatbot\n${chatName} learns by tracking messages across all channels. Your messages will only be stored if you give explicit permission by selecting a button below. You will be able to change your decision at any time, however any past messages can’t be deleted, as message authors are not stored. By default, your messages are not saved. If you consent to these terms, you may select the appropriate button below.`,
 		components: [
 			{
 				type: ComponentType.ActionRow,
@@ -150,7 +152,7 @@ async function getThread(): Promise<ThreadChannel | undefined> {
 			},
 		],
 	});
-	await message.pin("Pinned Scradd Chat consent message for easy access");
+	await message.pin(`Pinned ${chatName} consent message for ease of access`);
 	return createdThread;
 }
 export async function allowChat(
@@ -211,7 +213,7 @@ export async function removeResponse(
 						label: "Please confirm to remove this response",
 						required: true,
 						customId: "confirm",
-						placeholder: "Type anything in this box to confirm. This is unreversible.",
+						placeholder: "Type anything in this box to confirm. This is irreversible.",
 					},
 				],
 			},
@@ -243,12 +245,13 @@ export async function removeResponse(
 	await log(
 		`${
 			LoggingEmojis.Bot
-		} ${interaction.user.toString()} permamently removed a response from Scradd Chat (${deletedCount} prompt${
+		} ${interaction.user.toString()} permamently removed a response from ${chatName} (${deletedCount} prompt${
 			deletedCount === 1 ? "" : "s"
 		})`,
 		LogSeverity.ImportantUpdate,
 		{ files: [{ content: response, extension: "md" }] },
 	);
+	await interaction.targetMessage.delete();
 	await modalInteraction.reply({
 		content: `${
 			constants.emojis.statuses.yes

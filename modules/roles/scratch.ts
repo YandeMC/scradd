@@ -11,7 +11,6 @@ import {
 	type RESTPutAPICurrentUserApplicationRoleConnectionJSONBody,
 	type RESTPutAPICurrentUserApplicationRoleConnectionResult,
 } from "discord.js";
-import { createHash, randomBytes } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { client } from "strife.js";
 import config from "../../common/config.js";
@@ -20,6 +19,7 @@ import { fetchUser } from "../../util/scratch.js";
 import { getRequestUrl } from "../../util/text.js";
 import { handleUser } from "../auto/scratch.js";
 import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
+import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
 await client.application.editRoleConnectionMetadataRecords([
 	{
@@ -30,8 +30,6 @@ await client.application.editRoleConnectionMetadataRecords([
 	},
 ]);
 
-const HASH = randomBytes(16);
-const sessions: Record<string, string> = {};
 export default async function linkScratchRole(
 	request: IncomingMessage,
 	response: ServerResponse,
@@ -41,11 +39,6 @@ export default async function linkScratchRole(
 	if (request.method === "OPTIONS")
 		return response.writeHead(201, { "content-type": "text/plain" }).end("201 No Content");
 
-	const ipHash = createHash("sha384")
-		.update(request.socket.remoteAddress ?? "")
-		.update(HASH)
-		.digest("base64");
-
 	const requestUrl = getRequestUrl(request);
 	const redirectUri = requestUrl.origin + requestUrl.pathname;
 	const discordUrl = `https://discord.com${Routes.oauth2Authorization()}?${new URLSearchParams({
@@ -54,11 +47,7 @@ export default async function linkScratchRole(
 		response_type: "code",
 		scope: OAuth2Scopes.Identify + " " + OAuth2Scopes.RoleConnectionsWrite,
 	}).toString()}`;
-	const scratchUrl = `https://auth.itinerary.eu.org/auth/?name=${encodeURIComponent(
-		client.user.displayName,
-	)}&redirect=${Buffer.from(redirectUri).toString("base64")}`;
 	const discordHtml = `<meta http-equiv="refresh" content="0;url=${discordUrl}">`; // eslint-disable-line unicorn/string-content
-	const scratchHtml = `<meta http-equiv="refresh" content="0;url=${scratchUrl}">`; // eslint-disable-line unicorn/string-content
 
 	const search = new URLSearchParams(requestUrl.search);
 	const scratchToken = search.get("privateCode");
@@ -69,11 +58,11 @@ export default async function linkScratchRole(
 		const tokenData = (await client.rest
 			.post(Routes.oauth2TokenExchange(), {
 				body: new URLSearchParams({
+					redirect_uri: redirectUri,
 					client_id: client.user.id,
 					client_secret: process.env.CLIENT_SECRET,
-					code,
 					grant_type: "authorization_code",
-					redirect_uri: redirectUri,
+					code,
 				} satisfies RESTPostOAuth2AccessTokenURLEncodedData),
 				passThroughBody: true,
 				headers: { "content-type": "application/x-www-form-urlencoded" },
@@ -83,12 +72,11 @@ export default async function linkScratchRole(
 		if (!tokenData)
 			return response.writeHead(401, { "content-type": "text/html" }).end(discordHtml);
 
-		sessions[ipHash] = tokenData.refresh_token;
-
-		return response.writeHead(303, { location: scratchUrl }).end();
+		return response.writeHead(303, { location: getScratchUrl(tokenData.refresh_token) }).end();
 	}
 
-	const discordToken = sessions[ipHash];
+	const rawToken = search.get("refresh_token");
+	const discordToken = rawToken && decodeString(rawToken);
 	if (!discordToken)
 		return response.writeHead(401, { "content-type": "text/html" }).end(discordHtml);
 	const tokenData = (await client.rest
@@ -111,7 +99,10 @@ export default async function linkScratchRole(
 		`https://auth-api.itinerary.eu.org/auth/verifyToken/${encodeURI(scratchToken)}`,
 	).then((verification) => verification.json<{ username: string | null }>());
 	const scratch = username && (await fetchUser(username));
-	if (!scratch) return response.writeHead(401, { "content-type": "text/html" }).end(scratchHtml);
+	if (!scratch)
+		return response.writeHead(401, { "content-type": "text/html" }).end(
+			`<meta http-equiv="refresh" content="0;url=${getScratchUrl(tokenData.refresh_token)}">`, // eslint-disable-line unicorn/string-content
+		);
 
 	(await client.rest.put(Routes.userApplicationRoleConnection(client.user.id), {
 		body: JSON.stringify({
@@ -145,4 +136,29 @@ export default async function linkScratchRole(
 		{ embeds: [await handleUser(["", "", username])] },
 	);
 	return response.writeHead(303, { location: config.guild.rulesChannel?.url }).end();
+
+	function getScratchUrl(refreshToken: string): string {
+		const encodedRedirectUri = Buffer.from(
+			redirectUri + "?refresh_token=" + encodeString(refreshToken),
+		).toString("base64");
+		return `https://auth.itinerary.eu.org/auth/?name=${encodeURIComponent(
+			client.user.displayName,
+		)}&redirect=${encodedRedirectUri}`;
+	}
+}
+
+const secretKey = randomBytes(32);
+function encodeString(text: string): string {
+	const iv = randomBytes(16);
+	const cipher = createCipheriv("aes-256-cbc", secretKey, iv);
+	const encrypted = cipher.update(text, "utf8", "hex") + cipher.final("hex");
+	return iv.toString("hex") + ":" + encrypted;
+}
+
+// Decode the string
+function decodeString(encryptedText: string): string {
+	const parts = encryptedText.split(":");
+	const iv = Buffer.from(parts.shift() ?? "", "hex");
+	const decipher = createDecipheriv("aes-256-cbc", secretKey, iv);
+	return decipher.update(parts.join(":"), "hex", "utf8") + decipher.final("utf8");
 }

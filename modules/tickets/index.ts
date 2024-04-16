@@ -20,7 +20,7 @@ import {
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
 import { disableComponents } from "../../util/discord.js";
-import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
+import log, { LogSeverity, LoggingEmojis, extraAuditLogsInfo } from "../logging/misc.js";
 import contactMods, { contactUser, showTicketModal } from "./contact.js";
 import {
 	SA_CATEGORY,
@@ -172,9 +172,15 @@ defineModal("contactMods", async (interaction, id) => {
 defineMenuCommand(
 	{ name: "Report Message", type: ApplicationCommandType.Message },
 	async (interaction) => {
+		if (interaction.targetMessage.author.id === interaction.user.id) {
+			return await interaction.reply({
+				ephemeral: true,
+				content: `${constants.emojis.statuses.no} You can’t report your own messages!`,
+			});
+		}
 		await interaction.showModal({
 			title: "Report Message",
-			customId: interaction.id,
+			customId: `${interaction.targetMessage.id}_report`,
 			components: [
 				{
 					type: ComponentType.ActionRow,
@@ -192,43 +198,46 @@ defineMenuCommand(
 				},
 			],
 		});
-
-		const modalInteraction = await interaction
-			.awaitModalSubmit({
-				time: constants.collectorTime,
-				filter: (modalInteraction) => modalInteraction.customId === interaction.id,
-			})
-			.catch(() => void 0);
-
-		if (!modalInteraction) return;
-		const reason = modalInteraction.fields.getTextInputValue("reason");
-
-		await log(
-			`${LoggingEmojis.Punishment} ${interaction.user.toString()} reported [a message](<${
-				interaction.targetMessage.url
-			}>) by ${interaction.targetMessage.author.toString()}\n${reason}`,
-			LogSeverity.Alert,
-			{
-				buttons: [
-					{
-						label: "Contact Reporter",
-						style: ButtonStyle.Secondary,
-						customId: `${interaction.user.id}_contactUser`,
-					},
-					{
-						label: "Contact Reportee",
-						style: ButtonStyle.Secondary,
-						customId: `${interaction.targetMessage.author.id}_contactUser`,
-					},
-				],
-			},
-		);
-		await interaction.reply({
-			content: `${constants.emojis.statuses.yes} Thanks for the report! Please do not spam or meaninglessly report, or you may be blacklisted from reporting.`,
-			ephemeral: true,
-		});
 	},
 );
+defineModal("report", async (interaction, messageId) => {
+	const message = await interaction.channel?.messages.fetch(messageId).catch(() => void 0);
+	if (!message) {
+		await interaction.reply({
+			content: `${constants.emojis.statuses.no} Cannot report that message! Has it already been deleted?`,
+			ephemeral: true,
+		});
+		return;
+	}
+
+	await log(
+		`${LoggingEmojis.Punishment} ${interaction.user.toString()} reported [a message](<${
+			message.url
+		}>)${extraAuditLogsInfo({
+			executor: message.author,
+			reason: interaction.fields.getTextInputValue("reason"),
+		})}`,
+		LogSeverity.Alert,
+		{
+			buttons: [
+				{
+					label: "Contact Reporter",
+					style: ButtonStyle.Secondary,
+					customId: `${interaction.user.id}_contactUser`,
+				},
+				{
+					label: "Contact Reportee",
+					style: ButtonStyle.Secondary,
+					customId: `${message.author.id}_contactUser`,
+				},
+			],
+		},
+	);
+	await interaction.reply({
+		content: `${constants.emojis.statuses.yes} Thanks for the report! Please do not spam or meaninglessly report, or you may be blacklisted from reporting.`,
+		ephemeral: true,
+	});
+});
 
 defineChatCommand(
 	{
@@ -320,6 +329,8 @@ defineEvent("threadUpdate", async (oldThread, newThread) => {
 			await newThread.setArchived(false, "To lock it");
 			await newThread.setLocked(true, "Was closed");
 		}
+	} else if (newThread.locked) {
+		TICKETS_BY_MEMBER[memberId] = undefined;
 	} else if (TICKETS_BY_MEMBER[memberId]) {
 		await newThread.setArchived(true, "Reopened while another ticket is already open");
 		await newThread.setLocked(true, "Reopened while another ticket is already open");

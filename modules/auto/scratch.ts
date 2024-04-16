@@ -71,26 +71,29 @@ export async function handleProject(urlParts: string[]): Promise<APIEmbed | unde
 	if (!project || project.code) return;
 
 	const parent =
-		project.remix.parent &&
+		project.remix?.parent &&
 		(await gracefulFetch(`${constants.domains.scratchApi}/projects/${project.remix.parent}/`));
 
 	const embed = {
 		title: project.title,
 		color: constants.scratchColor,
 
-		fields: [
-			{
-				name: `${constants.emojis.scratch.love} ${project.stats.loves.toLocaleString()} ${
-					constants.emojis.scratch.favorite
-				} ${project.stats.favorites.toLocaleString()}`,
-				value: `**${
-					constants.emojis.scratch.remix
-				} ${project.stats.remixes.toLocaleString()} ${
-					constants.emojis.scratch.view
-				} ${project.stats.views.toLocaleString()}**`,
-				inline: true,
-			},
-		],
+		fields:
+			project.stats ?
+				[
+					{
+						name: `${constants.emojis.scratch.love} ${project.stats.loves.toLocaleString()} ${
+							constants.emojis.scratch.favorite
+						} ${project.stats.favorites.toLocaleString()}`,
+						value: `**${
+							constants.emojis.scratch.remix
+						} ${project.stats.remixes.toLocaleString()} ${
+							constants.emojis.scratch.view
+						} ${project.stats.views.toLocaleString()}**`,
+						inline: true,
+					},
+				]
+			:	[],
 		thumbnail: { url: project.images["282x218"] },
 		author: {
 			name: project.author.username,
@@ -218,7 +221,10 @@ export async function handleStudio(urlParts: string[]): Promise<APIEmbed | undef
 			},
 			{
 				name: `${constants.emojis.scratch.comments} Comments`,
-				value: studio.stats.comments + (studio.comments_allowed ? "" : " (off)"),
+				value:
+					studio.stats.comments +
+					(studio.stats.comments < 100 ? "" : "+") +
+					(studio.comments_allowed ? "" : " (off)"),
 				inline: true,
 			},
 		],

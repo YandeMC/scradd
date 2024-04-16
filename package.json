@@ -1,6 +1,6 @@
 {
 	"name": "scradd",
-	"version": "3.0.0",
+	"version": "3.0.3",
 	"private": true,
 	"homepage": "https://discord.gg/FPv957V6SD",
 	"type": "module",
@@ -25,7 +25,7 @@
 		"@fontsource-variable/sora": "5.0.17",
 		"@khanacademy/simple-markdown": "0.11.4",
 		"@napi-rs/canvas": "0.1.51",
-		"@sa-community/addons-data": "1.36.0",
+		"@sa-community/addons-data": "1.37.1",
 		"@twemoji/parser": "<=15.0.3",
 		"chart.js": "4.4.2",
 		"didyoumean2": "6.0.1",
@@ -52,7 +52,7 @@
 		"eslint-plugin-unicorn": "51.0.1",
 		"nodemon": "3.1.0",
 		"prettier": "3.2.5",
-		"typescript": "5.4.3"
+		"typescript": "5.4.5"
 	},
 	"optionalDependencies": {
 		"@railway/cli": "3.5.2"
@@ -63,7 +63,7 @@
 	},
 	"overrides": {
 		"@discordjs/builders": "dev",
-		"@discordjs/collection": "dev",
+		"@discordjs/collection": "1.6.0-dev.1699315767-344a3f934",
 		"@discordjs/formatters": "dev",
 		"@discordjs/rest": "dev",
 		"@discordjs/util": "dev",

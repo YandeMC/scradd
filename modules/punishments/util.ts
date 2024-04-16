@@ -6,7 +6,6 @@ import {
 	time,
 	type GuildMember,
 	type InteractionReplyOptions,
-	type InteractionResponse,
 	type Message,
 	type Snowflake,
 	type User,
@@ -92,7 +91,7 @@ export default async function filterToStrike(
 
 export async function listStrikes(
 	member: GuildMember | User,
-	reply: (options: InteractionReplyOptions) => Promise<InteractionResponse | Message>,
+	reply: (options: InteractionReplyOptions) => Promise<Message>,
 	{ expired: showExpired = true, removed: showRemoved = false } = {},
 	commandUser: User | false = false,
 ): Promise<void> {
@@ -114,20 +113,20 @@ export async function listStrikes(
 
 	await paginate(
 		strikes,
-		(strike) =>
-			`${
+		(strike) => {
+			const count = Math.floor(strike.count);
+			return `${
 				strike.removed ? "~~"
 				: strike.date + EXPIRY_LENGTH > Date.now() ? ""
 				: "*"
 			}\`${strike.id}\`${
-				strike.count === 1 ?
-					""
-				:	` (${strike.count < 1 ? "verbal" : `\\*${Math.floor(strike.count)}`})`
+				count === 1 ? "" : ` (${count < 1 ? "verbal" : `\\*${count}`})`
 			} - ${time(new Date(strike.date), TimestampStyles.RelativeTime)}${
 				strike.removed ? "~~"
 				: strike.date + EXPIRY_LENGTH > Date.now() ? ""
 				: "*"
-			}`,
+			}`;
+		},
 		reply,
 		{
 			title: `${member.displayName}’s strikes`,
@@ -136,7 +135,6 @@ export async function listStrikes(
 
 			user: commandUser,
 			totalCount: totalStrikeCount,
-			ephemeral: true,
 
 			generateComponents(filtered) {
 				if (filtered.length > 5) {

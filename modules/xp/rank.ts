@@ -10,7 +10,7 @@ import {
 } from "discord.js";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
-import { paginate } from "../../util/discord.js";
+import { getAllMembers, paginate } from "../../util/discord.js";
 import { nth } from "../../util/numbers.js";
 import { getSettings, mentionUser } from "../settings.js";
 import { getLevelForXp, getXpForLevel } from "./misc.js";
@@ -24,7 +24,7 @@ export default async function getUserRank(
 
 	const member = await config.guild.members.fetch(user.id).catch(() => void 0);
 
-	const xp = Math.floor(allXp.find((entry) => entry.user === user.id)?.xp ?? 0);
+	const xp = allXp.find((entry) => entry.user === user.id)?.xp ?? 0;
 	const level = getLevelForXp(xp);
 	const xpForNextLevel = getXpForLevel(level + 1);
 	const xpForPreviousLevel = getXpForLevel(level);
@@ -35,7 +35,7 @@ export default async function getUserRank(
 	const weeklyRank = getFullWeeklyData().findIndex((entry) => entry.user === user.id) + 1;
 	const approximateWeeklyRank = Math.ceil(weeklyRank / 10) * 10;
 
-	const guildMembers = await config.guild.members.fetch();
+	const guildMembers = await getAllMembers(config.guild);
 	const serverRank =
 		allXp
 			.filter((entry) => guildMembers.has(entry.user))
@@ -58,7 +58,7 @@ export default async function getUserRank(
 
 				fields: [
 					{ name: "📊 Level", value: level.toLocaleString(), inline: true },
-					{ name: "✨ XP", value: xp.toLocaleString(), inline: true },
+					{ name: "✨ XP", value: Math.floor(xp).toLocaleString(), inline: true },
 					{
 						name: "⏳ Weekly rank",
 
@@ -140,6 +140,7 @@ async function makeCanvasFiles(progress: number): Promise<{ attachment: Buffer; 
 export async function top(
 	interaction: ButtonInteraction | ChatInputCommandInteraction<"cached" | "raw">,
 	user?: GuildMember | User,
+	onlyMembers = false,
 ): Promise<InteractionResponse | undefined> {
 	const leaderboard = xpDatabase.data.toSorted((one, two) => two.xp - one.xp);
 
@@ -154,15 +155,22 @@ export async function top(
 		});
 	}
 
+	await interaction.deferReply({
+		ephemeral:
+			interaction.isButton() &&
+			interaction.message.interaction?.user.id !== interaction.user.id,
+	});
+	const guildMembers = onlyMembers && (await getAllMembers(config.guild));
+
 	await paginate(
-		leaderboard,
+		guildMembers ? leaderboard.filter((entry) => guildMembers.has(entry.user)) : leaderboard,
 		async (xp) =>
 			`${await mentionUser(
 				xp.user,
 				interaction.user,
 				interaction.guild ?? config.guild,
 			)}\n Level ${getLevelForXp(xp.xp)} (${Math.floor(xp.xp).toLocaleString()} XP)`,
-		(data) => interaction.reply(data),
+		(data) => interaction.editReply(data),
 		{
 			title: "XP Leaderboard",
 			singular: "user",
@@ -171,15 +179,12 @@ export async function top(
 
 			user: interaction.user,
 			rawOffset: index,
-			ephemeral:
-				interaction.isButton() &&
-				interaction.message.interaction?.user.id !== interaction.user.id,
 
 			async generateComponents() {
 				return (await getSettings(interaction.user, false)).useMentions === undefined ?
 						[
 							{
-								customId: "levelUpPings_toggleSetting",
+								customId: `useMentions-${interaction.user.id}_toggleSetting`,
 								type: ComponentType.Button,
 								label: "Toggle Mentions",
 								style: ButtonStyle.Success,

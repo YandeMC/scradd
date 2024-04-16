@@ -1,4 +1,6 @@
 import {
+	ButtonStyle,
+	ComponentType,
 	GuildMember,
 	channelLink,
 	hyperlink,
@@ -7,6 +9,7 @@ import {
 	type User,
 } from "discord.js";
 import config from "../../common/config.js";
+import constants from "../../common/constants.js";
 import { paginate } from "../../util/discord.js";
 import { formatAnyEmoji } from "../../util/markdown.js";
 import { mentionUser } from "../settings.js";
@@ -16,6 +19,8 @@ export default async function top(
 	interaction?: RepliableInteraction,
 	options: { user?: GuildMember | User; answer?: string; all?: boolean; page?: number } = {},
 ): Promise<InteractionReplyOptions | undefined> {
+	await interaction?.deferReply();
+
 	const { suggestions } = config.channels;
 	const displayName = (options.user instanceof GuildMember ? options.user.user : options.user)
 		?.displayName;
@@ -58,7 +63,7 @@ export default async function top(
 				)
 			}`,
 
-		(data) => interaction?.reply(data),
+		(data) => interaction?.editReply(data),
 		{
 			title: `Top suggestions${displayName ? ` by ${displayName}` : ""}${
 				options.answer && options.user ? " and" : ""
@@ -69,6 +74,17 @@ export default async function top(
 			pageLength: interaction ? 15 : 25,
 			rawOffset: (options.page ?? 0) * (interaction ? 15 : 25),
 			highlightOffset: false,
+			generateComponents() {
+				return [
+					{
+						type: ComponentType.Button,
+						style: ButtonStyle.Link,
+						label: "Suggestions Site",
+						url: `${constants.domains.scradd}/suggestions${options.all === undefined ? "" : `?all=${options.all.toString()}`}`,
+					},
+				];
+			},
+			customComponentLocation: "below",
 		},
 	);
 }

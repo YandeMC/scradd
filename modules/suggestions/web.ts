@@ -1,17 +1,10 @@
-import {
-	Collection,
-	channelLink,
-	type Attachment,
-	type DefaultReactionEmoji,
-	type EmbedAssetData,
-	type MessageInteraction,
-	type Snowflake,
-} from "discord.js";
+import { channelLink, type DefaultReactionEmoji, type Snowflake } from "discord.js";
 import Mustache from "mustache";
 import fileSystem from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { client } from "strife.js";
 import config from "../../common/config.js";
+import constants from "../../common/constants.js";
 import { getTwemojiUrl, markdownToHtml } from "../../util/markdown.js";
 import { getRequestUrl } from "../../util/text.js";
 import { oldSuggestions, suggestionAnswers, suggestionsDatabase } from "./misc.js";
@@ -45,7 +38,7 @@ export default async function suggestionsPage(
 				all: all ? "&all" : "",
 				pageInfo,
 				previousPage: currentPage - 1,
-				nextPage: pageInfo && pageInfo.includes(`/${currentPage}`) ? 0 : currentPage + 1,
+				nextPage: pageInfo && pageInfo.includes(`/${currentPage} `) ? 0 : currentPage + 1,
 			}),
 		);
 	}
@@ -82,16 +75,10 @@ export default async function suggestionsPage(
 	const messages = [
 		!starterMessage || config.channels.oldSuggestions?.id === thread.parentId ?
 			{
-				interaction: starterMessage?.interaction,
 				createdAt: (starterMessage ?? thread).createdAt,
 				id: (starterMessage ?? thread).id,
-				attachments:
-					starterMessage?.embeds[0]?.image ?
-						new Collection<Snowflake, Attachment | EmbedAssetData>([
-							...starterMessage.attachments,
-							["0", starterMessage.embeds[0].image],
-						])
-					:	starterMessage?.attachments,
+				attachments: starterMessage?.attachments,
+				embeds: starterMessage?.embeds,
 				content:
 					starterMessage?.content ||
 					starterMessage?.embeds[0]?.description ||
@@ -109,15 +96,16 @@ export default async function suggestionsPage(
 			.filter(
 				(message) =>
 					message.id !== starterMessage?.id &&
-					(message.content || message.attachments.size),
+					(message.content ||
+						message.attachments.size ||
+						message.interaction?.commandName === "addon"),
 			)
-			.toSorted((one, two) => one.createdTimestamp - two.createdTimestamp)
+			.sorted((one, two) => one.createdTimestamp - two.createdTimestamp)
 			.values(),
 	];
 
 	const emoji = prepareEmoji(
 		!("old" in suggestion) && config.channels.suggestions?.defaultReactionEmoji,
-		"👍",
 	);
 
 	const answer = config.channels.suggestions?.availableTags.find(
@@ -129,50 +117,99 @@ export default async function suggestionsPage(
 		suggestion: {
 			title: suggestion.title,
 			votes: { emoji, count: suggestion.count.toLocaleString() },
-			answer: { emoji: prepareEmoji(answer.emoji, "❓"), name: answer.name },
+			answer: {
+				emoji: prepareEmoji(answer.emoji),
+				name: answer.name,
+				description:
+					config.channels.suggestions?.topic
+						?.split(`\n- **${answer.name}**: `)[1]
+						?.split("\n")[0] ?? "",
+			},
 			url: thread.url,
-		},
-		interactionAvatar(this: MessageInteraction | null | undefined) {
-			return this?.user.displayAvatarURL({ size: 64 });
 		},
 		userAvatar(this: (typeof messages)[number]) {
 			return this.author.displayAvatarURL({ size: 64 });
-		},
-		userIcon(this: (typeof messages)[number]) {
-			return this.member?.roles?.icon?.iconURL();
 		},
 		createdDate(this: (typeof messages)[number]) {
 			return this.createdAt?.toLocaleString([], { dateStyle: "short", timeStyle: "short" });
 		},
 		attachmentArray(this: (typeof messages)[number]) {
-			return Array.from(this.attachments?.values() ?? [], (attachment) => ({
-				name: "name" in attachment ? attachment.name : "",
-				url: attachment.proxyURL ?? attachment.url,
-				height: attachment.height,
-				width: attachment.width,
-				isImage: !("id" in attachment) || attachment.contentType?.startsWith("image/"),
-				isVideo: "id" in attachment && attachment.contentType?.startsWith("video/"),
-				isAudio: "id" in attachment && attachment.contentType?.startsWith("audio/"),
-			}));
+			const embedImages = Array.from(this.embeds ?? [], (attachment) =>
+				attachment.video ?
+					{
+						name: attachment.title,
+						url: attachment.video.proxyURL ?? attachment.video.url,
+						height: attachment.video.height,
+						width: attachment.video.width,
+						isImage: false,
+						isVideo: true,
+						isAudio: false,
+					}
+				: attachment.thumbnail ?
+					{
+						name: attachment.title,
+						url: attachment.thumbnail.proxyURL ?? attachment.thumbnail.url,
+						height: attachment.thumbnail.height,
+						width: attachment.thumbnail.width,
+						isImage: true,
+						isVideo: false,
+						isAudio: false,
+					}
+				: attachment.image ?
+					{
+						name: attachment.title,
+						url: attachment.image.proxyURL ?? attachment.image.url,
+						height: attachment.image.height,
+						width: attachment.image.width,
+						isImage: true,
+						isVideo: false,
+						isAudio: false,
+					}
+				:	undefined,
+			);
+			return [
+				...Array.from(this.attachments?.values() ?? [], (attachment) => ({
+					name: attachment.name,
+					url: attachment.proxyURL,
+					height: attachment.height,
+					width: attachment.width,
+					isImage: attachment.contentType?.startsWith("image/"),
+					isVideo: attachment.contentType?.startsWith("video/"),
+					isAudio: attachment.contentType?.startsWith("audio/"),
+				})),
+				...embedImages.filter(Boolean),
+			];
 		},
 		messageContent(this: (typeof messages)[number]) {
-			return markdownToHtml(this.content);
+			return markdownToHtml(
+				this.content ||
+					((
+						"interaction" in this &&
+						this.interaction?.commandName === "addon" &&
+						this.embeds[0]
+					) ?
+						`## ${this.embeds[0].title ?? ""}\n${this.embeds[0].description ?? ""}\n` +
+						(this.embeds[0].footer?.text ?
+							`[Enable Addon](${constants.urls.settings}#addon-${this.embeds[0].footer.text})`
+						:	"")
+					:	""),
+			);
 		},
 	});
 	return response.writeHead(200, { "content-type": "text/html" }).end(rendered);
 }
 
-function prepareEmoji(
-	emoji: Partial<DefaultReactionEmoji> | false | null | undefined,
-	defaultTwemoji: string,
-): { name: string; url: string } {
+function prepareEmoji(emoji?: Partial<DefaultReactionEmoji> | false | null | undefined): {
+	name: string;
+	url: string;
+} {
 	if (emoji && emoji.id) {
 		return {
 			name: `:${emoji.name ?? "_"}:`,
 			url: client.rest.cdn.emoji(emoji.id, { size: 32 }),
 		};
-	} else {
-		const name = (emoji && emoji.name) || defaultTwemoji;
-		return { name: name, url: getTwemojiUrl(name) };
 	}
+
+	const name = (emoji && emoji.name) || "👍";
+	return { name: name, url: getTwemojiUrl(name) };
 }

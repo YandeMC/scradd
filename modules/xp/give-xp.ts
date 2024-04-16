@@ -10,7 +10,14 @@ import {
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
 import { getDefaultSettings, getSettings } from "../settings.js";
-import { DEFAULT_XP, getLevelForXp, getXpForLevel } from "./misc.js";
+import {
+	DEFAULT_XP,
+	getLevelForXp,
+	getXpForLevel,
+	ACTIVE_THRESHOLD_ONE,
+	ACTIVE_THRESHOLD_TWO,
+	ESTABLISHED_THRESHOLD,
+} from "./misc.js";
 import { getFullWeeklyData, recentXpDatabase, xpDatabase } from "./util.js";
 
 const latestMessages: Record<Snowflake, Message[]> = {};
@@ -124,22 +131,26 @@ export default async function giveXp(
 	recentXpDatabase.data = weekly;
 }
 
+const MAX_LEVELS: Record<Snowflake, number> = {};
 async function sendLevelUpMessage(member: GuildMember, newXp: number, url?: string): Promise<void> {
 	const newLevel = getLevelForXp(newXp);
+	if (newLevel <= (MAX_LEVELS[member.id] ?? 0)) return;
+	MAX_LEVELS[member.id] = newLevel;
 	const nextLevelXp = getXpForLevel(newLevel + 1);
-	const showButton = (await getSettings(member, false)).levelUpPings === undefined;
+	const pingsConfigured = (await getSettings(member, false)).levelUpPings;
 	const pingsDefault = (await getDefaultSettings(member)).levelUpPings;
+	const pingsEnabled = pingsConfigured ?? pingsDefault;
 
 	await config.channels.bots?.send({
-		allowedMentions: (await getSettings(member)).levelUpPings ? undefined : { users: [] },
+		allowedMentions: pingsEnabled ? undefined : { users: [] },
 		content: `🎉 ${member.toString()}`,
 		components:
-			showButton ?
+			pingsConfigured === undefined ?
 				[
 					{
 						components: [
 							{
-								customId: "levelUpPings_toggleSetting",
+								customId: `levelUpPings-${member.id}_toggleSetting`,
 								type: ComponentType.Button,
 								label: `${pingsDefault ? "Disable" : "Enable"} Pings`,
 								style: ButtonStyle.Success,
@@ -174,7 +185,7 @@ async function sendLevelUpMessage(member: GuildMember, newXp: number, url?: stri
 				footer: {
 					icon_url: config.guild.iconURL() ?? undefined,
 					text: `View your XP with /xp rank${
-						showButton ? "" : "\nToggle pings via /settings"
+						pingsConfigured === undefined ? "" : "\nToggle pings via /settings"
 					}`,
 				},
 			},
@@ -183,22 +194,39 @@ async function sendLevelUpMessage(member: GuildMember, newXp: number, url?: stri
 }
 
 export async function checkXPRoles(member: GuildMember): Promise<void> {
-	if (config.roles.active) {
+	if (config.roles.established && !member.roles.resolve(config.roles.established.id)) {
+		const xp = xpDatabase.data.find((entry) => entry.user === member.id)?.xp ?? 0;
+		const level = getLevelForXp(xp);
+		await (level >= ESTABLISHED_THRESHOLD ?
+			member.roles.add(config.roles.established, "Reached level 5")
+		:	member.roles.remove(config.roles.established, "Lost level 5"));
+	}
+
+	if (config.roles.active && !member.roles.resolve(config.roles.active.id)) {
 		const isActive =
-			getFullWeeklyData().find((item) => member.id == item.user && item.xp >= 300) ??
+			getFullWeeklyData().find(
+				(item) => member.id == item.user && item.xp >= ACTIVE_THRESHOLD_ONE,
+			) ??
 			recentXpDatabase.data.reduce(
 				(accumulator, gain) =>
 					gain.user === member.id ? accumulator + gain.xp : accumulator,
 				0,
-			) >= 500;
+			) >= ACTIVE_THRESHOLD_TWO;
 
-		if (isActive) await member.roles.add(config.roles.active, "Active");
+		if (isActive) {
+			await member.roles.add(config.roles.active, "Active");
+			await config.channels.bots?.send({
+				allowedMentions:
+					(await getSettings(member)).levelUpPings ? undefined : { users: [] },
+				content: `🎊 ${member.toString()} Thanks for being active recently! You have earned ${config.roles.active.toString()}.`,
+			});
+		}
 	}
 
-	if (config.roles.epic) {
+	if (config.roles.epic && !member.roles.resolve(config.roles.epic.id)) {
 		const sorted = xpDatabase.data.toSorted((one, two) => two.xp - one.xp);
 		const rank = sorted.findIndex((info) => info.user === member.id);
-		if (rank < 30 && !member.roles.resolve(config.roles.epic.id)) {
+		if (rank >= 0 && rank < 30) {
 			await member.roles.add(config.roles.epic, "Top 30 on the XP leaderboard");
 			await config.channels.general?.send(
 				`🎊 ${member.toString()} Congratulations on being in the top 30 of the XP leaderboard! You have earned ${config.roles.epic.toString()}.`,

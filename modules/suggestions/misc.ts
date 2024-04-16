@@ -98,18 +98,16 @@ export function parseSuggestionTags(
 		categories: string[];
 	}>(
 		({ answer, categories }, tag) =>
-			tag.name !== "Other" && appliedTags.includes(tag.id) ?
-				suggestionAnswers.includes(tag.name) ?
-					{ answer: tag, categories }
-				:	{ answer, categories: [...categories, tag.name] }
-			:	{ answer, categories },
+			tag.name === "Other" || !appliedTags.includes(tag.id) ? { answer, categories }
+			: tag.moderated ? { answer: tag, categories }
+			: { answer, categories: [...categories, tag.name] },
 		{
 			answer: { name: defaultAnswer, emoji: { name: "❓", id: null }, moderated: true },
 			categories: [],
 		},
 	);
 	const answers = availableTags.filter((tag) => tag.moderated);
-	const index = answers.findIndex((tag) => answer.id === tag.name);
+	const index = answers.findIndex((tag) => answer.id === tag.id);
 	return {
 		answer: { ...answer, index, position: index / (answers.length - 1) },
 		category: (categories.length === 1 && categories[0]) || "Other",
