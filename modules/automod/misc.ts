@@ -2,7 +2,6 @@ import { ChannelType, type TextBasedChannel } from "discord.js";
 import config from "../../common/config.js";
 import { getBaseChannel } from "../../util/discord.js";
 import { caesar, normalize } from "../../util/text.js";
-import { PARTIAL_STRIKE_COUNT } from "../punishments/misc.js";
 import badWords from "./bad-words.js";
 
 export const regexpFlags = "giu";
@@ -89,7 +88,7 @@ export default function tryCensor(
 
 			strikes: words.reduce(
 				(accumulator, current, index) =>
-					current.length * Math.max(index - strikeShift, PARTIAL_STRIKE_COUNT) +
+					current.length * Math.max(index - strikeShift, 1) +
 					accumulator,
 				0,
 			),

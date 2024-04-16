@@ -7,7 +7,6 @@ import {
 	Collection,
 } from "discord.js";
 import { client } from "strife.js";
-import { CUSTOM_ROLE_PREFIX } from "../modules/roles/misc.js";
 
 const IS_TESTING = process.argv.some((file) => file.endsWith(".test.js"));
 
@@ -19,9 +18,7 @@ if (guilds) guilds.delete(guild.id);
 async function getConfig() {
 	const channels = (await guild?.channels.fetch()) ?? new Collection();
 	const roles =
-		(await guild?.roles.fetch())?.filter(
-			(role) => role.editable && !role.name.startsWith(CUSTOM_ROLE_PREFIX),
-		) ?? new Collection();
+		(await guild?.roles.fetch()) ?? new Collection();
 
 	const mod = roles.find((role) => role.name.toLowerCase().startsWith("mod"));
 	return {

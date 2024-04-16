@@ -1,4 +1,4 @@
-import { Constants, type Message } from "discord.js";
+import { Constants, GuildMember, User, type Message } from "discord.js";
 import { client } from "strife.js";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
@@ -10,14 +10,18 @@ import {
 } from "../../util/discord.js";
 import { stripMarkdown } from "../../util/markdown.js";
 import { joinWithAnd } from "../../util/text.js";
-import log, { LogSeverity, LoggingErrorEmoji } from "../logging/misc.js";
-import { PARTIAL_STRIKE_COUNT } from "../punishments/misc.js";
-import warn from "../punishments/warn.js";
-import { getLevelForXp } from "../xp/misc.js";
-import { xpDatabase } from "../xp/util.js";
 import tryCensor, { badWordRegexps, badWordsAllowed } from "./misc.js";
 import { createWorker } from "tesseract.js";
-
+const DEFAULT_STRIKES = 1
+export function warn(user: GuildMember | User,
+	reason: string,
+	rawStrikes: number = DEFAULT_STRIKES,
+	contextOrModerator: User | string = client.user) {
+	config.channels.modlogs?.send("WARN " + JSON.stringify({
+		user, reason, rawStrikes, contextOrModerator
+	}))
+}
+const PARTIAL_STRIKE_COUNT = 1
 const worker = await createWorker("eng");
 async function getMessageImageText(message: Message): Promise<string[]> {
 	const imageTextPromises = message.attachments
@@ -39,8 +43,8 @@ export default async function automodMessage(message: Message): Promise<boolean>
 	const baseChannel = getBaseChannel(message.channel);
 	const pings = message.mentions.users.size
 		? ` (ghost pinged ${joinWithAnd(
-				message.mentions.users.map((user: { toString: () => any }) => user.toString()),
-		  )})`
+			message.mentions.users.map((user: { toString: () => any }) => user.toString()),
+		)})`
 		: "";
 
 	let needsDelete = false;
@@ -67,10 +71,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 	if (allowBadWords) {
 		if (!needsDelete) return true;
 		if (!message.deletable) {
-			await log(
-				`${LoggingErrorEmoji} Unable to delete ${message.url} (${deletionMessage.trim()})`,
-				LogSeverity.Alert,
-			);
+
 			return true;
 		}
 
@@ -125,50 +126,6 @@ export default async function automodMessage(message: Message): Promise<boolean>
 			);
 			deletionMessage += ` Please don’t post bot invites outside of ${config.channels.advertise.toString()}!`;
 		}
-
-		if (baseChannel.name.includes("general") || baseChannel.name.includes("showcase")) {
-			const links = Array.from(
-				new Set(message.content.match(/(https?:\/\/[^\s"')*,.:;<>\]]+)/gis) ?? []),
-				(link) => new URL(link),
-			).filter((link) =>
-				[
-					"scratch.camp",
-					"scratch.love",
-					"scratch.mit.edu",
-					"scratch.org",
-					"scratch.pizza",
-					"scratch.team",
-
-					"youtu.be",
-					"youtube.com",
-				].includes(link.hostname),
-			);
-
-			const level = getLevelForXp(
-				xpDatabase.data.find(({ user }) => user === message.author.id)?.xp ?? 0,
-			);
-			const canPostLinks =
-				!links.length ||
-				level > 4 ||
-				[(config.roles.dev?.id, config.roles.epic?.id, config.roles.booster?.id)].some(
-					(role) => !message.member || (role && message.member.roles.resolve(role)),
-				);
-
-			if (!canPostLinks) {
-				needsDelete = true;
-				await warn(
-					message.author,
-					`Posted blacklisted link${
-						links.length === 1 ? "" : "s"
-					} in ${message.channel.toString()} while at level ${level}`,
-					links.length * PARTIAL_STRIKE_COUNT,
-					links.join(" "),
-				);
-				deletionMessage += ` Sorry, but you need level 5 to post ${
-					links.length === 1 ? "that link" : "those links"
-				} outside a channel like ${config.channels.advertise.toString()}!`;
-			}
-		}
 	}
 
 	const badWords = [
@@ -181,12 +138,12 @@ export default async function automodMessage(message: Message): Promise<boolean>
 			typeof censored === "boolean"
 				? bad
 				: {
-						strikes: bad.strikes + censored.strikes,
-						words: bad.words.map((words: any, index: number) => [
-							...words,
-							...(censored.words[index] ?? []),
-						]),
-				  },
+					strikes: bad.strikes + censored.strikes,
+					words: bad.words.map((words: any, index: number) => [
+						...words,
+						...(censored.words[index] ?? []),
+					]),
+				},
 		{ strikes: 0, words: Array.from<string[]>({ length: badWordRegexps.length }).fill([]) },
 	);
 	if (badWords.strikes) needsDelete = true;
@@ -216,11 +173,6 @@ export default async function automodMessage(message: Message): Promise<boolean>
 			setTimeout(() => publicWarn.delete(), 300_000);
 			return false;
 		}
-
-		await log(
-			`${LoggingErrorEmoji} Unable to delete ${message.url} (${deletionMessage.trim()})`,
-			LogSeverity.Alert,
-		);
 	}
 
 	return true;

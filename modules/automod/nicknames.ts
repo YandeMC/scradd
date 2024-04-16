@@ -1,9 +1,7 @@
 import type { GuildMember } from "discord.js";
 import config from "../../common/config.js";
-import { joinWithAnd } from "../../util/text.js";
-import log, { LogSeverity, LoggingErrorEmoji } from "../logging/misc.js";
-import warn from "../punishments/warn.js";
 import tryCensor, { censor, isPingable } from "./misc.js";
+import { warn } from "./automod.js";
 
 export default async function changeNickname(member: GuildMember): Promise<void> {
 	const censored = tryCensor(member.displayName);
@@ -71,14 +69,8 @@ export default async function changeNickname(member: GuildMember): Promise<void>
 		if (unchanged.size === 2) {
 			const oldest = unchanged.firstKey();
 			if (oldest) unchanged.delete(oldest);
-		} else if (unchanged.size > 1)
-			await log(
-				`${LoggingErrorEmoji} Conflicting nicknames: ${joinWithAnd([
-					...unchanged.values(),
-				])}`,
-				LogSeverity.Alert,
-			);
-	}
+		}
+		}
 }
 
 async function setNickname(
@@ -88,10 +80,7 @@ async function setNickname(
 ): Promise<void> {
 	await (member.moderatable && newNickname.length <= 32
 		? member.setNickname(member.user.displayName === newNickname ? null : newNickname, reason)
-		: log(
-				`${LoggingErrorEmoji} Unable to change ${member.toString()}’s nickname to \`${newNickname}\` (${reason})`,
-				LogSeverity.Alert,
-		  ));
+		: void 0)
 }
 
 function findName(member: GuildMember): string {

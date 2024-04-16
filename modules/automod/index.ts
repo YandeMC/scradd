@@ -3,20 +3,26 @@ import {
 	AutoModerationActionType,
 	GuildMember,
 	MessageType,
+	User,
 	underline,
 	type CommandInteractionOption,
 } from "discord.js";
-import { commands, defineChatCommand, defineEvent } from "strife.js";
+import { client, commands, defineChatCommand, defineEvent } from "strife.js";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
 import { escapeMessage } from "../../util/markdown.js";
 import { joinWithAnd } from "../../util/text.js";
-import { ignoredDeletions } from "../logging/messages.js";
-import warn from "../punishments/warn.js";
 import automodMessage from "./automod.js";
 import tryCensor, { badWordsAllowed } from "./misc.js";
 import changeNickname from "./nicknames.js";
-
+export function warn(user: GuildMember | User,
+	reason: string,
+	rawStrikes: number = 1,
+	contextOrModerator: User | string = client.user) {
+	config.channels.modlogs?.send("WARN " + JSON.stringify({
+		user, reason, rawStrikes, contextOrModerator
+	}))
+}
 defineEvent.pre("interactionCreate", async (interaction) => {
 	if (
 		!interaction.inGuild() ||
@@ -218,7 +224,6 @@ defineEvent("autoModerationActionExecution", async (action) => {
 			action.action.metadata.channelId &&
 			(await config.guild.channels.fetch(action.action.metadata.channelId));
 		if (channel && channel.isTextBased()) {
-			ignoredDeletions.add(action.alertSystemMessageId);
 			await channel.messages.delete(action.alertSystemMessageId);
 		}
 	}
