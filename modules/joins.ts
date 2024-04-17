@@ -28,8 +28,7 @@ defineEvent("guildMemberAdd", async (member) => {
 					},
 				],
 				footer: {
-					icon_url:
-						"https://scrub.fly.dev/icon.png",
+					icon_url: "https://scrub.fly.dev/icon.png",
 					text: "~ the Scratch Coders team",
 				},
 				{

@@ -170,14 +170,12 @@ export async function uno(interaction: ChatInputCommandInteraction): Promise<voi
 		autoArchiveDuration: ThreadAutoArchiveDuration.OneHour,
 	});
 	await Promise.allSettled(game.players.map((player) => thread.members.add(player.id)));
-	const events = await thread.send(
-		{ embeds: [{ title: "Loading Game" }], }
-	)
-	let eventsList: string[] = []
+	const events = await thread.send({ embeds: [{ title: "Loading Game" }] });
+	let eventsList: string[] = [];
 	const board = await thread.send({
 		embeds: [{ title: "Events List" }],
 	});
-	let pingMsg: Message | undefined
+	let pingMsg: Message | undefined;
 	await board.pin();
 	await updateGame(board, game, events, eventsList);
 	for (let i = 0; i < 7; i++) {
@@ -275,9 +273,8 @@ export async function uno(interaction: ChatInputCommandInteraction): Promise<voi
 					if (choice.values[0] == "draw") {
 						idkWhatToNameThisVariable = game.deck.pop() as Card;
 						game.players[game.turn]?.hand.push(idkWhatToNameThisVariable);
-						await eventsList.push(`${userMention(
-							game.ids[game.turn] || "",
-						)} Drew a card from the deck!`
+						await eventsList.push(
+							`${userMention(game.ids[game.turn] || "")} Drew a card from the deck!`,
 						);
 						await await updateGame(board, game, events, eventsList);
 					} else if (choice.values[0] == "skip") {
@@ -290,22 +287,25 @@ export async function uno(interaction: ChatInputCommandInteraction): Promise<voi
 						idkWhatToNameThisVariable = playedCard;
 						ch = cardToString(playedCard);
 						game.stack.push(playedCard);
-						await eventsList.push(`${userMention(game.ids[game.turn] || "")} Played a ${playedCard.color == "black" ? "" : playedCard.color + " "
-							}${playedCard.type}!`);
+						await eventsList.push(
+							`${userMention(game.ids[game.turn] || "")} Played a ${
+								playedCard.color == "black" ? "" : playedCard.color + " "
+							}${playedCard.type}!`,
+						);
 						await await updateGame(board, game, events, eventsList);
 						if (game.players[game.turn]?.hand.length == 1) {
-							await eventsList.push(`# ${userMention(
-								game.ids[game.turn] || "",
-							)} has **one** card!`,
+							await eventsList.push(
+								`# ${userMention(game.ids[game.turn] || "")} has **one** card!`,
 							);
 							await await updateGame(board, game, events, eventsList);
 						} else if (game.players[game.turn]?.hand.length == 0) {
 							game.placements.push(btn.user.id);
 							game.ids = game.ids.filter((i) => i != btn.user.id);
 							game.players = game.players.filter((i) => i.id != btn.user.id);
-							await eventsList.push(`# ${userMention(btn.user.id)} finished in ${nth(
-								game.placements.length,
-							)} place`
+							await eventsList.push(
+								`# ${userMention(btn.user.id)} finished in ${nth(
+									game.placements.length,
+								)} place`,
 							);
 							await await updateGame(board, game, events, eventsList);
 						}
@@ -354,7 +354,8 @@ export async function uno(interaction: ChatInputCommandInteraction): Promise<voi
 								await eventsList.push(
 									`${userMention(
 										game.ids[game.turn] || "",
-									)} Took too long to choose a color, so the color is now ${game.stack[game.stack.length - 1]?.color
+									)} Took too long to choose a color, so the color is now ${
+										game.stack[game.stack.length - 1]?.color
 									}`,
 								);
 								await await updateGame(board, game, events, eventsList);
@@ -364,7 +365,8 @@ export async function uno(interaction: ChatInputCommandInteraction): Promise<voi
 									type: "any",
 								});
 								await eventsList.push(
-									`${userMention(game.ids[game.turn] || "")} made the color ${game.stack[game.stack.length - 1]?.color
+									`${userMention(game.ids[game.turn] || "")} made the color ${
+										game.stack[game.stack.length - 1]?.color
 									}`,
 								);
 								await await updateGame(board, game, events, eventsList);
@@ -374,42 +376,45 @@ export async function uno(interaction: ChatInputCommandInteraction): Promise<voi
 							for (let i = 0; i < 2; i++) {
 								game.players[
 									(game.turn + (game.reversed ? game.players.length - 1 : 1)) %
-									game.players.length
+										game.players.length
 								]?.hand.push(game.deck.pop() as Card);
 							}
-							await eventsList.push(`${userMention(
-								game.ids[
-								(game.turn +
-									(game.reversed ? game.players.length - 1 : 1)) %
-								game.players.length
-								] || "",
-							)} drew 2 cards`
+							await eventsList.push(
+								`${userMention(
+									game.ids[
+										(game.turn +
+											(game.reversed ? game.players.length - 1 : 1)) %
+											game.players.length
+									] || "",
+								)} drew 2 cards`,
 							);
 							await await updateGame(board, game, events, eventsList);
 						} else if (playedCard.type == "draw4") {
 							for (let i = 0; i < 4; i++) {
 								game.players[
 									(game.turn + (game.reversed ? game.players.length - 1 : 1)) %
-									game.players.length
+										game.players.length
 								]?.hand.push(game.deck.pop() as Card);
 							}
-							await eventsList.push(`${userMention(
-								game.ids[
-								(game.turn +
-									(game.reversed ? game.players.length - 1 : 1)) %
-								game.players.length
-								] || "",
-							)} Drew 4 cards`,
+							await eventsList.push(
+								`${userMention(
+									game.ids[
+										(game.turn +
+											(game.reversed ? game.players.length - 1 : 1)) %
+											game.players.length
+									] || "",
+								)} Drew 4 cards`,
 							);
 							await await updateGame(board, game, events, eventsList);
 						} else if (playedCard.type == "skip") {
-							await eventsList.push(`${userMention(
-								game.ids[
-								(game.turn +
-									(game.reversed ? game.players.length - 1 : 1)) %
-								game.players.length
-								] || "",
-							)} got skipped`,
+							await eventsList.push(
+								`${userMention(
+									game.ids[
+										(game.turn +
+											(game.reversed ? game.players.length - 1 : 1)) %
+											game.players.length
+									] || "",
+								)} got skipped`,
 							);
 							await await updateGame(board, game, events, eventsList);
 
@@ -434,8 +439,10 @@ export async function uno(interaction: ChatInputCommandInteraction): Promise<voi
 					(game.turn + (game.reversed ? game.players.length - 1 : 1)) %
 					game.players.length;
 				if (!(game.ids.length == 0)) {
-					await pingMsg?.delete()
-					pingMsg = await thread.send(`${userMention(game.ids[game.turn] || "")}, its your turn!`)
+					await pingMsg?.delete();
+					pingMsg = await thread.send(
+						`${userMention(game.ids[game.turn] || "")}, its your turn!`,
+					);
 					await eventsList.push(`${userMention(game.ids[game.turn] || "")}'s turn`);
 					await updateGame(board, game, events, eventsList);
 				}
@@ -455,11 +462,10 @@ export async function uno(interaction: ChatInputCommandInteraction): Promise<voi
 				game.placements.push(id);
 			});
 
-
 			c.stop("less than 2 players");
 			eventsList.push("Game Ended.");
 			await updateGame(board, game, events, eventsList);
-			thread.send("Game Ended.")
+			thread.send("Game Ended.");
 			if (game.placements.length > 0) sendEnd(thread, game);
 		}
 	});
@@ -666,8 +672,9 @@ async function updateGame(message: Message, game: Game, eMsg: Message, eList: st
 						name: `${game.players[game.turn]?.name}'s turn`,
 						value: `${game.ids
 							.map((i: any, idx: number) => {
-								return `${userMention(i)} - ${game.players[idx]?.hand.length
-									}<:blank:1215068301407952937>`;
+								return `${userMention(i)} - ${
+									game.players[idx]?.hand.length
+								}<:blank:1215068301407952937>`;
 							})
 							.join("\n")}`,
 					},
@@ -677,16 +684,19 @@ async function updateGame(message: Message, game: Game, eMsg: Message, eList: st
 		],
 		files: [
 			{
-				attachment: await generateCards([
-					game.stack[game.stack.length - 1] || { color: "", type: "none" },
-				], undefined),
+				attachment: await generateCards(
+					[game.stack[game.stack.length - 1] || { color: "", type: "none" }],
+					undefined,
+				),
 				name: "cards.png",
 			},
 		],
 	});
 	eMsg.edit({
-		embeds: splitArrayIntoSections(eList).map((list) => { return { description: list } })
-	})
+		embeds: splitArrayIntoSections(eList).map((list) => {
+			return { description: list };
+		}),
+	});
 }
 
 function checkCard(card: Card, stackCard: Card | undefined, onlyMatchNumber?: boolean) {
@@ -744,115 +754,115 @@ async function sendCardSelect(
 
 	return !btn.replied
 		? await btn.reply({
-			content: msgOptions.content,
-			fetchReply: true,
-			ephemeral: true,
-			files: [
-				{
-					attachment: await generateCards(
-						game.players[game.ids.indexOf(btn.user.id)]?.hand,
-						game.stack[game.stack.length - 1] as Card,
-						onlyNum,
-					),
-					name: "cards.png",
-				},
-			],
-			components: msgOptions.optionsEnabled
-				? msgOptions.skipOption
-					? [
-						{
-							type: ComponentType.ActionRow,
-							components: [
+				content: msgOptions.content,
+				fetchReply: true,
+				ephemeral: true,
+				files: [
+					{
+						attachment: await generateCards(
+							game.players[game.ids.indexOf(btn.user.id)]?.hand,
+							game.stack[game.stack.length - 1] as Card,
+							onlyNum,
+						),
+						name: "cards.png",
+					},
+				],
+				components: msgOptions.optionsEnabled
+					? msgOptions.skipOption
+						? [
 								{
-									type: ComponentType.StringSelect,
-									customId: "cardselect",
-									placeholder: "Select A Card",
-									options,
+									type: ComponentType.ActionRow,
+									components: [
+										{
+											type: ComponentType.StringSelect,
+											customId: "cardselect",
+											placeholder: "Select A Card",
+											options,
+										},
+									],
 								},
-							],
-						},
-						{
-							type: ComponentType.ActionRow,
-							components: [
 								{
-									type: ComponentType.Button,
-									label: "End Turn",
-									customId: "skip",
-									style: ButtonStyle.Secondary,
+									type: ComponentType.ActionRow,
+									components: [
+										{
+											type: ComponentType.Button,
+											label: "End Turn",
+											customId: "skip",
+											style: ButtonStyle.Secondary,
+										},
+									],
 								},
-							],
-						},
-					]
-					: [
-						{
-							type: ComponentType.ActionRow,
-							components: [
+						  ]
+						: [
 								{
-									type: ComponentType.StringSelect,
-									customId: "cardselect",
-									placeholder: "Select A Card",
-									options,
+									type: ComponentType.ActionRow,
+									components: [
+										{
+											type: ComponentType.StringSelect,
+											customId: "cardselect",
+											placeholder: "Select A Card",
+											options,
+										},
+									],
 								},
-							],
-						},
-					]
-				: [],
-		})
+						  ]
+					: [],
+		  })
 		: btn.followUp({
-			content: msgOptions.content,
-			fetchReply: true,
-			ephemeral: true,
-			files: [
-				{
-					attachment: await generateCards(
-						game.players[game.ids.indexOf(btn.user.id)]?.hand,
-						game.stack[game.stack.length - 1] as Card,
-						onlyNum,
-					),
-					name: "cards.png",
-				},
-			],
-			components: msgOptions.optionsEnabled
-				? msgOptions.skipOption
-					? [
-						{
-							type: ComponentType.ActionRow,
-							components: [
+				content: msgOptions.content,
+				fetchReply: true,
+				ephemeral: true,
+				files: [
+					{
+						attachment: await generateCards(
+							game.players[game.ids.indexOf(btn.user.id)]?.hand,
+							game.stack[game.stack.length - 1] as Card,
+							onlyNum,
+						),
+						name: "cards.png",
+					},
+				],
+				components: msgOptions.optionsEnabled
+					? msgOptions.skipOption
+						? [
 								{
-									type: ComponentType.StringSelect,
-									customId: "cardselect",
-									placeholder: "Select A Card",
-									options,
+									type: ComponentType.ActionRow,
+									components: [
+										{
+											type: ComponentType.StringSelect,
+											customId: "cardselect",
+											placeholder: "Select A Card",
+											options,
+										},
+									],
 								},
-							],
-						},
-						{
-							type: ComponentType.ActionRow,
-							components: [
 								{
-									type: ComponentType.Button,
-									label: "End Turn",
-									customId: "skip",
-									style: ButtonStyle.Secondary,
+									type: ComponentType.ActionRow,
+									components: [
+										{
+											type: ComponentType.Button,
+											label: "End Turn",
+											customId: "skip",
+											style: ButtonStyle.Secondary,
+										},
+									],
 								},
-							],
-						},
-					]
-					: [
-						{
-							type: ComponentType.ActionRow,
-							components: [
+						  ]
+						: [
 								{
-									type: ComponentType.StringSelect,
-									customId: "cardselect",
-									placeholder: "Select A Card",
-									options,
+									type: ComponentType.ActionRow,
+									components: [
+										{
+											type: ComponentType.StringSelect,
+											customId: "cardselect",
+											placeholder: "Select A Card",
+											options,
+										},
+									],
 								},
-							],
-						},
-					]
-				: [],
-		});
+						  ]
+					: [],
+		  });
 }
 function cardToString(card: Card) {
 	return `${card.color == "black" ? "" : card.color + " "}${card.type}`;

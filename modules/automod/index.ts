@@ -56,7 +56,6 @@ defineEvent.pre("interactionCreate", async (interaction) => {
 	return true;
 });
 
-
 defineEvent("messageCreate", async (message) => {
     if (message.channel.id != config.channels.modlogs?.id) return
     if (message.author.id != "1229863889592778894") return
