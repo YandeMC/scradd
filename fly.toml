@@ -1,12 +1,13 @@
-# fly.toml app configuration file generated for scradd-weathered-sunset-3636 on 2023-12-24T18:29:00-06:00
+# fly.toml app configuration file generated for scrub on 2024-04-16T15:18:28-04:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = "scrub"
-primary_region = "iad"
-kill_timeout = 60
+app = 'scrub'
+primary_region = 'iad'
+kill_timeout = '1m0s'
 
+[build]
 
 [http_service]
   internal_port = 3000
@@ -14,9 +15,9 @@ kill_timeout = 60
   auto_stop_machines = false
   auto_start_machines = false
   min_machines_running = 1
-  processes = ["app"]
+  processes = ['app']
 
 [[vm]]
-  cpu_kind = "shared"
+  cpu_kind = 'shared'
   cpus = 1
   memory_mb = 256

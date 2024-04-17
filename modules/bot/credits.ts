@@ -54,7 +54,7 @@ export default async function credits(interaction: ChatInputCommandInteraction):
 		embeds: [
 			{
 				title: "Credits",
-				description: `Scradd is hosted on [Railway](${constants.urls.railway}) using Node.JS ${process.version}.`,
+				description: `scrub isnt hosted on [Railway](https://railway.app?referralCode=RedGuy14) using Node.JS ${process.version}.`,
 
 				fields: [
 					{ name: "🧑‍💻 Developers", value: await getRole(developers), inline: true },

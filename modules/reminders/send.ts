@@ -54,7 +54,7 @@ export default async function queueReminders(): Promise<NodeJS.Timeout | undefin
 }
 
 const STATUSES = [
-	"Watching the SA server!",
+	"Watching Scratch Coders",
 	"Hope for no bugs…",
 	"Dating Yande",
 	"e",
@@ -62,7 +62,7 @@ const STATUSES = [
 	"Hi, I’m Scrub!",
 	"Rico, status",
 	"beep boop beep",
-	"ims scradd",
+	"ims scrub",
 	"alan 👑",
 	"strawberries 😌",
 	"Farming dangos",

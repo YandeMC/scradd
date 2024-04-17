@@ -160,7 +160,7 @@ export const categoryToDescription = {
 	appeal: "Strike Appeal",
 	report: "User Report",
 	role: "Role Request",
-	bug: "Scradd Bug",
+	bug: "Scrub Bug",
 	rules: "Rule Clarification",
 	server: "Other Scratch Servers",
 	other: "Other",

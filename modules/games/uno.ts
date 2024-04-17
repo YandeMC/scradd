@@ -6,9 +6,7 @@ import {
 	ButtonInteraction,
 	ThreadAutoArchiveDuration,
 	Message,
-	InteractionCollector,
 	type AnyThreadChannel,
-	type CacheType,
 } from "discord.js";
 import { createCanvas, loadImage, type SKRSContext2D } from "@napi-rs/canvas";
 import { setTimeout as wait } from "node:timers/promises";
@@ -52,14 +50,6 @@ interface Game {
 	stack: Card[];
 	placements: string[];
 }
-
-interface Board {
-	message: Message | undefined;
-	collector:
-		| InteractionCollector<ButtonInteraction<"cached">>
-		| InteractionCollector<ButtonInteraction<CacheType>>
-		| undefined;
-}
 const cards: Card[] = generateUnoDeck();
 
 export async function uno(interaction: ChatInputCommandInteraction): Promise<void> {
@@ -73,6 +63,7 @@ export async function uno(interaction: ChatInputCommandInteraction): Promise<voi
 		stack: [],
 		placements: [],
 	};
+
 	const seconds = 15;
 	const unix = Math.floor(Date.now() / 1000 + seconds);
 	const message = await interaction.reply({
@@ -179,8 +170,16 @@ export async function uno(interaction: ChatInputCommandInteraction): Promise<voi
 		autoArchiveDuration: ThreadAutoArchiveDuration.OneHour,
 	});
 	await Promise.allSettled(game.players.map((player) => thread.members.add(player.id)));
-	let board: Board = { message: undefined, collector: undefined };
-	board = await updateGame(board, game, thread);
+	const events = await thread.send(
+		{ embeds: [{ title: "Loading Game" }], }
+	)
+	let eventsList: string[] = []
+	const board = await thread.send({
+		embeds: [{ title: "Events List" }],
+	});
+	let pingMsg: Message | undefined
+	await board.pin();
+	await updateGame(board, game, events, eventsList);
 	for (let i = 0; i < 7; i++) {
 		game.players.forEach((player) => {
 			if (game.deck) player.hand.push(game.deck.pop() as Card);
@@ -190,7 +189,280 @@ export async function uno(interaction: ChatInputCommandInteraction): Promise<voi
 		color: ["red", "yellow", "green", "blue"][Math.floor(Math.random() * 4)] as string,
 		type: `${Math.floor(Math.random() * 10)}`,
 	});
-	board = await updateGame(board, game, thread);
+	await updateGame(board, game, events, eventsList);
+	await board.edit({
+		components: [
+			{
+				type: ComponentType.ActionRow,
+				components: [
+					{
+						type: ComponentType.Button,
+						label: "Hand",
+						customId: `hand`,
+						style: ButtonStyle.Primary,
+					},
+					{
+						type: ComponentType.Button,
+						label: "Leave game",
+						customId: `leave`,
+						style: ButtonStyle.Danger,
+					},
+				],
+			},
+		],
+	});
+	const c = board.createMessageComponentCollector({
+		componentType: ComponentType.Button,
+	});
+	c.on("collect", async (btn: ButtonInteraction) => {
+		if (btn.customId == "hand") {
+			if (!game.ids.includes(btn.user.id))
+				return await btn.reply({ ephemeral: true, content: "you are not in this game" });
+			if (game.ids[game.turn] == btn.user.id) {
+				let i = 0;
+				let ch = "";
+				let actions = [];
+				while (
+					!(
+						ch == "skip" ||
+						game.players[game.turn]?.hand.filter((c) =>
+							checkCard(c, game.stack[game.stack.length - 1], true),
+						).length == 0
+					) ||
+					i == 0
+				) {
+					const msg = await sendCardSelect(
+						game,
+						btn,
+						{
+							optionsEnabled: true,
+							skipOption: i > 0,
+							content:
+								i > 0
+									? `You played a ${ch}. play another card or end your turn.`
+									: "",
+						},
+						i > 0,
+					);
+
+					const choice = await Promise.any([
+						msg.awaitMessageComponent({
+							componentType: ComponentType.StringSelect,
+							time: 30_000,
+						}),
+						msg.awaitMessageComponent({
+							componentType: ComponentType.Button,
+							time: 30_000,
+						}),
+					])
+						.then((b) => {
+							b.deferUpdate();
+							if (b instanceof ButtonInteraction) return { values: [b.customId] };
+							return b;
+						})
+						.catch(() => {
+							btn.followUp({
+								ephemeral: true,
+								content: "you took too long, so i picked for you",
+							});
+							return {
+								values: [`${i > 0 ? "skip" : "draw"}`],
+							};
+						});
+
+					ch = choice.values[0] as string;
+					let idkWhatToNameThisVariable = { color: "#000000", type: "" };
+					if (choice.values[0] == "draw") {
+						idkWhatToNameThisVariable = game.deck.pop() as Card;
+						game.players[game.turn]?.hand.push(idkWhatToNameThisVariable);
+						await eventsList.push(`${userMention(
+							game.ids[game.turn] || "",
+						)} Drew a card from the deck!`
+						);
+						await await updateGame(board, game, events, eventsList);
+					} else if (choice.values[0] == "skip") {
+						ch = "skip";
+					} else {
+						const playedCard = game.players[game.turn]?.hand.splice(
+							Number(choice.values[0] || -1),
+							1,
+						)[0] as Card;
+						idkWhatToNameThisVariable = playedCard;
+						ch = cardToString(playedCard);
+						game.stack.push(playedCard);
+						await eventsList.push(`${userMention(game.ids[game.turn] || "")} Played a ${playedCard.color == "black" ? "" : playedCard.color + " "
+							}${playedCard.type}!`);
+						await await updateGame(board, game, events, eventsList);
+						if (game.players[game.turn]?.hand.length == 1) {
+							await eventsList.push(`# ${userMention(
+								game.ids[game.turn] || "",
+							)} has **one** card!`,
+							);
+							await await updateGame(board, game, events, eventsList);
+						} else if (game.players[game.turn]?.hand.length == 0) {
+							game.placements.push(btn.user.id);
+							game.ids = game.ids.filter((i) => i != btn.user.id);
+							game.players = game.players.filter((i) => i.id != btn.user.id);
+							await eventsList.push(`# ${userMention(btn.user.id)} finished in ${nth(
+								game.placements.length,
+							)} place`
+							);
+							await await updateGame(board, game, events, eventsList);
+						}
+						if (playedCard.color == "black") {
+							const colorMsg = await btn.followUp({
+								ephemeral: true,
+								components: [
+									{
+										type: ComponentType.ActionRow,
+										components: [
+											{
+												type: ComponentType.StringSelect,
+												customId: "cardselect",
+												placeholder: "Select A Color",
+												options: [
+													{ label: "Red", value: "red" },
+													{ label: "Yellow", value: "yellow" },
+													{ label: "Green", value: "green" },
+													{ label: "Blue", value: "blue" },
+												],
+											},
+										],
+									},
+								],
+							});
+
+							const colorChoice = await colorMsg
+								.awaitMessageComponent({
+									componentType:
+										ComponentType.StringSelect || ComponentType.Button,
+									time: 20_000,
+								})
+								.then((b) => {
+									b.deferUpdate();
+									return b;
+								})
+								.catch(() => null);
+							await btn.deleteReply(colorMsg);
+							if (!colorChoice) {
+								game.stack.push({
+									color: ["red", "yellow", "green", "blue"][
+										Math.floor(Math.random() * 4)
+									] as string,
+									type: "any",
+								});
+								await eventsList.push(
+									`${userMention(
+										game.ids[game.turn] || "",
+									)} Took too long to choose a color, so the color is now ${game.stack[game.stack.length - 1]?.color
+									}`,
+								);
+								await await updateGame(board, game, events, eventsList);
+							} else {
+								game.stack.push({
+									color: colorChoice.values[0] as string,
+									type: "any",
+								});
+								await eventsList.push(
+									`${userMention(game.ids[game.turn] || "")} made the color ${game.stack[game.stack.length - 1]?.color
+									}`,
+								);
+								await await updateGame(board, game, events, eventsList);
+							}
+						}
+						if (playedCard.type == "draw2") {
+							for (let i = 0; i < 2; i++) {
+								game.players[
+									(game.turn + (game.reversed ? game.players.length - 1 : 1)) %
+									game.players.length
+								]?.hand.push(game.deck.pop() as Card);
+							}
+							await eventsList.push(`${userMention(
+								game.ids[
+								(game.turn +
+									(game.reversed ? game.players.length - 1 : 1)) %
+								game.players.length
+								] || "",
+							)} drew 2 cards`
+							);
+							await await updateGame(board, game, events, eventsList);
+						} else if (playedCard.type == "draw4") {
+							for (let i = 0; i < 4; i++) {
+								game.players[
+									(game.turn + (game.reversed ? game.players.length - 1 : 1)) %
+									game.players.length
+								]?.hand.push(game.deck.pop() as Card);
+							}
+							await eventsList.push(`${userMention(
+								game.ids[
+								(game.turn +
+									(game.reversed ? game.players.length - 1 : 1)) %
+								game.players.length
+								] || "",
+							)} Drew 4 cards`,
+							);
+							await await updateGame(board, game, events, eventsList);
+						} else if (playedCard.type == "skip") {
+							await eventsList.push(`${userMention(
+								game.ids[
+								(game.turn +
+									(game.reversed ? game.players.length - 1 : 1)) %
+								game.players.length
+								] || "",
+							)} got skipped`,
+							);
+							await await updateGame(board, game, events, eventsList);
+
+							actions.push("skip");
+						} else if (playedCard.type == "reverse") {
+							game.reversed = !game.reversed;
+						}
+					}
+					await btn.deleteReply(msg);
+
+					i++;
+				}
+				actions.forEach((action) => {
+					if (action == "skip") {
+						game.turn =
+							(game.turn + (game.reversed ? game.players.length - 1 : 1)) %
+							game.players.length;
+					}
+				});
+				await sendCardSelect(game, btn, { optionsEnabled: false }, i > 0);
+				game.turn =
+					(game.turn + (game.reversed ? game.players.length - 1 : 1)) %
+					game.players.length;
+				if (!(game.ids.length == 0)) {
+					await pingMsg?.delete()
+					pingMsg = await thread.send(`${userMention(game.ids[game.turn] || "")}, its your turn!`)
+					await eventsList.push(`${userMention(game.ids[game.turn] || "")}'s turn`);
+					await updateGame(board, game, events, eventsList);
+				}
+			}
+		} else if (btn.customId == "leave") {
+			btn.deferUpdate();
+			if (!game.ids.includes(btn.user.id)) return;
+			game.ids = game.ids.filter((i) => i != btn.user.id);
+			game.players = game.players.filter((i) => i.id != btn.user.id);
+			await eventsList.push(`${userMention(btn.user.id)} left the game.`);
+			await updateGame(board, game, events, eventsList);
+		}
+		if (game.ids.length < 2) {
+			game.ids.forEach((id) => {
+				game.ids = game.ids.filter((i) => i != id);
+				game.players = game.players.filter((i) => i.id != id);
+				game.placements.push(id);
+			});
+
+
+			c.stop("less than 2 players");
+			eventsList.push("Game Ended.");
+			await updateGame(board, game, events, eventsList);
+			thread.send("Game Ended.")
+			if (game.placements.length > 0) sendEnd(thread, game);
+		}
+	});
 }
 void generateCards;
 async function generateCards(
@@ -308,7 +580,7 @@ async function drawText(
 	}
 	if (text.text == "any") return;
 	ctx.textAlign = align.x;
-	ctx.font = `${size}px Sora	`;
+	ctx.font = `${size}px uno`;
 	ctx.strokeStyle = outline.color;
 	ctx.lineWidth = outline.stroke;
 	ctx.textBaseline = align.y;
@@ -385,9 +657,8 @@ function generateUnoDeck() {
 	return deck;
 }
 
-async function updateGame(board: Board, game: Game, thread: AnyThreadChannel) {
-	await board.message?.delete().catch(() => {});
-	board.message = (await thread.send({
+async function updateGame(message: Message, game: Game, eMsg: Message, eList: string[]) {
+	await message.edit({
 		embeds: [
 			{
 				fields: [
@@ -395,9 +666,8 @@ async function updateGame(board: Board, game: Game, thread: AnyThreadChannel) {
 						name: `${game.players[game.turn]?.name}'s turn`,
 						value: `${game.ids
 							.map((i: any, idx: number) => {
-								return `${userMention(i)} - ${
-									game.players[idx]?.hand.length
-								}<:blank:1215068301407952937>`;
+								return `${userMention(i)} - ${game.players[idx]?.hand.length
+									}<:blank:1215068301407952937>`;
 							})
 							.join("\n")}`,
 					},
@@ -407,316 +677,16 @@ async function updateGame(board: Board, game: Game, thread: AnyThreadChannel) {
 		],
 		files: [
 			{
-				attachment: await generateCards(
-					[game.stack[game.stack.length - 1] || { color: "", type: "none" }],
-					undefined,
-				),
+				attachment: await generateCards([
+					game.stack[game.stack.length - 1] || { color: "", type: "none" },
+				], undefined),
 				name: "cards.png",
 			},
 		],
-
-		components: [
-			{
-				type: ComponentType.ActionRow,
-				components: [
-					{
-						type: ComponentType.Button,
-						label: "Hand",
-						customId: `hand`,
-						style: ButtonStyle.Primary,
-					},
-					{
-						type: ComponentType.Button,
-						label: "Leave game",
-						customId: `leave`,
-						style: ButtonStyle.Danger,
-					},
-				],
-			},
-		],
-	})) as Message<true>;
-	board.collector?.stop();
-
-	board.collector = board.message.createMessageComponentCollector({
-		componentType: ComponentType.Button,
-		filter: async (a) => {
-			if (a.user.id != game.ids[game.turn]) {
-				a.reply({
-					ephemeral: true,
-					files: [
-						{
-							attachment: await generateCards(
-								game.players[game.ids.indexOf(a.user.id)]?.hand,
-								undefined,
-							),
-							name: "cards.png",
-						},
-					],
-				});
-			}
-			return a.user.id == game.ids[game.turn];
-		},
 	});
-
-	board.collector.on("collect", async (btn: ButtonInteraction) => {
-		if (btn.customId == "hand") {
-			if (!game.ids.includes(btn.user.id))
-				return await btn.reply({ ephemeral: true, content: "you are not in this game" });
-			if (game.ids[game.turn] == btn.user.id) {
-				let i = 0;
-				let ch = "";
-				let actions = [];
-				while (
-					!(
-						ch == "skip" ||
-						game.players[game.turn]?.hand.filter((c) =>
-							checkCard(c, game.stack[game.stack.length - 1], true),
-						).length == 0
-					) ||
-					i == 0
-				) {
-					const msg = await sendCardSelect(
-						game,
-						btn,
-						{
-							optionsEnabled: true,
-							skipOption: i > 0,
-							content:
-								i > 0
-									? `You played a ${ch}. play another card or end your turn.`
-									: "",
-						},
-						i > 0,
-					);
-
-					const choice = await Promise.any([
-						msg.awaitMessageComponent({
-							componentType: ComponentType.StringSelect,
-							time: 30_000,
-						}),
-						msg.awaitMessageComponent({
-							componentType: ComponentType.Button,
-							time: 30_000,
-						}),
-					])
-						.then((b) => {
-							b.deferUpdate();
-							if (b instanceof ButtonInteraction) return { values: [b.customId] };
-							return b;
-						})
-						.catch(() => {
-							btn.followUp({
-								ephemeral: true,
-								content: "you took too long, so i picked for you",
-							});
-							return {
-								values: [`${i > 0 ? "skip" : "draw"}`],
-							};
-						});
-
-					ch = choice.values[0] as string;
-					let idkWhatToNameThisVariable = { color: "#000000", type: "" };
-					if (choice.values[0] == "draw") {
-						idkWhatToNameThisVariable = game.deck.pop() as Card;
-						game.players[game.turn]?.hand.push(idkWhatToNameThisVariable);
-						await thread.send({
-							content: `${userMention(
-								game.ids[game.turn] || "",
-							)} Drew a card from the deck!`,
-							allowedMentions: { users: [] },
-						});
-					} else if (choice.values[0] == "skip") {
-						ch = "skip";
-					} else {
-						const playedCard = game.players[game.turn]?.hand.splice(
-							Number(choice.values[0] || -1),
-							1,
-						)[0] as Card;
-						idkWhatToNameThisVariable = playedCard;
-						ch = cardToString(playedCard);
-						game.stack.push(playedCard);
-						await thread.send({
-							content: `${userMention(game.ids[game.turn] || "")} Played a ${
-								playedCard.color == "black" ? "" : playedCard.color + " "
-							}${playedCard.type}!`,
-							allowedMentions: { users: [] },
-						});
-						if (game.players[game.turn]?.hand.length == 1) {
-							await thread.send({
-								content: `# ${userMention(
-									game.ids[game.turn] || "",
-								)} has **one** card!`,
-								allowedMentions: { users: [] },
-							});
-						} else if (game.players[game.turn]?.hand.length == 0) {
-							game.placements.push(btn.user.id);
-							game.ids = game.ids.filter((i) => i != btn.user.id);
-							game.players = game.players.filter((i) => i.id != btn.user.id);
-							await thread.send({
-								content: `# ${userMention(btn.user.id)} finished in ${nth(
-									game.placements.length,
-								)} place`,
-								allowedMentions: { users: [] },
-							});
-							board = await updateGame(board, game, thread);
-						}
-						if (playedCard.color == "black") {
-							board = await updateGame(board, game, thread);
-							const colorMsg = await btn.followUp({
-								ephemeral: true,
-								components: [
-									{
-										type: ComponentType.ActionRow,
-										components: [
-											{
-												type: ComponentType.StringSelect,
-												customId: "cardselect",
-												placeholder: "Select A Color",
-												options: [
-													{ label: "Red", value: "red" },
-													{ label: "Yellow", value: "yellow" },
-													{ label: "Green", value: "green" },
-													{ label: "Blue", value: "blue" },
-												],
-											},
-										],
-									},
-								],
-							});
-
-							const colorChoice = await colorMsg
-								.awaitMessageComponent({
-									componentType:
-										ComponentType.StringSelect || ComponentType.Button,
-									time: 20_000,
-								})
-								.then((b) => {
-									b.deferUpdate();
-									return b;
-								})
-								.catch(() => null);
-							await btn.deleteReply(colorMsg);
-							if (!colorChoice) {
-								game.stack.push({
-									color: ["red", "yellow", "green", "blue"][
-										Math.floor(Math.random() * 4)
-									] as string,
-									type: "any",
-								});
-								await thread.send(
-									`${userMention(
-										game.ids[game.turn] || "",
-									)} Took too long to choose a color, so the color is now ${
-										game.stack[game.stack.length - 1]?.color
-									}`,
-								);
-							} else {
-								game.stack.push({
-									color: colorChoice.values[0] as string,
-									type: "any",
-								});
-								await thread.send(
-									`${userMention(game.ids[game.turn] || "")} made the color ${
-										game.stack[game.stack.length - 1]?.color
-									}`,
-								);
-							}
-						}
-						if (playedCard.type == "draw2") {
-							for (let i = 0; i < 2; i++) {
-								game.players[
-									(game.turn + (game.reversed ? game.players.length - 1 : 1)) %
-										game.players.length
-								]?.hand.push(game.deck.pop() as Card);
-							}
-							await thread.send({
-								content: `${userMention(
-									game.ids[
-										(game.turn +
-											(game.reversed ? game.players.length - 1 : 1)) %
-											game.players.length
-									] || "",
-								)} drew 2 cards`,
-								allowedMentions: { users: [] },
-							});
-						} else if (playedCard.type == "draw4") {
-							for (let i = 0; i < 4; i++) {
-								game.players[
-									(game.turn + (game.reversed ? game.players.length - 1 : 1)) %
-										game.players.length
-								]?.hand.push(game.deck.pop() as Card);
-							}
-							await thread.send({
-								content: `${userMention(
-									game.ids[
-										(game.turn +
-											(game.reversed ? game.players.length - 1 : 1)) %
-											game.players.length
-									] || "",
-								)} Drew 4 cards`,
-								allowedMentions: { users: [] },
-							});
-						} else if (playedCard.type == "skip") {
-							await thread.send({
-								content: `${userMention(
-									game.ids[
-										(game.turn +
-											(game.reversed ? game.players.length - 1 : 1)) %
-											game.players.length
-									] || "",
-								)} got skipped`,
-								allowedMentions: { users: [] },
-							});
-
-							actions.push("skip");
-						} else if (playedCard.type == "reverse") {
-							game.reversed = !game.reversed;
-						}
-					}
-					await btn.deleteReply(msg);
-
-					board = await updateGame(board, game, thread);
-					i++;
-				}
-				actions.forEach((action) => {
-					if (action == "skip") {
-						game.turn =
-							(game.turn + (game.reversed ? game.players.length - 1 : 1)) %
-							game.players.length;
-					}
-				});
-				await sendCardSelect(game, btn, { optionsEnabled: false }, i > 0);
-				game.turn =
-					(game.turn + (game.reversed ? game.players.length - 1 : 1)) %
-					game.players.length;
-				if (!(game.ids.length == 0)) {
-					await thread.send(`${userMention(game.ids[game.turn] || "")}, Its your turn!`);
-					board = await updateGame(board, game, thread);
-				}
-			}
-		} else if (btn.customId == "leave") {
-			btn.deferUpdate();
-			if (!game.ids.includes(btn.user.id)) return;
-			game.ids = game.ids.filter((i) => i != btn.user.id);
-			game.players = game.players.filter((i) => i.id != btn.user.id);
-			await thread.send(`${userMention(btn.user.id)} left the game.`);
-			board = await updateGame(board, game, thread);
-		}
-		if (game.ids.length < 2) {
-			game.ids.forEach((id) => {
-				game.ids = game.ids.filter((i) => i != id);
-				game.players = game.players.filter((i) => i.id != id);
-				game.placements.push(id);
-			});
-
-			board.message?.delete();
-			board.collector?.stop("less than 2 players");
-			thread.send("Game Ended.");
-			if (game.placements.length > 0) sendEnd(thread, game);
-		}
-	});
-
-	return board;
+	eMsg.edit({
+		embeds: splitArrayIntoSections(eList).map((list) => { return { description: list } })
+	})
 }
 
 function checkCard(card: Card, stackCard: Card | undefined, onlyMatchNumber?: boolean) {
@@ -742,35 +712,6 @@ function sendEnd(thread: AnyThreadChannel, game: Game) {
 			},
 		],
 	});
-}
-
-function darkenHexColor(hex: string, factor: number) {
-	// Convert hex to RGB
-	let r = parseInt(hex.substring(1, 3), 16);
-	let g = parseInt(hex.substring(3, 5), 16);
-	let b = parseInt(hex.substring(5, 7), 16);
-
-	// Darken the color
-	r = Math.round(r * factor);
-	g = Math.round(g * factor);
-	b = Math.round(b * factor);
-
-	// Ensure the values are within 0-255
-	r = Math.min(r, 255);
-	g = Math.min(g, 255);
-	b = Math.min(b, 255);
-
-	// Convert back to hex
-	const darkenHex =
-		"#" +
-		(r < 16 ? "0" : "") +
-		r.toString(16) +
-		(g < 16 ? "0" : "") +
-		g.toString(16) +
-		(b < 16 ? "0" : "") +
-		b.toString(16);
-
-	return darkenHex;
 }
 
 async function sendCardSelect(
@@ -803,117 +744,170 @@ async function sendCardSelect(
 
 	return !btn.replied
 		? await btn.reply({
-				content: msgOptions.content,
-				fetchReply: true,
-				ephemeral: true,
-				files: [
-					{
-						attachment: await generateCards(
-							game.players[game.ids.indexOf(btn.user.id)]?.hand,
-							game.stack[game.stack.length - 1] as Card,
-							onlyNum,
-						),
-						name: "cards.png",
-					},
-				],
-				components: msgOptions.optionsEnabled
-					? msgOptions.skipOption
-						? [
+			content: msgOptions.content,
+			fetchReply: true,
+			ephemeral: true,
+			files: [
+				{
+					attachment: await generateCards(
+						game.players[game.ids.indexOf(btn.user.id)]?.hand,
+						game.stack[game.stack.length - 1] as Card,
+						onlyNum,
+					),
+					name: "cards.png",
+				},
+			],
+			components: msgOptions.optionsEnabled
+				? msgOptions.skipOption
+					? [
+						{
+							type: ComponentType.ActionRow,
+							components: [
 								{
-									type: ComponentType.ActionRow,
-									components: [
-										{
-											type: ComponentType.StringSelect,
-											customId: "cardselect",
-											placeholder: "Select A Card",
-											options,
-										},
-									],
+									type: ComponentType.StringSelect,
+									customId: "cardselect",
+									placeholder: "Select A Card",
+									options,
 								},
+							],
+						},
+						{
+							type: ComponentType.ActionRow,
+							components: [
 								{
-									type: ComponentType.ActionRow,
-									components: [
-										{
-											type: ComponentType.Button,
-											label: "End Turn",
-											customId: "skip",
-											style: ButtonStyle.Secondary,
-										},
-									],
+									type: ComponentType.Button,
+									label: "End Turn",
+									customId: "skip",
+									style: ButtonStyle.Secondary,
 								},
-						  ]
-						: [
+							],
+						},
+					]
+					: [
+						{
+							type: ComponentType.ActionRow,
+							components: [
 								{
-									type: ComponentType.ActionRow,
-									components: [
-										{
-											type: ComponentType.StringSelect,
-											customId: "cardselect",
-											placeholder: "Select A Card",
-											options,
-										},
-									],
+									type: ComponentType.StringSelect,
+									customId: "cardselect",
+									placeholder: "Select A Card",
+									options,
 								},
-						  ]
-					: [],
-		  })
+							],
+						},
+					]
+				: [],
+		})
 		: btn.followUp({
-				content: msgOptions.content,
-				fetchReply: true,
-				ephemeral: true,
-				files: [
-					{
-						attachment: await generateCards(
-							game.players[game.ids.indexOf(btn.user.id)]?.hand,
-							game.stack[game.stack.length - 1] as Card,
-							onlyNum,
-						),
-						name: "cards.png",
-					},
-				],
-				components: msgOptions.optionsEnabled
-					? msgOptions.skipOption
-						? [
+			content: msgOptions.content,
+			fetchReply: true,
+			ephemeral: true,
+			files: [
+				{
+					attachment: await generateCards(
+						game.players[game.ids.indexOf(btn.user.id)]?.hand,
+						game.stack[game.stack.length - 1] as Card,
+						onlyNum,
+					),
+					name: "cards.png",
+				},
+			],
+			components: msgOptions.optionsEnabled
+				? msgOptions.skipOption
+					? [
+						{
+							type: ComponentType.ActionRow,
+							components: [
 								{
-									type: ComponentType.ActionRow,
-									components: [
-										{
-											type: ComponentType.StringSelect,
-											customId: "cardselect",
-											placeholder: "Select A Card",
-											options,
-										},
-									],
+									type: ComponentType.StringSelect,
+									customId: "cardselect",
+									placeholder: "Select A Card",
+									options,
 								},
+							],
+						},
+						{
+							type: ComponentType.ActionRow,
+							components: [
 								{
-									type: ComponentType.ActionRow,
-									components: [
-										{
-											type: ComponentType.Button,
-											label: "End Turn",
-											customId: "skip",
-											style: ButtonStyle.Secondary,
-										},
-									],
+									type: ComponentType.Button,
+									label: "End Turn",
+									customId: "skip",
+									style: ButtonStyle.Secondary,
 								},
-						  ]
-						: [
+							],
+						},
+					]
+					: [
+						{
+							type: ComponentType.ActionRow,
+							components: [
 								{
-									type: ComponentType.ActionRow,
-									components: [
-										{
-											type: ComponentType.StringSelect,
-											customId: "cardselect",
-											placeholder: "Select A Card",
-											options,
-										},
-									],
+									type: ComponentType.StringSelect,
+									customId: "cardselect",
+									placeholder: "Select A Card",
+									options,
 								},
-						  ]
-					: [],
-		  });
+							],
+						},
+					]
+				: [],
+		});
 }
-
 function cardToString(card: Card) {
 	return `${card.color == "black" ? "" : card.color + " "}${card.type}`;
+}
+
+function darkenHexColor(hex: string, factor: number) {
+	// Convert hex to RGB
+	let r = parseInt(hex.substring(1, 3), 16);
+	let g = parseInt(hex.substring(3, 5), 16);
+	let b = parseInt(hex.substring(5, 7), 16);
+
+	// Darken the color
+	r = Math.round(r * factor);
+	g = Math.round(g * factor);
+	b = Math.round(b * factor);
+
+	// Ensure the values are within 0-255
+	r = Math.min(r, 255);
+	g = Math.min(g, 255);
+	b = Math.min(b, 255);
+
+	// Convert back to hex
+	const darkenHex =
+		"#" +
+		(r < 16 ? "0" : "") +
+		r.toString(16) +
+		(g < 16 ? "0" : "") +
+		g.toString(16) +
+		(b < 16 ? "0" : "") +
+		b.toString(16);
+
+	return darkenHex;
+}
+
+function splitArrayIntoSections(strings: string[], maxLength = 4096) {
+	const sections = [];
+	let currentSection = "";
+
+	strings.forEach((string) => {
+		// Check if adding this string to the current section will exceed the limit
+		if (currentSection.length + string.length + 1 > maxLength) {
+			// If so, push the current section to the array and start a new section
+			sections.push(currentSection);
+			currentSection = string;
+		} else {
+			// Otherwise, add the string to the current section
+			// Add a space if this is not the first element in the section
+			currentSection += (currentSection ? "\n" : "") + string;
+		}
+	});
+
+	// Push the last section if it contains any string
+	if (currentSection) {
+		sections.push(currentSection);
+	}
+
+	return sections;
 }

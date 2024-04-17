@@ -107,11 +107,7 @@ export default async function giveXp(
 				content: `<@${user.id}>, You passed ${joinWithAnd(
 					passedUsers.map((id) => `<@${id.user}>`),
 				)} on the leaderboard!`,
-				allowedMentions: (
-					await getSettings(user)
-				).leaderPassPings
-					? undefined
-					: { users: [] },
+				allowedMentions: { users: [] },
 			});
 	}
 	const member =

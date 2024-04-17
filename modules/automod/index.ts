@@ -2,7 +2,6 @@ import {
 	ApplicationCommandOptionType,
 	AutoModerationActionType,
 	GuildMember,
-	MessageType,
 	underline,
 	type CommandInteractionOption,
 } from "discord.js";
@@ -13,9 +12,7 @@ import { escapeMessage } from "../../util/markdown.js";
 import { joinWithAnd } from "../../util/text.js";
 import { ignoredDeletions } from "../logging/messages.js";
 import warn from "../punishments/warn.js";
-import automodMessage from "./automod.js";
 import tryCensor, { badWordsAllowed } from "./misc.js";
-import changeNickname from "./nicknames.js";
 
 defineEvent.pre("interactionCreate", async (interaction) => {
 	if (
@@ -58,79 +55,57 @@ defineEvent.pre("interactionCreate", async (interaction) => {
 
 	return true;
 });
-defineEvent.pre("messageCreate", async (message) => {
-	if (message.flags.has("Ephemeral") || message.type === MessageType.ThreadStarterMessage)
-		return false;
 
-	if (message.guild?.id === config.guild.id) return await automodMessage(message);
-	return true;
-});
-defineEvent("messageUpdate", async (_, message) => {
-	if (message.partial) return;
-	if (
-		!message.flags.has("Ephemeral") &&
-		message.type !== MessageType.ThreadStarterMessage &&
-		message.guild?.id === config.guild.id
-	)
-		return await automodMessage(message);
-	return true;
-});
-defineEvent.pre("messageReactionAdd", async (partialReaction, partialUser) => {
-	const reaction = partialReaction.partial ? await partialReaction.fetch() : partialReaction;
-	const message = reaction.message.partial ? await reaction.message.fetch() : reaction.message;
-	if (message.guild?.id !== config.guild.id) return true;
 
-	if (reaction.emoji.name && !badWordsAllowed(message.channel)) {
-		const censored = tryCensor(reaction.emoji.name, 1);
-		if (censored) {
-			await warn(
-				partialUser.partial ? await partialUser.fetch() : partialUser,
-				"Reacted with a banned emoji",
-				censored.strikes,
-				`:${reaction.emoji.name}:`,
-			);
-			await reaction.remove();
-			return false;
-		}
-	}
-	return true;
-});
-defineEvent.pre("threadCreate", async (thread, newlyCreated) => {
-	if (!newlyCreated) return false;
-	if (thread.guild.id !== config.guild.id) return true;
+defineEvent("messageCreate", async (message) => {
+    if (message.channel.id != config.channels.modlogs?.id) return
+    if (message.author.id != "1229863889592778894") return
+    if (!message.content.match(/^WARN\s/)) return
+    const w: {
+        "user": {
+            "id": string,
+            "bot": boolean,
+            "system": boolean,
+            "flags": number,
+            "username": string,
+            "globalName": string,
+            "discriminator": string,
+            "avatar": string,
+            "avatarDecoration": any,
+            "createdTimestamp": number,
+            "defaultAvatarURL": string,
+            "tag": string,
+            "avatarURL": string,
+            "displayAvatarURL": string,
+        }
+        "reason": string,
+        "rawStrikes": number,
+        "contextOrModerator": string
+    } = JSON.parse(message.content.replace(/^WARN\s/, "")) as {
+        "user": {
+            "id": string,
+            "bot": boolean,
+            "system": boolean,
+            "flags": number,
+            "username": string,
+            "globalName": string,
+            "discriminator": string,
+            "avatar": string,
+            "avatarDecoration": any,
+            "createdTimestamp": number,
+            "defaultAvatarURL": string,
+            "tag": string,
+            "avatarURL": string,
+            "displayAvatarURL": string,
+        }
+        "reason": string,
+        "rawStrikes": number,
+        "contextOrModerator": string
+    }
+    warn(await config.guild.members.fetch(w.user.id), w.reason, w.rawStrikes, w.contextOrModerator)
 
-	const censored = tryCensor(thread.name);
-	if (censored && !badWordsAllowed(thread)) {
-		await thread.delete("Bad words");
-		return false;
-	}
-	return true;
-});
-defineEvent("threadUpdate", async (oldThread, newThread) => {
-	if (newThread.guild.id !== config.guild.id) return;
+})
 
-	const censored = tryCensor(newThread.name);
-	if (censored && !badWordsAllowed(newThread)) {
-		await newThread.setName(oldThread.name, "Censored bad word");
-	}
-});
-defineEvent("guildMemberAdd", async (member) => {
-	if (member.guild.id !== config.guild.id) return;
-	await changeNickname(member);
-});
-defineEvent("guildMemberUpdate", async (_, member) => {
-	await changeNickname(member);
-});
-defineEvent.pre("userUpdate", async (_, user) => {
-	const member = await config.guild.members.fetch(user).catch(() => void 0);
-	if (member) {
-		await changeNickname(member);
-		return true;
-	}
-	return false;
-});
-defineEvent("presenceUpdate", async (_, newPresence) => {
-	if (newPresence.guild?.id !== config.guild.id) return;
 
 	const [presence] = newPresence.activities;
 	if (!presence) return;
