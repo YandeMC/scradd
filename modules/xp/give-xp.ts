@@ -11,8 +11,7 @@ import config from "../../common/config.js";
 import constants from "../../common/constants.js";
 import { getDefaultSettings, getSettings } from "../settings.js";
 import { DEFAULT_XP, getLevelForXp, getXpForLevel } from "./misc.js";
-import { getFullWeeklyData, getRank, recentXpDatabase, xpDatabase } from "./util.js";
-import { joinWithAnd } from "../../util/text.js";
+import { getFullWeeklyData, recentXpDatabase, xpDatabase } from "./util.js";
 
 const latestMessages: Record<Snowflake, Message[]> = {};
 
@@ -87,7 +86,6 @@ export default async function giveXp(
 	if (process.env.NODE_ENV === "production" && user.bot) return;
 
 	const xp = [...xpDatabase.data];
-	const oldRank = getRank(xpDatabase, user.id);
 	const xpDatabaseIndex = xp.findIndex((entry) => entry.user === user.id);
 	const oldXp = xp[xpDatabaseIndex]?.xp || 0;
 	const newXp = oldXp === 0 && amount < 0 ? 0 : oldXp + amount;
@@ -96,20 +94,8 @@ export default async function giveXp(
 	else xp[xpDatabaseIndex] = { user: user.id, xp: newXp };
 
 	xpDatabase.data = xp;
-	const newRank = getRank(xpDatabase, user.id);
 
-	if (newRank < oldRank) {
-		const passedUsers = xpDatabase.data
-			.toSorted((one, two) => two.xp - one.xp)
-			.slice(newRank + 1, oldRank + 1);
-		if (!(passedUsers.length > 2 || passedUsers.length == 0))
-			await config.channels.bots?.send({
-				content: `<@${user.id}>, You passed ${joinWithAnd(
-					passedUsers.map((id) => `<@${id.user}>`),
-				)} on the leaderboard!`,
-				allowedMentions: { users: [] },
-			});
-	}
+	
 	const member =
 		user instanceof GuildMember ? user : (
 			await config.guild.members.fetch(user).catch(() => void 0)
