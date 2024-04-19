@@ -156,5 +156,5 @@ export async function findRole(roleName: string) {
 		(await guild?.roles.fetch())?.filter(
 			(role) => role.editable && !role.name.startsWith(CUSTOM_ROLE_PREFIX),
 		) ?? new Collection();
-	return roles.find((role) => role.name.toLowerCase().includes(roleName))
+	return roles.find((role) => role.name.toLowerCase().includes(roleName));
 }

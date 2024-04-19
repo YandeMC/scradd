@@ -1,12 +1,5 @@
-import {
-	ApplicationCommandOptionType,
-	GuildMember,
-} from "discord.js";
-import {
-	defineButton,
-	defineEvent,
-	defineSubcommands,
-} from "strife.js";
+import { ApplicationCommandOptionType, GuildMember } from "discord.js";
+import { defineButton, defineEvent, defineSubcommands } from "strife.js";
 import config from "../../common/config.js";
 import { getSponges, giveSpongesForMessage } from "./give-sponges.js";
 import { pay } from "./pay.js";
@@ -33,34 +26,31 @@ defineSubcommands(
 						type: ApplicationCommandOptionType.User,
 						description: "User to pay sponges to",
 
-						required: true
+						required: true,
 					},
 					amount: {
 						type: ApplicationCommandOptionType.Integer,
 						description: "how many",
-						required: true
-					}
+						required: true,
+					},
 				},
 			},
 
 			shop: {
 				description: "View the shop",
 
-				options: {
-				},
+				options: {},
 			},
 
 			view: {
 				description: "look at yr sponges",
 
-				options: {
-				},
+				options: {},
 			},
 			transactions: {
 				description: "look at yr sponge transactions",
 
-				options: {
-				},
+				options: {},
 			},
 		},
 	},
@@ -74,8 +64,7 @@ defineSubcommands(
 				: options.options.user);
 
 		const amount =
-			(options?.options &&
-				"amount" in options.options ? options.options.amount : 0) ?? 0
+			(options?.options && "amount" in options.options ? options.options.amount : 0) ?? 0;
 
 		switch (options?.subcommand ?? "shop") {
 			case "pay": {
@@ -84,29 +73,36 @@ defineSubcommands(
 			}
 
 			case "shop": {
-				await getShopItems(interaction)
-				break
+				await getShopItems(interaction);
+				break;
 			}
 			case "view": {
-				await interaction.reply({ ephemeral: true, content: `${getSponges(interaction.user)}` })
-				break
+				await interaction.reply({
+					ephemeral: true,
+					content: `${getSponges(interaction.user)}`,
+				});
+				break;
 			}
 			case "transactions": {
 				await interaction.reply({
-					ephemeral: true, embeds: splitArrayIntoSections(getFormattedTransactions(interaction.user.id)).map((list, index) => {
+					ephemeral: true,
+					embeds: splitArrayIntoSections(
+						getFormattedTransactions(interaction.user.id),
+					).map((list, index) => {
 						return {
 							title: index == 0 ? "Transactions" : undefined,
-							description: list
+							description: list,
 						};
-					}), content: ``
-				})
-				break
+					}),
+					content: ``,
+				});
+				break;
 			}
 		}
 	},
 );
 
-defineButton("buyItem", buyItem)
+defineButton("buyItem", buyItem);
 
 function splitArrayIntoSections(strings: string[], maxLength = 4096) {
 	const sections = [];

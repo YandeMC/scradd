@@ -95,7 +95,6 @@ export default async function giveXp(
 
 	xpDatabase.data = xp;
 
-	
 	const member =
 		user instanceof GuildMember ? user : (
 			await config.guild.members.fetch(user).catch(() => void 0)
