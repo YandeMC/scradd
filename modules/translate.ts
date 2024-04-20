@@ -18,18 +18,15 @@ defineEvent("messageReactionAdd", async (reaction) => {
     }
 });
 
-
-
 function getLanguageForCountryCode(code: string) {
-   
-    const languageMap: { [key: string]: string } = {
-        "🇺🇸": 'en',
-        "🇬🇧": "en",
-        "🇫🇷": 'fr',
-        "🇪🇸": 'es',
-        "🇯🇵": "ja",
-        "🇩🇪": "de",
-        "🇮🇹": "it"
-    };
-    return languageMap[code.toLowerCase()];
+	const languageMap: { [key: string]: string } = {
+		"🇺🇸": "en",
+		"🇬🇧": "en",
+		"🇫🇷": "fr",
+		"🇪🇸": "es",
+		"🇯🇵": "ja",
+		"🇩🇪": "de",
+		"🇮🇹": "it",
+	};
+	return languageMap[code.toLowerCase()];
 }
