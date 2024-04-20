@@ -157,76 +157,56 @@ export async function getShopItems(interaction: RepliableInteraction) {
 }
 
 export async function buyItem(button: ButtonInteraction) {
-	const item = shopItems[+button.customId.split("_")[0]];
-	if (!item)
-		return await button.reply({
-			ephemeral: true,
-			content: `${constants.emojis.statuses.no} Invalid Option (this is probably a bug please report it)`,
-		});
-	const message = await button.reply({
-		fetchReply: true,
-		ephemeral: true,
-		content: "",
-		embeds: [
-			{
-				title: "Confirm Purchase",
-				description: `Confirm Purchase of ${item.name} for ${item.price} 🧽? this action is **IRRIVERSABLE**`,
-				color: 0xff0000,
-			},
-		],
-		components: [
-			{
-				components: [
-					{
-						type: ComponentType.Button,
-						customId: `confirm`,
-						label: "Confirm",
-						style: ButtonStyle.Danger,
-					},
-					{
-						type: ComponentType.Button,
-						customId: `decline`,
-						label: "Cancel",
-						style: ButtonStyle.Secondary,
-					},
-				],
-				type: ComponentType.ActionRow,
-			},
-		],
-	});
-	const ans = await message.awaitMessageComponent({
-		componentType: ComponentType.Button,
-	});
-	ans.deferUpdate();
-	if (ans.customId == "decline")
-		return button.editReply({ content: `${constants.emojis.statuses.yes} Canceled Purchase` });
-	await button.editReply({ content: `${constants.emojis.statuses.yes} Attempting Purchase` });
-	const result = await item.buy(button.user);
-	switch (result) {
-		case 1: {
-			return await button.editReply({
-				content: `${constants.emojis.statuses.yes} Purchase Successful`,
-			});
-		}
-		case 0: {
-			return await button.editReply({
-				content: `${constants.emojis.statuses.no} You already have the thing`,
-			});
-		}
-		case -1: {
-			return await button.editReply({
-				content: `${constants.emojis.statuses.no} You dont have enough money`,
-			});
-		}
-		case -2: {
-			return await button.editReply({
-				content: `${constants.emojis.statuses.no} item does not exist`,
-			});
-		}
-		case -3: {
-			return await button.editReply({
-				content: `${constants.emojis.statuses.no} general error happened, it has been reported`,
-			});
-		}
-	}
+  const item = shopItems[+button.customId.split("_")[0]]
+  if (!item) return await button.reply({ ephemeral: true, content: `${constants.emojis.statuses.no} Invalid Option (this is probably a bug please report it)` })
+  const message = await button.reply({
+    fetchReply: true, ephemeral: true, content: "", embeds: [{
+      title: 'Confirm Purchase',
+      description: `Confirm Purchase of ${item.name} for ${item.price} 🧽? this action is **IRRIVERSABLE**`,
+      color: 0xff0000
+    }], components: [
+      {
+        components: [
+          {
+            type: ComponentType.Button,
+            customId: `confirm`,
+            label: "Confirm",
+            style: ButtonStyle.Danger,
+          },
+          {
+            type: ComponentType.Button,
+            customId: `decline`,
+            label: "Cancel",
+            style: ButtonStyle.Secondary,
+          },
+        ],
+        type: ComponentType.ActionRow,
+      },
+    ],
+  })
+  const ans = await message
+    .awaitMessageComponent({
+      componentType: ComponentType.Button,
+    })
+    ans.deferUpdate()
+  if (ans.customId == "decline") return button.editReply({ content: `${constants.emojis.statuses.yes} Canceled Purchase` ,embeds:[],components:[]})
+   await button.editReply({ content: `${constants.emojis.statuses.yes} Attempting Purchase`,embeds:[],components:[] })
+  const result = await item.buy(button.user)
+  switch (result) {
+    case 1: {
+      return await button.editReply({ content: `${constants.emojis.statuses.yes} Purchase Successful` ,embeds:[],components:[]})
+    }
+    case 0: {
+      return await button.editReply({ content: `${constants.emojis.statuses.no} You already have the thing`,embeds:[],components:[] })
+    }
+    case -1: {
+      return await button.editReply({ content: `${constants.emojis.statuses.no} You dont have enough money`,embeds:[],components:[]})
+    }
+    case -2: {
+      return await button.editReply({ content: `${constants.emojis.statuses.no} item does not exist`,embeds:[],components:[] })
+    }
+    case -3: {
+      return await button.editReply({ content: `${constants.emojis.statuses.no} general error happened, it has been reported` ,embeds:[],components:[]})
+    }
+  }
 }
