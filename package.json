@@ -46,6 +46,7 @@
 		"@types/eslint": "<=8.57",
 		"@types/mustache": "<=4.2",
 		"@types/node": "<=20.10",
+		"@types/node-fetch": "^2.6.11",
 		"@types/papaparse": "<=5.4",
 		"@typescript-eslint/eslint-plugin": "7.0.2",
 		"@typescript-eslint/parser": "7.4.0",
