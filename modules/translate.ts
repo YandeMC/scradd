@@ -9,10 +9,10 @@ defineEvent("messageReactionAdd", async (reaction) => {
         if (language && message.content) {
             try {
                 const translatedText = (await translate(message.content, { to: language }));
-                message.reply(`${flagCode.toUpperCase()}: ${translatedText.text}`);
+                message.reply({content: `${flagCode.toUpperCase()}: ${translatedText.text}`, allowedMentions: {users:[]}});
             } catch (error) {
                 console.error('Error translating message:', error);
-                message.reply('There was an error trying to translate the message.');
+                message.reply({content: 'There was an error trying to translate the message.', allowedMentions: {users:[]}});
             }
         }
     }
