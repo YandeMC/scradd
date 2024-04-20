@@ -15,7 +15,7 @@ interface TriviaResType {
 			category: string;
 			question: string;
 			correct_answer: string;
-			incorrect_answers: string[]
+			incorrect_answers: string[];
 		},
 	];
 }
@@ -87,7 +87,7 @@ export default async function updateTrivia() {
 		"https://opentdb.com/api.php?amount=1&encode=base64",
 	);
 	if (!triviaRes?.results?.[0]) {
-		await setTimeout(() => { }, 30000);
+		await setTimeout(() => {}, 30000);
 		return updateTrivia();
 	}
 	const messages: any = await triviaChannel?.messages.fetchPinned();
@@ -112,11 +112,12 @@ export default async function updateTrivia() {
 				description:
 					(!bool
 						? atob(triviaRes?.results[0].question).toLowerCase().includes("which of")
-							? [...triviaRes.results[0].incorrect_answers
-								.map((a) => atob(a)),
-							atob(triviaRes?.results[0].correct_answer)]
-								.toSorted(() => Math.random() - 0.5)
-								.join(" or ")
+							? [
+									...triviaRes.results[0].incorrect_answers.map((a) => atob(a)),
+									atob(triviaRes?.results[0].correct_answer),
+							  ]
+									.toSorted(() => Math.random() - 0.5)
+									.join(" or ")
 							: hint(atob(triviaRes?.results[0].correct_answer) || "")
 						: "True or False") +
 					`\n\nTrivia expires <t:${Math.floor((Date.now() + 86_400_000 / 2) / 1000)}:R>`,
@@ -148,29 +149,32 @@ defineEvent("messageCreate", async (m: Message) => {
 });
 
 defineButton("voteskip", async (button) => {
-	if ((triviaAnswer.data[0]?.votes.split("/").length || 0 )> 2) return updateTrivia();
-	if (triviaAnswer.data[0]?.votes?.split("/").includes(button.user.id)) return button.reply({ content: "You already voted", ephemeral: true });
+	if ((triviaAnswer.data[0]?.votes.split("/").length || 0) > 2) return updateTrivia();
+	if (triviaAnswer.data[0]?.votes?.split("/").includes(button.user.id))
+		return button.reply({ content: "You already voted", ephemeral: true });
 	if (triviaAnswer.data[0]?.id != button.customId.split("_")[0])
 		return button.reply({ content: "this vote is outdated", ephemeral: true });
 	triviaAnswer.data = [
 		{
 			answer: `${triviaAnswer.data[0]?.answer}`,
-			votes: `${triviaAnswer.data[0]?.votes != "-" ? `${triviaAnswer.data[0]?.votes}/` : ""}${button.user.id
-				}`,
+			votes: `${triviaAnswer.data[0]?.votes != "-" ? `${triviaAnswer.data[0]?.votes}/` : ""}${
+				button.user.id
+			}`,
 			id: `${triviaAnswer.data[0]?.id}`,
 		},
 	];
 	await button.message.edit({
-		content: `${button.message.content.split("\n")[0]}\n> ${triviaAnswer.data[0]?.votes?.split("/").length
-			}/3 votes\n${triviaAnswer.data[0]?.votes
-				?.split("/")
-				.map((i) => {
-					return `> <@${i}>`;
-				})
-				.join("\n")}`,
+		content: `${button.message.content.split("\n")[0]}\n> ${
+			triviaAnswer.data[0]?.votes?.split("/").length
+		}/3 votes\n${triviaAnswer.data[0]?.votes
+			?.split("/")
+			.map((i) => {
+				return `> <@${i}>`;
+			})
+			.join("\n")}`,
 	});
 	await button.reply({ content: "Vote Successful" });
-	if ((triviaAnswer.data[0]?.votes.split("/").length || 0 )> 2) return updateTrivia();
+	if ((triviaAnswer.data[0]?.votes.split("/").length || 0) > 2) return updateTrivia();
 });
 defineChatCommand(
 	{
@@ -209,19 +213,21 @@ defineChatCommand(
 		triviaAnswer.data = [
 			{
 				answer: `${triviaAnswer.data[0]?.answer}`,
-				votes: `${triviaAnswer.data[0]?.votes != "-" ? `${triviaAnswer.data[0]?.votes}/` : ""
-					}${interaction.user.id}`,
+				votes: `${
+					triviaAnswer.data[0]?.votes != "-" ? `${triviaAnswer.data[0]?.votes}/` : ""
+				}${interaction.user.id}`,
 				id: `${triviaAnswer.data[0]?.id}`,
 			},
 		];
 		await message.edit({
-			content: `${message.content.split("\n")[0]}\n> ${triviaAnswer.data[0]?.votes?.split("/").length
-				}/3 votes\n${triviaAnswer.data[0]?.votes
-					?.split("/")
-					.map((i) => {
-						return `> <@${i}>`;
-					})
-					.join("\n")}`,
+			content: `${message.content.split("\n")[0]}\n> ${
+				triviaAnswer.data[0]?.votes?.split("/").length
+			}/3 votes\n${triviaAnswer.data[0]?.votes
+				?.split("/")
+				.map((i) => {
+					return `> <@${i}>`;
+				})
+				.join("\n")}`,
 		});
 	},
 );
