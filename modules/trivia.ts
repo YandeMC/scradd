@@ -23,7 +23,6 @@ interface TriviaResType {
 const triviaChannel = config.channels.trivia;
 if (!triviaChannel) {
 }
-
 const triviaAnswer = new Database<{
 	answer: string;
 	votes: string;
@@ -132,6 +131,7 @@ export default async function updateTrivia() {
 }
 
 defineEvent("messageCreate", async (m: Message) => {
+	// (await config.guild.members.fetch(m.author)).roles.add("1021061241583714304")
 	if (m.channelId != triviaChannel?.id) return;
 	if (triviaAnswer.data[0]?.answer == "") return;
 	if (m.author.bot) return;

@@ -13,6 +13,7 @@ import { joinWithAnd } from "../../util/text.js";
 import { ignoredDeletions } from "../logging/messages.js";
 import warn from "../punishments/warn.js";
 import tryCensor, { badWordsAllowed } from "./misc.js";
+import { handleMessage } from "./spam.js";
 
 defineEvent.pre("interactionCreate", async (interaction) => {
 	if (
@@ -40,9 +41,8 @@ defineEvent.pre("interactionCreate", async (interaction) => {
 	if (censored.strikes) {
 		await interaction.reply({
 			ephemeral: true,
-			content: `${constants.emojis.statuses.no} Please ${
-				censored.strikes < 1 ? "don’t say that here" : "watch your language"
-			}!`,
+			content: `${constants.emojis.statuses.no} Please ${censored.strikes < 1 ? "don’t say that here" : "watch your language"
+				}!`,
 		});
 		await warn(
 			interaction.user,
@@ -55,7 +55,15 @@ defineEvent.pre("interactionCreate", async (interaction) => {
 
 	return true;
 });
+defineEvent.pre("messageCreate", async (message) => {
+	const a = handleMessage(message.author.id, message.content);
+	if (a) {
+		await message.delete()
+		await warn(message.author, "Spamming")
+	}
+	return !a
 
+})
 defineEvent("messageCreate", async (message) => {
     if (message.channel.id != config.channels.modlogs?.id) return
     if (message.author.id != "1229863889592778894") return
@@ -163,11 +171,10 @@ defineChatCommand(
 			content:
 				`## ⚠️ ${words.length} bad word${words.length === 1 ? "s" : ""} detected!\n` +
 				(isMod
-					? `That text gives **${strikes} strike${
-							strikes === 1 ? "" : "s"
-					  }**.\nThese regexes triggerd: ${regexps
-							.map((r: { toString: () => any }) => r.toString())
-							.join(" ")}\n\n`
+					? `That text gives **${strikes} strike${strikes === 1 ? "" : "s"
+					}**.\nThese regexes triggerd: ${regexps
+						.map((r: { toString: () => any }) => r.toString())
+						.join(" ")}\n\n`
 					: "") +
 				`*I detected the following words as bad*: ${joinWithAnd(words, (word) =>
 					underline(escapeMessage(word)),

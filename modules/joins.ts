@@ -31,22 +31,10 @@ defineEvent("guildMemberAdd", async (member) => {
 					icon_url: "https://scrub.fly.dev/icon.png",
 					text: "~ the Scratch Coders team",
 				},
-				{
-					url: constants.domains.scratchAddons,
-					image: { url: `${constants.domains.scradd}/images/join-dm-2.png` },
-				},
-				{
-					url: constants.domains.scratchAddons,
-					image: { url: `${constants.domains.scradd}/images/join-dm-3.png` },
-				},
-				{
-					url: constants.domains.scratchAddons,
-					image: { url: `${constants.domains.scradd}/images/join-dm-4.png` },
-				},
-			],
-			
-		})
-		.catch(() => void 0);
+			},
+		],
+		
+	});
 });
 
 defineEvent("guildMemberAdd", async (member) => {

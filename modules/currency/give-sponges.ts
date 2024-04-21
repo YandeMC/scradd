@@ -1,5 +1,6 @@
 import { GuildMember, MessageType, User, type Message, type Snowflake } from "discord.js";
 import { spongesDB } from "./util.js";
+import config from "../../common/config.js";
 
 const latestMessages: Record<Snowflake, Message[]> = {};
 
@@ -31,7 +32,7 @@ export async function giveSpongesForMessage(message: Message): Promise<void> {
 	await giveSponges(
 		message.interaction?.user ?? message.author,
 		spam === -1 && !newChannel
-			? 1
+			? (await config.guild.members.fetch(message.author)).roles.resolveId("1213666253324030043") ? 5 : 1 
 			: Math.max(
 					1,
 					Math.round(
