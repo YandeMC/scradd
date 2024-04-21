@@ -32,7 +32,11 @@ export async function giveSpongesForMessage(message: Message): Promise<void> {
 	await giveSponges(
 		message.interaction?.user ?? message.author,
 		spam === -1 && !newChannel
-			? (await config.guild.members.fetch(message.author)).roles.resolveId("1213666253324030043") ? 5 : 1 
+			? (
+					await config.guild.members.fetch(message.author)
+			  ).roles.resolveId("1213666253324030043")
+				? 5
+				: 1
 			: Math.max(
 					1,
 					Math.round(

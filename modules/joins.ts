@@ -33,7 +33,6 @@ defineEvent("guildMemberAdd", async (member) => {
 				},
 			},
 		],
-		
 	});
 });
 
