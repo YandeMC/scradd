@@ -63,7 +63,7 @@ export default class Database<Data extends Record<string, boolean | number | str
 	async init(): Promise<void> {
 		if (this.message) return;
 		this.message = databases[this.name] ||= await databaseThread.send(
-			`__**SCRADD ${this.name.toUpperCase()} DATABASE**__\n\n*Please don’t delete this message. If you do, all ${this.name.replaceAll(
+			`__**SCRUB ${this.name.toUpperCase()} DATABASE**__\n\n*Please don’t delete this message. If you do, all ${this.name.replaceAll(
 				"_",
 				" ",
 			)} information may be reset.*`,
@@ -153,7 +153,7 @@ export default class Database<Data extends Record<string, boolean | number | str
 
 			const files =
 				data ?
-					[{ attachment: Buffer.from(data, "utf8"), name: `${this.name}.scradddb` }]
+					[{ attachment: Buffer.from(data, "utf8"), name: `${this.name}.scrubdb` }]
 				:	[];
 			const messageContent = message.content.split("\n");
 			messageContent[3] = "";

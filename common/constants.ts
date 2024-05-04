@@ -89,7 +89,7 @@ export default {
 	footerSeperator: " • ",
 
 	repos: {
-		scradd: "scratchaddons-community/scradd",
+		scradd: "theyande/scradd",
 		scratchAddons: "ScratchAddons/ScratchAddons",
 	},
 
