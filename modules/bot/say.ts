@@ -52,10 +52,24 @@ export default async function sayCommand(
 						type: ComponentType.TextInput,
 						customId: "message",
 						label: "Message content",
-						maxLength: 2000,
+						maxLength: 4000,
 						required: true,
 						style: TextInputStyle.Paragraph,
-					},
+					}
+				],
+			},
+			{
+				type: ComponentType.ActionRow,
+
+				components: [
+					{
+						type: ComponentType.TextInput,
+						customId: "json",
+						label: "json",
+						maxLength: 1,
+						required: true,
+						style: TextInputStyle.Short,
+					}
 				],
 			},
 		],
@@ -71,9 +85,53 @@ export default async function sayCommand(
  */
 export async function say(
 	interaction: RepliableInteraction,
-	content: string,
+	rawContent: string,
 	reply?: string,
+	isJson?: boolean,
 ): Promise<Message | undefined> {
+	if (isJson) {
+
+		let json: any
+
+		try {
+			json = (JSON.parse(rawContent) as any)
+		} catch (error) {
+			interaction.reply({ ephemeral: true, content: "this is not json\n" + error + "\n your json:\n```" + rawContent + "```" })
+			return
+		}
+
+		await interaction.deferReply({ ephemeral: true });
+
+
+		const oldMessage =
+			reply && (await interaction.channel?.messages.fetch(reply).catch(() => void 0));
+		if (reply && (!oldMessage || oldMessage.system))
+			return await interaction.editReply(
+				`${constants.emojis.statuses.no} Could not find message to reply to!`,
+			);
+
+		const message = await (oldMessage ?
+			oldMessage.reply(json)
+			: interaction.channel?.send(json));
+
+		if (message) {
+			await log(
+				`${LoggingEmojis.Bot} ${await mentionChatCommand(
+					"say",
+					interaction.guild ?? undefined,
+				)} used by ${interaction.user.toString()} in ${message.channel.toString()} (ID: ${message.id
+				})`,
+				(interaction.guild?.id !== config.guild.id &&
+					interaction.guild?.publicUpdatesChannel) ||
+				LogSeverity.ServerChange,
+				{ buttons: [{ label: "Message", url: message.url }] },
+			);
+			await interaction.editReply(`${constants.emojis.statuses.yes} Message sent!`);
+		}
+		return
+	}
+
+	let content = rawContent
 	await interaction.deferReply({ ephemeral: true });
 	const silent = content.startsWith("@silent");
 	content = silent ? content.replace("@silent", "").trim() : content;
@@ -89,7 +147,7 @@ export async function say(
 			content,
 			flags: silent ? MessageFlags.SuppressNotifications : undefined,
 		})
-	:	interaction.channel?.send({
+		: interaction.channel?.send({
 			content,
 			flags: silent ? MessageFlags.SuppressNotifications : undefined,
 		}));
@@ -99,14 +157,15 @@ export async function say(
 			`${LoggingEmojis.Bot} ${await mentionChatCommand(
 				"say",
 				interaction.guild ?? undefined,
-			)} used by ${interaction.user.toString()} in ${message.channel.toString()} (ID: ${
-				message.id
+			)} used by ${interaction.user.toString()} in ${message.channel.toString()} (ID: ${message.id
 			})`,
 			(interaction.guild?.id !== config.guild.id &&
 				interaction.guild?.publicUpdatesChannel) ||
-				LogSeverity.ServerChange,
+			LogSeverity.ServerChange,
 			{ buttons: [{ label: "Message", url: message.url }] },
 		);
 		await interaction.editReply(`${constants.emojis.statuses.yes} Message sent!`);
 	}
+
+
 }

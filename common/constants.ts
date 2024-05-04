@@ -4,7 +4,7 @@ const domains = {
 	npm: "https://npmjs.com/package",
 	scradd:
 		process.env.NODE_ENV === "production" || !process.env.PORT ?
-			"https://sa-discord.up.railway.app"
+			"https://scrub.fly.dev"
 		:	(`http://localhost:${process.env.PORT}` as const),
 	scratch: "https://scratch.mit.edu",
 	scratchAddons: "https://scratchaddons.com",

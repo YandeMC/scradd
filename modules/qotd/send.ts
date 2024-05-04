@@ -1,6 +1,5 @@
 import type { ForumChannel, MediaChannel } from "discord.js";
 import mongoose from "mongoose";
-import constants from "../../common/constants.js";
 import { reactAll } from "../../util/discord.js";
 import log, { LogSeverity, LoggingErrorEmoji } from "../logging/misc.js";
 export const Question = mongoose.model(
@@ -39,11 +38,14 @@ export default async function sendQuestion(channel: ForumChannel | MediaChannel)
 	}
 
 	const post = await channel.threads.create({
-		name: `${question.question ?? ""} (QOTD for ${new Date().toLocaleString([], {
+		name: `${question.question ?? ""}`,
+		message: { content: question.description + `\n(QOTD for ${new Date().toLocaleString([], {
 			month: "short",
 			day: "numeric",
-		})})`,
-		message: { content: question.description || constants.zws },
+		})})` || `(QOTD for ${new Date().toLocaleString([], {
+			month: "short",
+			day: "numeric",
+		})})` },
 		reason: "For today’s QOTD",
 	});
 
