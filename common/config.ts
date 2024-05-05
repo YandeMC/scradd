@@ -149,3 +149,11 @@ export function getInitialChannelThreads(
 ): Collection<string, AnyThreadChannel> {
 	return threads.filter(({ parent }) => parent?.id === channel.id);
 }
+
+export async function findRole(roleName: string) {
+	const roles =
+		(await guild?.roles.fetch())?.filter(
+			(role) => role.editable && !role.name.startsWith(CUSTOM_ROLE_PREFIX),
+		) ?? new Collection();
+	return roles.find((role) => role.name.toLowerCase().includes(roleName));
+}

@@ -1,5 +1,5 @@
 import {
-	ApplicationCommandType,
+
 	ButtonStyle,
 	ChannelType,
 	ComponentType,
@@ -10,7 +10,7 @@ import {
 	type Snowflake,
 } from "discord.js";
 import { setTimeout as wait } from "node:timers/promises";
-import { client, defineButton, defineEvent, defineMenuCommand } from "strife.js";
+import { client, defineEvent } from "strife.js";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
 import { getBaseChannel, reactAll } from "../../util/discord.js";
@@ -19,10 +19,10 @@ import { normalize } from "../../util/text.js";
 import { BOARD_EMOJI } from "../board/misc.js";
 import { getSettings } from "../settings.js";
 import autoreactions from "./autos-data.js";
-import scraddChat, { allowChat, chatName, denyChat, learn, removeResponse } from "./chat.js";
+
 import dad from "./dad.js";
 import { getMatches, handleMatch } from "./scratch.js";
-import github from "./github.js";
+
 
 const REACTION_CAP = 3;
 
@@ -39,7 +39,7 @@ const ignoreTriggers = [
 ];
 
 defineEvent("messageCreate", async (message) => {
-	await learn(message);
+	
 
 	let reactions = 0;
 
@@ -146,28 +146,7 @@ async function handleMutatable(
 	const settings = await getSettings(message.author),
 		configuredSettings = await getSettings(message.author, false);
 
-	const links = settings.github && github(message.content, message.guild?.id);
-	if (links)
-		return {
-			content: links,
-			components:
-				configuredSettings.github === undefined ?
-					[
-						{
-							components: [
-								{
-									customId: `scratchEmbeds-${message.author.id}_toggleSetting`,
-									type: ComponentType.Button as const,
-									label: `Disable GitHub Links`,
-									style: ButtonStyle.Success as const,
-								},
-							],
-							type: ComponentType.ActionRow,
-						},
-					]
-				:	[],
-		};
-
+	
 	if (settings.scratchEmbeds) {
 		const matches = getMatches(message.content);
 		const embeds: APIEmbed[] = [];
@@ -207,8 +186,6 @@ async function handleMutatable(
 	const ignored = ignoreTriggers.some((trigger) => message.content.match(trigger));
 	if (ignored) return true;
 
-	const chatResponse = scraddChat(message);
-	if (chatResponse) return { content: chatResponse, files: [], embeds: [], components: [] };
 
 	if (!canDoSecrets(message, true)) return;
 	const cleanContent = stripMarkdown(normalize(message.cleanContent.toLowerCase()));
@@ -282,10 +259,3 @@ function canDoSecrets(message: Message, checkDads = false): boolean {
 
 	return message.channel.id !== message.id && !message.author.bot;
 }
-
-defineButton("allowChat", allowChat);
-defineButton("denyChat", denyChat);
-defineMenuCommand(
-	{ name: `Remove ${chatName} Response`, type: ApplicationCommandType.Message, restricted: true },
-	removeResponse,
-);

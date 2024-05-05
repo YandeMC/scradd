@@ -12,7 +12,7 @@ import { databaseThread } from "../../common/database.js";
 import { getBaseChannel, getMessageJSON } from "../../util/discord.js";
 import { generateError } from "../logging/errors.js";
 import log, { LogSeverity, LoggingEmojis, shouldLog } from "../logging/misc.js";
-import { chatThread } from "../auto/chat.js";
+
 
 export default async function editMessage(
 	interaction: MessageContextMenuCommandInteraction,
@@ -20,7 +20,7 @@ export default async function editMessage(
 	if (
 		!interaction.targetMessage.editable ||
 		!interaction.targetMessage.interaction ||
-		chatThread?.id === interaction.channel?.id ||
+	
 		config.channels.board?.id === interaction.channel?.id ||
 		(config.channels.modlogs.id === getBaseChannel(interaction.channel)?.id &&
 			databaseThread.id !== interaction.channel?.id)
