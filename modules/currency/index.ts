@@ -59,9 +59,9 @@ defineSubcommands(
 		const user =
 			options?.options &&
 			"user" in options.options &&
-			(options.options.user instanceof GuildMember
-				? options.options.user.user
-				: options.options.user);
+			(options.options.user instanceof GuildMember ?
+				options.options.user.user
+			:	options.options.user);
 
 		const amount =
 			(options?.options && "amount" in options.options ? options.options.amount : 0) ?? 0;

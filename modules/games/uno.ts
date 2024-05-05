@@ -236,9 +236,9 @@ export async function uno(interaction: ChatInputCommandInteraction): Promise<voi
 							optionsEnabled: true,
 							skipOption: i > 0,
 							content:
-								i > 0
-									? `You played a ${ch}. play another card or end your turn.`
-									: "",
+								i > 0 ?
+									`You played a ${ch}. play another card or end your turn.`
+								:	"",
 						},
 						i > 0,
 					);
@@ -496,9 +496,9 @@ async function generateCards(
 			unoCardWidth - 10,
 			unoCardHeight - 10,
 			10,
-			!checkCard(card, currentCard, onlyNum) && currentCard
-				? darkenHexColor(unoColors(card.color), 0.5)
-				: unoColors(card.color),
+			!checkCard(card, currentCard, onlyNum) && currentCard ?
+				darkenHexColor(unoColors(card.color), 0.5)
+			:	unoColors(card.color),
 		);
 
 		drawOval(
@@ -752,8 +752,8 @@ async function sendCardSelect(
 		{ label: "Draw A Card", value: "draw" },
 	];
 
-	return !btn.replied
-		? await btn.reply({
+	return !btn.replied ?
+			await btn.reply({
 				content: msgOptions.content,
 				fetchReply: true,
 				ephemeral: true,
@@ -767,9 +767,10 @@ async function sendCardSelect(
 						name: "cards.png",
 					},
 				],
-				components: msgOptions.optionsEnabled
-					? msgOptions.skipOption
-						? [
+				components:
+					msgOptions.optionsEnabled ?
+						msgOptions.skipOption ?
+							[
 								{
 									type: ComponentType.ActionRow,
 									components: [
@@ -792,8 +793,8 @@ async function sendCardSelect(
 										},
 									],
 								},
-						  ]
-						: [
+							]
+						:	[
 								{
 									type: ComponentType.ActionRow,
 									components: [
@@ -805,10 +806,10 @@ async function sendCardSelect(
 										},
 									],
 								},
-						  ]
-					: [],
-		  })
-		: btn.followUp({
+							]
+					:	[],
+			})
+		:	btn.followUp({
 				content: msgOptions.content,
 				fetchReply: true,
 				ephemeral: true,
@@ -822,9 +823,10 @@ async function sendCardSelect(
 						name: "cards.png",
 					},
 				],
-				components: msgOptions.optionsEnabled
-					? msgOptions.skipOption
-						? [
+				components:
+					msgOptions.optionsEnabled ?
+						msgOptions.skipOption ?
+							[
 								{
 									type: ComponentType.ActionRow,
 									components: [
@@ -847,8 +849,8 @@ async function sendCardSelect(
 										},
 									],
 								},
-						  ]
-						: [
+							]
+						:	[
 								{
 									type: ComponentType.ActionRow,
 									components: [
@@ -860,9 +862,9 @@ async function sendCardSelect(
 										},
 									],
 								},
-						  ]
-					: [],
-		  });
+							]
+					:	[],
+			});
 }
 function cardToString(card: Card) {
 	return `${card.color == "black" ? "" : card.color + " "}${card.type}`;

@@ -7,13 +7,13 @@
 	"main": "dist/index.js",
 	"scripts": {
 		"build": "rm -rf dist && tsc --project tsconfig.json",
-		"watch": "tsc --project tsconfig.json --watch",
 		"dev": "npm run serve & npm run watch",
 		"format": "prettier --write \"**\" --ignore-path .prettierignore --ignore-unknown --cache",
 		"lint": "eslint .",
 		"serve": "nodemon --env-file=.env --enable-source-maps . --ext js,json,html,css,png",
 		"start": "node --env-file=.env --enable-source-maps .",
-		"test": "npm run build && node --enable-source-maps --test"
+		"test": "npm run build && node --enable-source-maps --test",
+		"watch": "tsc --project tsconfig.json --watch"
 	},
 	"browserslist": [
 		"chrome 80",

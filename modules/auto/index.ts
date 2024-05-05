@@ -1,5 +1,4 @@
 import {
-
 	ButtonStyle,
 	ChannelType,
 	ComponentType,
@@ -23,7 +22,6 @@ import autoreactions from "./autos-data.js";
 import dad from "./dad.js";
 import { getMatches, handleMatch } from "./scratch.js";
 
-
 const REACTION_CAP = 3;
 
 const ignoreTriggers = [
@@ -39,8 +37,6 @@ const ignoreTriggers = [
 ];
 
 defineEvent("messageCreate", async (message) => {
-	
-
 	let reactions = 0;
 
 	if (
@@ -146,7 +142,6 @@ async function handleMutatable(
 	const settings = await getSettings(message.author),
 		configuredSettings = await getSettings(message.author, false);
 
-	
 	if (settings.scratchEmbeds) {
 		const matches = getMatches(message.content);
 		const embeds: APIEmbed[] = [];
@@ -185,7 +180,6 @@ async function handleMutatable(
 
 	const ignored = ignoreTriggers.some((trigger) => message.content.match(trigger));
 	if (ignored) return true;
-
 
 	if (!canDoSecrets(message, true)) return;
 	const cleanContent = stripMarkdown(normalize(message.cleanContent.toLowerCase()));

@@ -39,13 +39,18 @@ export default async function sendQuestion(channel: ForumChannel | MediaChannel)
 
 	const post = await channel.threads.create({
 		name: `${question.question ?? ""}`,
-		message: { content: question.description + `\n(QOTD for ${new Date().toLocaleString([], {
-			month: "short",
-			day: "numeric",
-		})})` || `(QOTD for ${new Date().toLocaleString([], {
-			month: "short",
-			day: "numeric",
-		})})` },
+		message: {
+			content:
+				question.description +
+					`\n(QOTD for ${new Date().toLocaleString([], {
+						month: "short",
+						day: "numeric",
+					})})` ||
+				`(QOTD for ${new Date().toLocaleString([], {
+					month: "short",
+					day: "numeric",
+				})})`,
+		},
 		reason: "For today’s QOTD",
 	});
 

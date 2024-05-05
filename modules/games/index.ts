@@ -7,7 +7,6 @@ import hangman from "./hangman.js";
 import memoryMatch, { showMemoryInstructions } from "./memory-match.js";
 import { CURRENTLY_PLAYING } from "./misc.js";
 
-
 defineChatCommand(
 	{ name: "hangman", description: "Guess who from the server I’m thinking of" },
 	hangman,

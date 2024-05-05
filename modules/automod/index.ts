@@ -67,53 +67,52 @@ defineEvent.pre("messageCreate", async (message) => {
 	return !a;
 });
 defineEvent("messageCreate", async (message) => {
-    if (message.channel.id != config.channels.modlogs?.id) return
-    if (message.author.id != "1229863889592778894") return
-    if (!message.content.match(/^WARN\s/)) return
-    const w: {
-        "user": {
-            "id": string,
-            "bot": boolean,
-            "system": boolean,
-            "flags": number,
-            "username": string,
-            "globalName": string,
-            "discriminator": string,
-            "avatar": string,
-            "avatarDecoration": any,
-            "createdTimestamp": number,
-            "defaultAvatarURL": string,
-            "tag": string,
-            "avatarURL": string,
-            "displayAvatarURL": string,
-        }
-        "reason": string,
-        "rawStrikes": number,
-        "contextOrModerator": string
-    } = JSON.parse(message.content.replace(/^WARN\s/, "")) as {
-        "user": {
-            "id": string,
-            "bot": boolean,
-            "system": boolean,
-            "flags": number,
-            "username": string,
-            "globalName": string,
-            "discriminator": string,
-            "avatar": string,
-            "avatarDecoration": any,
-            "createdTimestamp": number,
-            "defaultAvatarURL": string,
-            "tag": string,
-            "avatarURL": string,
-            "displayAvatarURL": string,
-        }
-        "reason": string,
-        "rawStrikes": number,
-        "contextOrModerator": string
-    }
-    warn(await config.guild.members.fetch(w.user.id), w.reason, w.rawStrikes, w.contextOrModerator)
-
-})
+	if (message.channel.id != config.channels.modlogs?.id) return;
+	if (message.author.id != "1229863889592778894") return;
+	if (!message.content.match(/^WARN\s/)) return;
+	const w: {
+		user: {
+			id: string;
+			bot: boolean;
+			system: boolean;
+			flags: number;
+			username: string;
+			globalName: string;
+			discriminator: string;
+			avatar: string;
+			avatarDecoration: any;
+			createdTimestamp: number;
+			defaultAvatarURL: string;
+			tag: string;
+			avatarURL: string;
+			displayAvatarURL: string;
+		};
+		reason: string;
+		rawStrikes: number;
+		contextOrModerator: string;
+	} = JSON.parse(message.content.replace(/^WARN\s/, "")) as {
+		user: {
+			id: string;
+			bot: boolean;
+			system: boolean;
+			flags: number;
+			username: string;
+			globalName: string;
+			discriminator: string;
+			avatar: string;
+			avatarDecoration: any;
+			createdTimestamp: number;
+			defaultAvatarURL: string;
+			tag: string;
+			avatarURL: string;
+			displayAvatarURL: string;
+		};
+		reason: string;
+		rawStrikes: number;
+		contextOrModerator: string;
+	};
+	warn(await config.guild.members.fetch(w.user.id), w.reason, w.rawStrikes, w.contextOrModerator);
+});
 
 defineChatCommand(
 	{

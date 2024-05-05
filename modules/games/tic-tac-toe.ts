@@ -113,15 +113,15 @@ export default async function ttt(
 				name: interaction.user.username,
 				id: interaction.user.id,
 			},
-			options.opponent
-				? {
-						name: options.opponent.user.username,
-						id: options.opponent.user.id,
-				  }
-				: {
-						name: client.user.username,
-						id: client.user.id,
-				  },
+			options.opponent ?
+				{
+					name: options.opponent.user.username,
+					id: options.opponent.user.id,
+				}
+			:	{
+					name: client.user.username,
+					id: client.user.id,
+				},
 		],
 		ids: [interaction.user.id, options.opponent?.user.id || client.user.id],
 		turn: 0,

@@ -53,7 +53,7 @@ export default async function sayCommand(
 						maxLength: 4000,
 						required: true,
 						style: TextInputStyle.Paragraph,
-					}
+					},
 				],
 			},
 			{
@@ -67,7 +67,7 @@ export default async function sayCommand(
 						maxLength: 1,
 						required: true,
 						style: TextInputStyle.Short,
-					}
+					},
 				],
 			},
 		],
@@ -88,18 +88,19 @@ export async function say(
 	isJson?: boolean,
 ): Promise<Message | undefined> {
 	if (isJson) {
-
-		let json: any
+		let json: any;
 
 		try {
-			json = (JSON.parse(rawContent) as any)
+			json = JSON.parse(rawContent) as any;
 		} catch (error) {
-			interaction.reply({ ephemeral: true, content: "this is not json\n" + error + "\n your json:\n```" + rawContent + "```" })
-			return
+			interaction.reply({
+				ephemeral: true,
+				content: "this is not json\n" + error + "\n your json:\n```" + rawContent + "```",
+			});
+			return;
 		}
 
 		await interaction.deferReply({ ephemeral: true });
-
 
 		const oldMessage =
 			reply && (await interaction.channel?.messages.fetch(reply).catch(() => void 0));
@@ -110,26 +111,27 @@ export async function say(
 
 		const message = await (oldMessage ?
 			oldMessage.reply(json)
-			: interaction.channel?.send(json));
+		:	interaction.channel?.send(json));
 
 		if (message) {
 			await log(
 				`${LoggingEmojis.Bot} ${await mentionChatCommand(
 					"say",
 					interaction.guild ?? undefined,
-				)} used by ${interaction.user.toString()} in ${message.channel.toString()} (ID: ${message.id
+				)} used by ${interaction.user.toString()} in ${message.channel.toString()} (ID: ${
+					message.id
 				})`,
 				(interaction.guild?.id !== config.guild.id &&
 					interaction.guild?.publicUpdatesChannel) ||
-				LogSeverity.ServerChange,
+					LogSeverity.ServerChange,
 				{ buttons: [{ label: "Message", url: message.url }] },
 			);
 			await interaction.editReply(`${constants.emojis.statuses.yes} Message sent!`);
 		}
-		return
+		return;
 	}
 
-	let content = rawContent
+	let content = rawContent;
 	await interaction.deferReply({ ephemeral: true });
 	const silent = content.startsWith("@silent");
 	content = silent ? content.replace("@silent", "").trim() : content;
@@ -145,7 +147,7 @@ export async function say(
 			content,
 			flags: silent ? MessageFlags.SuppressNotifications : undefined,
 		})
-		: interaction.channel?.send({
+	:	interaction.channel?.send({
 			content,
 			flags: silent ? MessageFlags.SuppressNotifications : undefined,
 		}));
@@ -155,15 +157,14 @@ export async function say(
 			`${LoggingEmojis.Bot} ${await mentionChatCommand(
 				"say",
 				interaction.guild ?? undefined,
-			)} used by ${interaction.user.toString()} in ${message.channel.toString()} (ID: ${message.id
+			)} used by ${interaction.user.toString()} in ${message.channel.toString()} (ID: ${
+				message.id
 			})`,
 			(interaction.guild?.id !== config.guild.id &&
 				interaction.guild?.publicUpdatesChannel) ||
-			LogSeverity.ServerChange,
+				LogSeverity.ServerChange,
 			{ buttons: [{ label: "Message", url: message.url }] },
 		);
 		await interaction.editReply(`${constants.emojis.statuses.yes} Message sent!`);
 	}
-
-
 }

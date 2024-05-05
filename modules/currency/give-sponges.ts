@@ -31,34 +31,36 @@ export async function giveSpongesForMessage(message: Message): Promise<void> {
 
 	await giveSponges(
 		message.interaction?.user ?? message.author,
-		spam === -1 && !newChannel
-			? (
-					await config.guild.members.fetch(message.author)
-			  ).roles.resolveId("1213666253324030043")
-				? 5
-				: 1
-			: Math.max(
-					1,
-					Math.round(
-						(1 - (newChannel ? lastInChannel.length - 1 : spam)) /
-							bot /
-							(1 +
-								Number(
-									![
-										MessageType.Default,
-										MessageType.GuildBoost,
-										MessageType.GuildBoostTier1,
-										MessageType.GuildBoostTier2,
-										MessageType.GuildBoostTier3,
-										MessageType.Reply,
-										MessageType.ChatInputCommand,
-										MessageType.ContextMenuCommand,
-										MessageType.RoleSubscriptionPurchase,
-										MessageType.GuildApplicationPremiumSubscription,
-									].includes(message.type),
-								)),
-					),
-			  ),
+		spam === -1 && !newChannel ?
+			(
+				(await config.guild.members.fetch(message.author)).roles.resolveId(
+					"1213666253324030043",
+				)
+			) ?
+				5
+			:	1
+		:	Math.max(
+				1,
+				Math.round(
+					(1 - (newChannel ? lastInChannel.length - 1 : spam)) /
+						bot /
+						(1 +
+							Number(
+								![
+									MessageType.Default,
+									MessageType.GuildBoost,
+									MessageType.GuildBoostTier1,
+									MessageType.GuildBoostTier2,
+									MessageType.GuildBoostTier3,
+									MessageType.Reply,
+									MessageType.ChatInputCommand,
+									MessageType.ContextMenuCommand,
+									MessageType.RoleSubscriptionPurchase,
+									MessageType.GuildApplicationPremiumSubscription,
+								].includes(message.type),
+							)),
+				),
+			),
 	);
 }
 
