@@ -49,9 +49,7 @@ export async function showTicketModal(
 
 	if (option === SA_CATEGORY) {
 		return await interaction.reply({
-			content: `${
-				constants.emojis.statuses.no
-			} Please don’t contact mods for help.`,
+			content: `${constants.emojis.statuses.no} Please don’t contact mods for help.`,
 
 			ephemeral: true,
 		});

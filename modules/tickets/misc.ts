@@ -23,14 +23,7 @@ export const TICKETS_BY_MEMBER = Object.fromEntries<
 	:	[],
 );
 
-export const TICKET_CATEGORIES = [
-	"appeal",
-	"report",
-	"role",
-	"bug",
-	"rules",
-	"other",
-] as const;
+export const TICKET_CATEGORIES = ["appeal", "report", "role", "bug", "rules", "other"] as const;
 export type Category = (typeof TICKET_CATEGORIES)[number];
 export const SA_CATEGORY = "sa";
 export const SERVER_CATEGORY = "update";
@@ -129,8 +122,6 @@ export const allFields = {
 			label: "What is your question?",
 		},
 	],
-
-	
 
 	other: [
 		{

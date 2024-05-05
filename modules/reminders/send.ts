@@ -79,7 +79,7 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					await thread.send(chatters);
 					continue;
 				}
-				
+
 				case SpecialReminders.Bump: {
 					if (!channel?.isTextBased()) continue;
 

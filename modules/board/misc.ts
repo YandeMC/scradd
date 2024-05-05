@@ -99,7 +99,7 @@ function baseReactionCount(id: Snowflake): number | undefined {
 		[config.channels.exec?.id || ""]: COUNTS.private,
 		[config.channels.admin.id || ""]: COUNTS.admins,
 		"853256939089559583": COUNTS.private, // #ba-doosters
-	
+
 		"811065897057255424": COUNTS.memes, // #memes
 		"806609527281549312": COUNTS.memes, // #collabs-and-ideas
 		[config.channels.advertise?.id || ""]: COUNTS.memes,

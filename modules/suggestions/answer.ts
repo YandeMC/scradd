@@ -18,10 +18,7 @@ export default async function answerSuggestion(rawEntry: GuildAuditLogsEntry): P
 
 	if (!(entry.target instanceof ThreadChannel)) return;
 	const channel = entry.target.parent;
-	if (
-		!(channel instanceof ForumChannel) 
-	)
-		return;
+	if (!(channel instanceof ForumChannel)) return;
 
 	const changes = entry.changes.filter(
 		(change): change is { key: "applied_tags"; old: Snowflake[]; new: Snowflake[] } =>
@@ -37,7 +34,7 @@ export default async function answerSuggestion(rawEntry: GuildAuditLogsEntry): P
 	const newAnswer = parseSuggestionTags(
 		changes.at(-1)?.new ?? [],
 		channel.availableTags,
-		 suggestionAnswers[0],
+		suggestionAnswers[0],
 	).answer;
 	if (oldAnswer.name === newAnswer.name) return;
 

@@ -109,16 +109,16 @@ export default async function updateTrivia() {
 				},
 				title: atob(triviaRes?.results[0].question),
 				description:
-					(!bool
-						? atob(triviaRes?.results[0].question).toLowerCase().includes("which of")
-							? [
-									...triviaRes.results[0].incorrect_answers.map((a) => atob(a)),
-									atob(triviaRes?.results[0].correct_answer),
-							  ]
-									.toSorted(() => Math.random() - 0.5)
-									.join(" or ")
-							: hint(atob(triviaRes?.results[0].correct_answer) || "")
-						: "True or False") +
+					(!bool ?
+						atob(triviaRes?.results[0].question).toLowerCase().includes("which of") ?
+							[
+								...triviaRes.results[0].incorrect_answers.map((a) => atob(a)),
+								atob(triviaRes?.results[0].correct_answer),
+							]
+								.toSorted(() => Math.random() - 0.5)
+								.join(" or ")
+						:	hint(atob(triviaRes?.results[0].correct_answer) || "")
+					:	"True or False") +
 					`\n\nTrivia expires <t:${Math.floor((Date.now() + 86_400_000 / 2) / 1000)}:R>`,
 				footer: {
 					text: `Category: ${atob(triviaRes.results[0].category)}\nDifficulty: ${atob(

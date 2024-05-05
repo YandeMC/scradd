@@ -1,4 +1,4 @@
-import type {  Message } from "discord.js";
+import type { Message } from "discord.js";
 import { client } from "strife.js";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
@@ -6,7 +6,6 @@ import {
 	GlobalAnimatedEmoji,
 	GlobalBotInvitesPattern,
 	InvitesPattern,
-
 	getBaseChannel,
 } from "../../util/discord.js";
 import { stripMarkdown } from "../../util/markdown.js";
@@ -18,10 +17,6 @@ import { ESTABLISHED_THRESHOLD, getLevelForXp } from "../xp/misc.js";
 import { xpDatabase } from "../xp/util.js";
 import tryCensor, { badWordRegexps, badWordsAllowed } from "./misc.js";
 import { ignoredDeletions } from "../logging/messages.js";
-
-
-
-
 
 const BLACKLISTED_DOMAINS = [
 	"scratch.camp",
@@ -86,13 +81,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 		!baseChannel.isDMBased() &&
 		baseChannel.permissionsFor(baseChannel.guild.id)?.has("SendMessages")
 	) {
-		const badInvites = [
-			...new Set(
-				invites
-					
-					.map(([link]) => link),
-			),
-		];
+		const badInvites = [...new Set(invites.map(([link]) => link))];
 
 		if (badInvites.length) {
 			await warn(

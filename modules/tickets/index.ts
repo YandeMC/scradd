@@ -71,7 +71,6 @@ defineEvent("messageCreate", async (message) => {
 								} as const,
 							]
 						:	[]),
-						
 					],
 				},
 			],

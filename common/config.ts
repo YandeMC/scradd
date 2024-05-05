@@ -73,7 +73,7 @@ async function getConfig() {
 				[ChannelType.GuildText, ChannelType.GuildAnnouncement],
 				"end",
 			),
-		
+
 			tickets: getChannel("tickets", ChannelType.GuildText, "start"),
 			server: "1138116320249000077",
 			welcome: getChannel("welcome", ChannelType.GuildText),
