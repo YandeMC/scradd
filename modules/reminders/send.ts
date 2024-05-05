@@ -1,6 +1,6 @@
 import {
 	ActivityType,
-	ChannelType,
+	// ChannelType,
 	MessageFlags,
 	TimestampStyles,
 	chatInputApplicationCommandMention,
@@ -9,11 +9,11 @@ import {
 } from "discord.js";
 import { client } from "strife.js";
 import config from "../../common/config.js";
-import constants from "../../common/constants.js";
+// import constants from "../../common/constants.js";
 import { backupDatabases, prepareExit } from "../../common/database.js";
 import { statuses } from "../../common/strings.js";
 import { convertBase } from "../../util/numbers.js";
-import { gracefulFetch } from "../../util/promises.js";
+// import { gracefulFetch } from "../../util/promises.js";
 import { syncRandomBoard } from "../board/update.js";
 import getWeekly, { getChatters } from "../xp/weekly.js";
 import {
@@ -24,6 +24,7 @@ import {
 	type Reminder,
 } from "./misc.js";
 import sendQuestion from "../qotd/send.js";
+import updateTrivia from "../trivia.js";
 
 let nextReminder: NodeJS.Timeout | undefined;
 export default async function queueReminders(): Promise<NodeJS.Timeout | undefined> {
@@ -78,36 +79,7 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					await thread.send(chatters);
 					continue;
 				}
-				case SpecialReminders.UpdateSACategory: {
-					if (channel?.type !== ChannelType.GuildCategory) continue;
-
-					remindersDatabase.data = [
-						...remindersDatabase.data,
-						{
-							channel: reminder.channel,
-							date: Number(Date.now() + 3_600_000),
-							reminder: undefined,
-							id: SpecialReminders.UpdateSACategory,
-							user: client.user.id,
-						},
-					];
-
-					const count = await gracefulFetch<{ count: number; _chromeCountDate: string }>(
-						`${constants.urls.usercount}?date=${Date.now()}`,
-					);
-					if (!count) continue;
-
-					await channel.setName(
-						`Scratch Addons - ${count.count.toLocaleString([], {
-							compactDisplay: "short",
-							maximumFractionDigits: 1,
-							minimumFractionDigits: +(count.count > 999),
-							notation: "compact",
-						})} users`,
-						"Automated update to sync count",
-					);
-					continue;
-				}
+				
 				case SpecialReminders.Bump: {
 					if (!channel?.isTextBased()) continue;
 
@@ -218,6 +190,10 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					];
 					await sendQuestion(channel);
 					continue;
+				}
+				case SpecialReminders.trivia: {
+					await config.channels.trivia?.send("<@&1236545704093028392> new trivia");
+					await updateTrivia();
 				}
 			}
 		}

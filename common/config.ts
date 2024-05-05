@@ -65,7 +65,7 @@ async function getConfig() {
 		),
 
 		channels: {
-			info: getChannel("Info", ChannelType.GuildCategory, "start"),
+			info: getChannel("info", ChannelType.GuildCategory, "start"),
 			announcements:
 				guild?.systemChannel ?? getChannel("server", ChannelType.GuildText, "start"),
 			board: getChannel(
@@ -73,8 +73,8 @@ async function getConfig() {
 				[ChannelType.GuildText, ChannelType.GuildAnnouncement],
 				"end",
 			),
-			servers: getChannel("servers", ChannelType.GuildText, "end"),
-			tickets: getChannel("contact", ChannelType.GuildText, "start"),
+		
+			tickets: getChannel("tickets", ChannelType.GuildText, "start"),
 			server: "1138116320249000077",
 			welcome: getChannel("welcome", ChannelType.GuildText),
 			intros: getChannel("intro", ChannelType.GuildText, "partial"),
@@ -86,19 +86,17 @@ async function getConfig() {
 
 			general: getChannel("general", ChannelType.GuildText),
 
-			support: getChannel("support", ChannelType.GuildText, "partial"),
 			updates: getChannel("updates", ChannelType.GuildText, "partial"),
 			suggestions: getChannel("suggestions", ChannelType.GuildForum),
-			bugs: getChannel("bug", ChannelType.GuildForum, "start"),
-			devs: getChannel("devs", ChannelType.GuildText, "start"),
+			level: getChannel("level", ChannelType.GuildText),
 
 			qotd: getChannel("question", ChannelType.GuildForum, "partial"),
 			share: getChannel("share", ChannelType.GuildForum),
 			advertise:
-				getChannel("advertise", ChannelType.GuildText, "partial") ??
-				getChannel("promo", ChannelType.GuildText, "partial"),
+				getChannel("advertise", ChannelType.GuildForum, "partial") ??
+				getChannel("promo", ChannelType.GuildForum, "partial"),
 			bots: getChannel("bots", ChannelType.GuildText, "partial"),
-
+			trivia: getChannel("trivia", ChannelType.GuildText, "partial"),
 			oldSuggestions: getChannel("suggestions", ChannelType.GuildText, "partial"),
 		},
 
@@ -108,7 +106,7 @@ async function getConfig() {
 			staff: staffRole,
 			weeklyWinner: roles.find((role) => role.name.toLowerCase().includes("weekly")),
 			dev: roles.find((role) => role.name.toLowerCase().startsWith("dev")),
-			epic: roles.find((role) => role.name.toLowerCase().includes("epic")),
+			epic: roles.find((role) => role.name.toLowerCase().includes("premium")),
 			booster: roles.find((role) => role.name.toLowerCase().includes("booster")),
 			active: roles.find((role) => role.name.toLowerCase().includes("active")),
 			established: roles.find((role) => role.name.toLowerCase().includes("established")),
@@ -118,7 +116,7 @@ async function getConfig() {
 	function getChannel<T extends ChannelType>(
 		name: string,
 		type: T | T[] = [],
-		matchType: "end" | "full" | "partial" | "start" = "full",
+		matchType: "end" | "full" | "partial" | "start" = "partial",
 	): Extract<NonThreadGuildBasedChannel, { type: T }> | undefined {
 		const types = new Set<ChannelType>([type].flat());
 		return channels.find(
@@ -126,10 +124,10 @@ async function getConfig() {
 				!!channel &&
 				types.has(channel.type) &&
 				{
-					end: channel.name.endsWith(name),
-					full: channel.name === name,
-					partial: channel.name.includes(name),
-					start: channel.name.startsWith(name),
+					end: channel.name.toLowerCase().endsWith(name),
+					full: channel.name.toLowerCase() === name,
+					partial: channel.name.toLowerCase().includes(name),
+					start: channel.name.toLowerCase().startsWith(name),
 				}[matchType],
 		);
 	}
