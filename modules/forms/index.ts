@@ -5,7 +5,14 @@ import {
 	submitAcceptAppeal,
 	submitRejectAppeal,
 } from "./appeals/appeals.js";
-import confirmInterest, { confirmAcceptApp, confirmRejectApp, fillInterest, submitAcceptApp, submitInterest, submitRejectApp } from "./mod-interest.js";
+import confirmInterest, {
+	confirmAcceptApp,
+	confirmRejectApp,
+	fillInterest,
+	submitAcceptApp,
+	submitInterest,
+	submitRejectApp,
+} from "./mod-interest.js";
 import { ButtonStyle, ComponentType, type Snowflake } from "discord.js";
 import config from "../../common/config.js";
 
@@ -15,21 +22,26 @@ defineEvent("guildBanAdd", (ban) => {
 });
 
 defineButton("confirmInterest", confirmInterest);
-defineChatCommand({ name: "mod-application", description: "fill out the form for moderationr" }, async (i) => {
-	i.reply({
-		components: [
-			{
-				type: ComponentType.ActionRow, components: [
-					{
-						type: ComponentType.Button,
-						style: ButtonStyle.Secondary,
-						label: "Fill out the form",
-						customId: "_confirmInterest"
-					}]
-			}
-		]
-	})
-})
+defineChatCommand(
+	{ name: "mod-application", description: "fill out the form for moderationr" },
+	async (i) => {
+		i.reply({
+			components: [
+				{
+					type: ComponentType.ActionRow,
+					components: [
+						{
+							type: ComponentType.Button,
+							style: ButtonStyle.Secondary,
+							label: "Fill out the form",
+							customId: "_confirmInterest",
+						},
+					],
+				},
+			],
+		});
+	},
+);
 defineButton("modInterestForm", fillInterest);
 defineModal("modInterestForm", submitInterest);
 
