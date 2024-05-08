@@ -29,8 +29,8 @@ import { parseIds } from "./appeals/generate-appeal.js";
 // import { LoggingEmojis } from "../logging/misc.js";
 import { escapeMessage } from "../../util/markdown.js";
 
-export const NEEDED_ACCEPT = 1,
-	NEEDED_REJECT = 1;
+export const NEEDED_ACCEPT = 6,
+	NEEDED_REJECT = 5;
 
 const thread =
 	getInitialChannelThreads(config.channels.admin).find(
@@ -458,7 +458,7 @@ export async function confirmAcceptApp(
 				components: [
 					{
 						customId: "note",
-						label: "Why should they be unbanned?",
+						label: "Why should they be mod?",
 						style: TextInputStyle.Paragraph,
 						type: ComponentType.TextInput,
 						value: value === "N/A" ? undefined : value,
@@ -472,7 +472,7 @@ export async function confirmAcceptApp(
 		],
 
 		customId: `${counts}_acceptApp`,
-		title: "Accept Mod Application (user may see the reason)",
+		title: "Accept Mod App (user may see the reason)",
 	});
 }
 export async function confirmRejectApp(
@@ -488,7 +488,7 @@ export async function confirmRejectApp(
 				components: [
 					{
 						customId: "note",
-						label: "Why shouldn’t they be unbanned?",
+						label: "Why shouldn’t they be mod?",
 						style: TextInputStyle.Paragraph,
 						type: ComponentType.TextInput,
 						value: value === "N/A" ? undefined : value,
@@ -502,7 +502,7 @@ export async function confirmRejectApp(
 		],
 
 		customId: `${counts}_rejectApp`,
-		title: "Reject Mod Application (user may see the reason)",
+		title: "Reject Mod App (user may see the reason)",
 	});
 }
 export async function submitAcceptApp(
