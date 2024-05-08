@@ -11,7 +11,7 @@ if (process.env.SCRATCH_PASS) {
 
     defineChatCommand({
         name: "test-verify",
-        description: "test the verification process to see if its workin",
+        description: "Test the verification process to see if its workin",
     }, async (i) => {
         let resolved: { [key: string]: string } = {
             project: "wait",
