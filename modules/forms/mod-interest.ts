@@ -90,20 +90,28 @@ export default async function confirmInterest(interaction: ButtonInteraction): P
 }
 
 export async function fillInterest(interaction: ButtonInteraction): Promise<void> {
-	const member = (await config.guild.members.fetch(interaction.user))
-	if (!member.joinedTimestamp) return void interaction.reply({ ephemeral: true, content: "aRRRRR MATEY" })
-	const xp = (xpDatabase.data.find((e) => e.user == interaction.user.id)?.xp || 0)
-	const xpRequirement = xp > 5000
-	const joinRequirement = Math.min(1, ((Date.now() - 1209600 * 1000) / member.joinedTimestamp)).toLocaleString([], { maximumFractionDigits: 1, style: "percent" }) == "100%"
+	const member = await config.guild.members.fetch(interaction.user);
+	if (!member.joinedTimestamp)
+		return void interaction.reply({ ephemeral: true, content: "aRRRRR MATEY" });
+	const xp = xpDatabase.data.find((e) => e.user == interaction.user.id)?.xp || 0;
+	const xpRequirement = xp > 5000;
+	const joinRequirement =
+		Math.min(1, (Date.now() - 1209600 * 1000) / member.joinedTimestamp).toLocaleString([], {
+			maximumFractionDigits: 1,
+			style: "percent",
+		}) == "100%";
 
 	if (!(xpRequirement && joinRequirement)) {
-		return void await interaction.reply({
-			ephemeral: true, content: "You do not meet the requirements to apply.\nhere are the requirements:\n```The person must have been in the server for atleast 2 weeks\nThe person must have atleast 5k xp```",
-			files: await makeCanvasFiles(Math.min(1, xp / 5000), Math.min(1, ((Date.now() - 1209600 * 1000) / member.joinedTimestamp)))
-		})
+		return void (await interaction.reply({
+			ephemeral: true,
+			content:
+				"You do not meet the requirements to apply.\nhere are the requirements:\n```The person must have been in the server for atleast 2 weeks\nThe person must have atleast 5k xp```",
+			files: await makeCanvasFiles(
+				Math.min(1, xp / 5000),
+				Math.min(1, (Date.now() - 1209600 * 1000) / member.joinedTimestamp),
+			),
+		}));
 	}
-
-
 
 	const mention = interaction.user.toString();
 	await interaction.showModal({
@@ -179,37 +187,40 @@ export async function fillInterest(interaction: ButtonInteraction): Promise<void
 		],
 	});
 }
-async function makeCanvasFiles(progressXp: number, progressJoin: number): Promise<{ attachment: Buffer; name: string }[]> {
+async function makeCanvasFiles(
+	progressXp: number,
+	progressJoin: number,
+): Promise<{ attachment: Buffer; name: string }[]> {
 	if (process.env.CANVAS === "false") return [];
 
 	const { createCanvas } = await import("@napi-rs/canvas");
 	const canvas = createCanvas(1000, 100);
 	const context = canvas.getContext("2d");
-	context.font = `${canvas.height / 2 * 0.9}px ${constants.fonts}`;
+	context.font = `${(canvas.height / 2) * 0.9}px ${constants.fonts}`;
 	context.fillStyle = "#0003";
 	context.fillRect(0, 0, canvas.width, canvas.height);
 	context.fillStyle = `#${constants.themeColor.toString(16)}`;
 	let rectangleSize = canvas.width * progressXp;
-	let paddingPixels = 0.18 * canvas.height / 2;
+	let paddingPixels = (0.18 * canvas.height) / 2;
 	context.fillRect(0, 0, rectangleSize, canvas.height / 2);
 
 	if (progressXp < 0.145) {
 		context.fillStyle = "#666";
 		context.textAlign = "end";
-		context.fillText("XP: " +
-			progressXp.toLocaleString([], { maximumFractionDigits: 1, style: "percent" }),
+		context.fillText(
+			"XP: " + progressXp.toLocaleString([], { maximumFractionDigits: 1, style: "percent" }),
 			canvas.width - paddingPixels,
 			canvas.height / 2 - paddingPixels,
 		);
 	} else {
 		context.fillStyle = "#0009";
-		context.fillText("XP: " +
-			progressXp.toLocaleString([], { maximumFractionDigits: 1, style: "percent" }),
+		context.fillText(
+			"XP: " + progressXp.toLocaleString([], { maximumFractionDigits: 1, style: "percent" }),
 			paddingPixels,
 			canvas.height / 2 - paddingPixels,
 		);
 	}
-	context.fillStyle = `#${0x008F75.toString(16)}`;
+	context.fillStyle = `#${(0x008f75).toString(16)}`;
 	rectangleSize = canvas.width * progressJoin;
 
 	context.fillRect(0, canvas.height / 2, rectangleSize, canvas.height);
@@ -217,15 +228,17 @@ async function makeCanvasFiles(progressXp: number, progressJoin: number): Promis
 	if (progressJoin < 0.345) {
 		context.fillStyle = "#666";
 		context.textAlign = "end";
-		context.fillText("Date: " +
-			progressJoin.toLocaleString([], { maximumFractionDigits: 1, style: "percent" }),
+		context.fillText(
+			"Date: " +
+				progressJoin.toLocaleString([], { maximumFractionDigits: 1, style: "percent" }),
 			canvas.width - paddingPixels,
 			canvas.height - paddingPixels,
 		);
 	} else {
 		context.fillStyle = "#0009";
-		context.fillText("Date: " +
-			progressJoin.toLocaleString([], { maximumFractionDigits: 1, style: "percent" }),
+		context.fillText(
+			"Date: " +
+				progressJoin.toLocaleString([], { maximumFractionDigits: 1, style: "percent" }),
 			paddingPixels,
 			canvas.height - paddingPixels,
 		);
@@ -323,7 +336,6 @@ export async function submitInterest(interaction: ModalSubmitInteraction): Promi
 		components: [
 			getAppComponents(),
 			{
-				
 				type: ComponentType.ActionRow,
 				components: [
 					{
@@ -340,7 +352,7 @@ export async function submitInterest(interaction: ModalSubmitInteraction): Promi
 					} as const,
 					...(totalStrikeCount === "0" ?
 						[]
-						: ([
+					:	([
 							{
 								style: ButtonStyle.Secondary,
 								type: ComponentType.Button,
@@ -361,7 +373,7 @@ export async function submitInterest(interaction: ModalSubmitInteraction): Promi
 								label: "Contact User",
 							},
 						] as const)
-						: []),
+					:	[]),
 				],
 			},
 		],
@@ -538,14 +550,19 @@ export async function submitAcceptApp(
 
 	if (users.accepters.size >= NEEDED_ACCEPT) {
 		const mention = interaction.message?.embeds[0]?.description ?? "";
-		const user = await config.guild.members.fetch(MessageMentions.UsersPattern.exec(mention)?.[1] ?? "")
-		const roleGiven = await user.roles.add(config.roles.mod)
+		const user = await config.guild.members.fetch(
+			MessageMentions.UsersPattern.exec(mention)?.[1] ?? "",
+		);
+		const roleGiven = await user.roles
+			.add(config.roles.mod)
 			.then(() => true)
 			.catch(() => false);
 		// appeals[mention] = { unbanned: true, note, date: new Date().toISOString() };
 		await interaction.message?.reply(
 			`${constants.emojis.statuses[roleGiven ? "yes" : "no"]}  ${
-				roleGiven ? `${mention} has joined the mod team!` : "failed to give the role or they already have mod"
+				roleGiven ?
+					`${mention} has joined the mod team!`
+				:	"failed to give the role or they already have mod"
 			}`,
 		);
 	}
@@ -554,7 +571,6 @@ export async function submitRejectApp(
 	interaction: ModalSubmitInteraction,
 	ids: string,
 ): Promise<void> {
-	
 	const users = parseIds(ids);
 	await interaction.reply({
 		content: `${
@@ -584,14 +600,17 @@ export async function submitRejectApp(
 
 	if (users.rejecters.size >= NEEDED_REJECT) {
 		const mention = interaction.message?.embeds[0]?.description ?? "";
-		const user = await config.guild.members.fetch(MessageMentions.UsersPattern.exec(mention)?.[1] ?? "")
+		const user = await config.guild.members.fetch(
+			MessageMentions.UsersPattern.exec(mention)?.[1] ?? "",
+		);
 		// applications[mention] = { unbanned: false, note, date: new Date().toISOString() };d
 		await interaction.message?.reply(
 			`${constants.emojis.statuses.yes} ${mention} will not get mod.`,
 		);
-const embed = interaction.message?.embeds ?? []
-		await user.send({content:`Your moderator application has been rejected for the reason:\n${embed[1]?.fields.find((field)=> field.name == "Accepted Note")?.value} `, embeds:[
-			embed[0] ? embed[0] : {}
-		]})
+		const embed = interaction.message?.embeds ?? [];
+		await user.send({
+			content: `Your moderator application has been rejected for the reason:\n${embed[1]?.fields.find((field) => field.name == "Accepted Note")?.value} `,
+			embeds: [embed[0] ? embed[0] : {}],
+		});
 	}
 }
