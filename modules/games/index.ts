@@ -6,12 +6,71 @@ import { disableComponents } from "../../util/discord.js";
 import hangman from "./hangman.js";
 import memoryMatch, { showMemoryInstructions } from "./memory-match.js";
 import { CURRENTLY_PLAYING } from "./misc.js";
-
+import rps from "./rps.js";
+import ttt from "./tic-tac-toe.js";
+import { uno } from "./uno.js";
+import dond from "./dond.js";
 defineChatCommand(
-	{ name: "hangman", description: "Guess who from the server I’m thinking of" },
+	{
+		name: "rps",
+		description: "Play Rock Paper Scissors against someone(or the bot)",
+		options: {
+			opponent: {
+				description: "Opponent (leave blank for solo)",
+				type: ApplicationCommandOptionType.User,
+			},
+			rounds: {
+				description: "Number of rounds",
+				type: ApplicationCommandOptionType.Integer,
+				minValue: 1,
+				maxValue: 31,
+			},
+		},
+	},
+	rps,
+);
+defineChatCommand(
+	{
+		name: "tic-tac-toe",
+		description: "Play Tic Tac Toe against someone(or the bot)",
+		options: {
+			opponent: {
+				description: "Opponent (leave blank for solo)",
+				type: ApplicationCommandOptionType.User,
+			},
+		},
+	},
+	ttt,
+);
+defineChatCommand(
+	{
+		name: "uno",
+		description: "Start a game of Uno!",
+	},
+	uno,
+);
+defineChatCommand(
+	{
+		name: "hangman", description: "Guess who from the server I’m thinking of",
+	},
+
 	hangman,
 );
-
+defineChatCommand(
+	{
+		name: "deal-or-no-deal",
+		description: "play a game of deal or no deal",
+		options: {
+			"money": {
+				description: "The user to challenge",
+				type: ApplicationCommandOptionType.Integer,
+				required: false,
+			},
+		},
+		access: false,
+	} as any,
+	dond,
+);
 defineChatCommand(
 	{
 		name: "memory-match",
