@@ -56,13 +56,13 @@ export function formatTransactions(
 				break;
 			case "buy":
 				formatted.push(`bought ${t.to} for ${t.amount} 🧽`);
-				break
+				break;
 			case "bet":
 				formatted.push(`bet ${t.amount} 🧽 on ${t.to}`);
-				break
+				break;
 			case "return":
 				formatted.push(`bet return of ${t.amount} 🧽 on ${t.to}`);
-				break
+				break;
 
 			default:
 				break;

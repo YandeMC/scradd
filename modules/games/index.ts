@@ -51,7 +51,8 @@ defineChatCommand(
 );
 defineChatCommand(
 	{
-		name: "hangman", description: "Guess who from the server I’m thinking of",
+		name: "hangman",
+		description: "Guess who from the server I’m thinking of",
 	},
 
 	hangman,
@@ -61,7 +62,7 @@ defineChatCommand(
 		name: "deal-or-no-deal",
 		description: "play a game of deal or no deal",
 		options: {
-			"money": {
+			money: {
 				description: "The user to challenge",
 				type: ApplicationCommandOptionType.Integer,
 				required: false,
