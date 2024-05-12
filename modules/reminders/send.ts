@@ -104,17 +104,16 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 							`https://stats.uptimerobot.com/api/getMonitor/K2V4js80Pk?m=${monitor.monitorId}`,
 						);
 						const statusEmoji =
-							re.monitor.statusClass == "success"
-								? "<:green:1196987578881150976>"
-								: "<:icons_outage:1199113890584342628>";
+							re.monitor.statusClass == "success" ?
+								"<:green:1196987578881150976>"
+							:	"<:icons_outage:1199113890584342628>";
 						fields.push({
 							name: `${statusEmoji} ${re.monitor.name}`,
 							value:
-								re.monitor.statusClass == "success"
-									? constants.zws
-									: re.monitor.logs[0]
-									? `Down for ${re.monitor.logs[0]?.duration}(${re.monitor.logs[0]?.reason?.code})`
-									: `No logs.`,
+								re.monitor.statusClass == "success" ? constants.zws
+								: re.monitor.logs[0] ?
+									`Down for ${re.monitor.logs[0]?.duration}(${re.monitor.logs[0]?.reason?.code})`
+								:	`No logs.`,
 						});
 					}
 					if (!config.channels.verify) return;
@@ -143,11 +142,11 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 									name: "Verification Status",
 								},
 								title:
-									downCount != 0
-										? `Uh oh! ${downCount} service${
-												downCount == 1 ? " is" : "s are"
-										  } down! `
-										: "All good!",
+									downCount != 0 ?
+										`Uh oh! ${downCount} service${
+											downCount == 1 ? " is" : "s are"
+										} down! `
+									:	"All good!",
 								color: 16754688,
 							},
 						],

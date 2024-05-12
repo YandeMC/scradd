@@ -1,7 +1,7 @@
 import { CloudConnection, Profile, Project, ScratchSession } from "scratchlink";
 import { defineChatCommand } from "strife.js";
 
-const cloudStatus = await fetch("https://clouddata.scratch.mit.edu/logs?projectid=961167982")
+const cloudStatus = await fetch("https://clouddata.scratch.mit.edu/logs?projectid=961167982");
 
 if (process.env.SCRATCH_PASS) {
 	if (cloudStatus.ok) {
@@ -11,7 +11,7 @@ if (process.env.SCRATCH_PASS) {
 		const project = new Project(session, 961167982);
 		const cloud = new CloudConnection(session, 961167982);
 		const user = new Profile(session, session.auth?.username);
-	
+
 		defineChatCommand(
 			{
 				name: "test-verify",
@@ -23,10 +23,10 @@ if (process.env.SCRATCH_PASS) {
 					comment: "wait",
 					cloud: "wait",
 				};
-	
+
 				await i.reply({ embeds: getEmbeds(resolved) });
 				const promises = [testComment(), testProject(), TestCloud()];
-	
+
 				promises.forEach((promise) => {
 					promise.then((result) => {
 						resolved[result.type] = result.valid ? "true" : "false";
@@ -39,7 +39,7 @@ if (process.env.SCRATCH_PASS) {
 			publicCode: string;
 			privateCode: string;
 		}
-	
+
 		async function testProject() {
 			const res = await fetch(
 				"https://scratch-coders-auth-server.vercel.app/auth/gettokens?redirect=aa&method=comment",
@@ -48,7 +48,8 @@ if (process.env.SCRATCH_PASS) {
 			await project.comment(json.publicCode);
 			// await wait(2000)
 			const res2 = await fetch(
-				"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" + json.privateCode,
+				"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
+					json.privateCode,
 			);
 			const json2: { valid: boolean } = await res2.json();
 			return { valid: json2.valid, type: "project" };
@@ -61,7 +62,8 @@ if (process.env.SCRATCH_PASS) {
 			await user.comment(json.publicCode);
 			// await wait(2000)
 			const res2 = await fetch(
-				"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" + json.privateCode,
+				"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
+					json.privateCode,
 			);
 			const json2: { valid: boolean } = await res2.json();
 			return { valid: json2.valid, type: "comment" };
@@ -74,12 +76,13 @@ if (process.env.SCRATCH_PASS) {
 			cloud.setVariable("cloud", json.publicCode);
 			// await wait(4000)
 			const res2 = await fetch(
-				"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" + json.privateCode,
+				"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
+					json.privateCode,
 			);
 			const json2: { valid: boolean } = await res2.json();
 			return { valid: json2.valid, type: "cloud" };
 		}
-	
+
 		function getEmbeds(promises: { [key: string]: string }) {
 			return [
 				{
@@ -101,7 +104,7 @@ if (process.env.SCRATCH_PASS) {
 				},
 			];
 		}
-	
+
 		function getStatus(status?: string) {
 			const statuses = {
 				wait: "<a:loading:1237879519948439583>",
@@ -120,7 +123,7 @@ if (process.env.SCRATCH_PASS) {
 		if (!session.auth) throw Error();
 		const project = new Project(session, 961167982);
 		const user = new Profile(session, session.auth?.username);
-	
+
 		defineChatCommand(
 			{
 				name: "test-verify",
@@ -132,10 +135,10 @@ if (process.env.SCRATCH_PASS) {
 					comment: "wait",
 					cloud: "error",
 				};
-	
+
 				await i.reply({ embeds: getEmbeds(resolved) });
 				const promises = [testComment(), testProject()];
-	
+
 				promises.forEach((promise) => {
 					promise.then((result) => {
 						resolved[result.type] = result.valid ? "true" : "false";
@@ -148,7 +151,7 @@ if (process.env.SCRATCH_PASS) {
 			publicCode: string;
 			privateCode: string;
 		}
-	
+
 		async function testProject() {
 			const res = await fetch(
 				"https://scratch-coders-auth-server.vercel.app/auth/gettokens?redirect=aa&method=comment",
@@ -157,7 +160,8 @@ if (process.env.SCRATCH_PASS) {
 			await project.comment(json.publicCode);
 			// await wait(2000)
 			const res2 = await fetch(
-				"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" + json.privateCode,
+				"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
+					json.privateCode,
 			);
 			const json2: { valid: boolean } = await res2.json();
 			return { valid: json2.valid, type: "project" };
@@ -170,13 +174,13 @@ if (process.env.SCRATCH_PASS) {
 			await user.comment(json.publicCode);
 			// await wait(2000)
 			const res2 = await fetch(
-				"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" + json.privateCode,
+				"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
+					json.privateCode,
 			);
 			const json2: { valid: boolean } = await res2.json();
 			return { valid: json2.valid, type: "comment" };
 		}
-		
-	
+
 		function getEmbeds(promises: { [key: string]: string }) {
 			return [
 				{
@@ -198,13 +202,13 @@ if (process.env.SCRATCH_PASS) {
 				},
 			];
 		}
-	
+
 		function getStatus(status?: string) {
 			const statuses = {
 				wait: "<a:loading:1237879519948439583>",
 				true: "<:green:1196987578881150976>",
 				false: "<:icons_outage:1199113890584342628>",
-				error: `<:icons_outage:1199113890584342628> Server down: ${cloudStatus.status} ${cloudStatus.statusText}`
+				error: `<:icons_outage:1199113890584342628> Server down: ${cloudStatus.status} ${cloudStatus.statusText}`,
 			};
 			return (
 				status == "wait" ? `${statuses.wait} In Progress`
@@ -217,7 +221,4 @@ if (process.env.SCRATCH_PASS) {
 }
 
 try {
-	
-} catch (error) {
-	
-}
+} catch (error) {}
