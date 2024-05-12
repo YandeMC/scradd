@@ -33,13 +33,13 @@ export async function messageDelete(message: Message | PartialMessage): Promise<
 	const content = !shush && messageToText(message, false);
 	const { embeds, files } =
 		shush ? { embeds: [], files: [] } : extractMessageExtremities(message);
-		const auditLogs = await config.guild
+	const auditLogs = await config.guild
 		.fetchAuditLogs({ limit: 1, type: AuditLogEvent.MessageDelete })
 		.catch(() => void 0);
 	await log(
 		`${LoggingEmojis.MessageDelete} ${message.partial ? "Unknown message" : "Message"}${
 			message.author ? ` by ${message.author.toString()}` : ""
-		} in ${message.channel.toString()} (ID: ${message.id}) deleted ${auditLogs? `by ${auditLogs.entries.first()?.executor?.toString()}` : ""}`,
+		} in ${message.channel.toString()} (ID: ${message.id}) deleted ${auditLogs ? `by ${auditLogs.entries.first()?.executor?.toString()}` : ""}`,
 		LogSeverity.ContentEdit,
 		{
 			embeds,
