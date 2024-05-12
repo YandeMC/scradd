@@ -66,7 +66,7 @@ async function getConfig() {
 
 		channels: {
 			info: getChannel("info", ChannelType.GuildCategory, "start"),
-			announcements: getChannel("weekly", ChannelType.GuildText, "start"),
+			announcements: getChannel("server-news", ChannelType.GuildText, "start"),
 			board: getChannel(
 				"board",
 				[ChannelType.GuildText, ChannelType.GuildAnnouncement],
