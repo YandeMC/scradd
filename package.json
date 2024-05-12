@@ -37,7 +37,7 @@
 		"mustache": "4.2.0",
 		"papaparse": "5.4.1",
 		"posthtml-parser": "0.12.0",
-		"scratchlink": "^3.1.0",
+		"scratchlink": "^3.1.1",
 		"serialize-error": "11.0.3",
 		"strife.js": "4.0.1"
 	},

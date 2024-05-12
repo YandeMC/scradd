@@ -13,6 +13,7 @@ import { client } from "strife.js";
 import { CUSTOM_ROLE_PREFIX } from "../modules/roles/misc.js";
 import type { NonFalsy } from "./misc.js";
 
+
 const IS_TESTING = process.argv.some((file) => file.endsWith(".test.js"));
 
 const guild = IS_TESTING ? undefined : await client.guilds.fetch(process.env.GUILD_ID);
@@ -74,6 +75,7 @@ async function getConfig() {
 			),
 
 			tickets: getChannel("tickets", ChannelType.GuildText, "start"),
+			verify: getChannel("verify", ChannelType.GuildText, "end"),
 			server: "1138116320249000077",
 			welcome: getChannel("welcome", ChannelType.GuildText),
 			intros: getChannel("intro", ChannelType.GuildText, "partial"),

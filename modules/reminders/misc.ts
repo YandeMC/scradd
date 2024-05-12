@@ -16,6 +16,7 @@ export enum SpecialReminders {
 	ChangeStatus,
 	QOTD,
 	trivia,
+	UpdateVerificationStatus,
 }
 export type Reminder = {
 	channel: Snowflake;
@@ -92,7 +93,23 @@ if (
 		},
 	];
 }
-
+if (
+	process.env.NODE_ENV === "production" &&
+	!remindersDatabase.data.some(
+		(reminder) => reminder.id === SpecialReminders.UpdateVerificationStatus,
+	)
+) {
+	remindersDatabase.data = [
+		...remindersDatabase.data,
+		{
+			channel: "0",
+			date: Date.now(),
+			reminder: undefined,
+			id: SpecialReminders.UpdateVerificationStatus,
+			user: client.user.id,
+		},
+	];
+}
 if (
 	process.env.NODE_ENV === "production" &&
 	!remindersDatabase.data.some((reminder) => reminder.id === SpecialReminders.BackupDatabases)

@@ -22,6 +22,9 @@ export const customNames: Record<string, string> = {
 	Abaka: "YandeAI Banner",
 	Board: "🛹",
 	Elon: "X enjoyer",
+	Hex:"The bestagon",
+	Hexa:"The bestagon",
+	Hexagon:"The bestagon",
 };
 export const customComments: Record<string, string> = {
 	Abaka: "Do it again and I ban you 😄",

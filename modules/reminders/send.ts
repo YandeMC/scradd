@@ -1,5 +1,6 @@
 import {
 	ActivityType,
+	Message,
 	// ChannelType,
 	MessageFlags,
 	TimestampStyles,
@@ -25,6 +26,8 @@ import {
 } from "./misc.js";
 import sendQuestion from "../qotd/send.js";
 import updateTrivia from "../trivia.js";
+import constants from "../../common/constants.js";
+import { gracefulFetch } from "../../util/promises.js";
 
 let nextReminder: NodeJS.Timeout | undefined;
 export default async function queueReminders(): Promise<NodeJS.Timeout | undefined> {
@@ -79,7 +82,79 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					await thread.send(chatters);
 					continue;
 				}
+				case SpecialReminders.UpdateVerificationStatus: {
+					remindersDatabase.data = [
+						...remindersDatabase.data,
+						{
+							channel: "0",
+							date: Date.now() + 60000 * 5,
+							id: SpecialReminders.UpdateVerificationStatus,
+							user: client.user.id,
+						},
+					];
 
+					const ScratchOauth = await gracefulFetch(
+						"https://stats.uptimerobot.com/api/getMonitorList/K2V4js80Pk",
+					);
+					if (!ScratchOauth) return;
+					let fields: any[] = [];
+
+					for (const monitor of ScratchOauth.psp.monitors) {
+						const re = await gracefulFetch(
+							`https://stats.uptimerobot.com/api/getMonitor/K2V4js80Pk?m=${monitor.monitorId}`,
+						);
+						const statusEmoji =
+							re.monitor.statusClass == "success"
+								? "<:green:1196987578881150976>"
+								: "<:icons_outage:1199113890584342628>";
+						fields.push({
+							name: `${statusEmoji} ${re.monitor.name}`,
+							value:
+								re.monitor.statusClass == "success"
+									? constants.zws
+									: re.monitor.logs[0]
+									? `Down for ${re.monitor.logs[0]?.duration}(${re.monitor.logs[0]?.reason?.code})`
+									: `No logs.`,
+						});
+					}
+					if (!config.channels.verify) return;
+					let verifyMessages: any = await config.channels.verify?.messages.fetch({
+						limit: 100,
+					});
+					if (!verifyMessages) return;
+					let messgae: any = verifyMessages.find(
+						(msg: Message) => msg.author.id == client.user.id,
+					);
+					if (!messgae) {
+						messgae = await config.channels.verify?.send({ content: "..." });
+					}
+					const downCount: number = ScratchOauth.statistics.counts.down;
+					fields.push({
+						name: `Next update <t:${Math.floor(Date.now() / 1000) + 60 * 5}:R>.`,
+						value: constants.zws,
+					});
+					messgae.edit({
+						content: ``,
+						embeds: [
+							{
+								fields: fields,
+
+								author: {
+									name: "Verification Status",
+								},
+								title:
+									downCount != 0
+										? `Uh oh! ${downCount} service${
+												downCount == 1 ? " is" : "s are"
+										  } down! `
+										: "All good!",
+								color: 16754688,
+							},
+						],
+					});
+
+					continue;
+				}
 				case SpecialReminders.Bump: {
 					if (!channel?.isTextBased()) continue;
 
