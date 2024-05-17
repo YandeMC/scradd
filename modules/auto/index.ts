@@ -18,6 +18,7 @@ import { normalize } from "../../util/text.js";
 import { BOARD_EMOJI } from "../board/misc.js";
 import { getSettings } from "../settings.js";
 import autoreactions from "./autos-data.js";
+import github from "./github.js";
 
 import dad from "./dad.js";
 import { getMatches, handleMatch } from "./scratch.js";
@@ -58,7 +59,7 @@ defineEvent("messageCreate", async (message) => {
 		if (isArray) {
 			const reply = await (message.system ?
 				message.channel.send(response[0])
-			:	message.reply(response[0]));
+				: message.reply(response[0]));
 			autoResponses.set(message.id, reply);
 			for (const action of response.slice(1)) {
 				if (typeof action === "number") {
@@ -97,8 +98,8 @@ defineEvent("messageCreate", async (message) => {
 			} else {
 				const result = new RegExp(
 					type === "partial" || type === "raw" ? match
-					: type === "full" ? `^(?:${match})$`
-					: `\\b(?:${match})${type === "plural" ? /(?:e?s)?/.source : ""}\\b`,
+						: type === "full" ? `^(?:${match})$`
+							: `\\b(?:${match})${type === "plural" ? /(?:e?s)?/.source : ""}\\b`,
 					"iu",
 				).test(type === "raw" ? message.content : content);
 
@@ -141,7 +142,27 @@ async function handleMutatable(
 
 	const settings = await getSettings(message.author),
 		configuredSettings = await getSettings(message.author, false);
-
+	const links = settings.github && github(message.content);
+	if (links)
+		return {
+			content: links,
+			components:
+				configuredSettings.github === undefined ?
+					[
+						{
+							components: [
+								{
+									customId: `github-${message.author.id}_toggleSetting`,
+									type: ComponentType.Button as const,
+									label: `Disable GitHub Links`,
+									style: ButtonStyle.Success as const,
+								},
+							],
+							type: ComponentType.ActionRow,
+						},
+					]
+					: [],
+		};
 	if (settings.scratchEmbeds) {
 		const matches = getMatches(message.content);
 		const embeds: APIEmbed[] = [];
@@ -174,7 +195,7 @@ async function handleMutatable(
 								type: ComponentType.ActionRow,
 							},
 						]
-					:	[],
+						: [],
 			};
 	}
 
@@ -196,23 +217,23 @@ async function handleMutatable(
 		if (name && message.member) {
 			const response = dad(name, message.member);
 			return Array.isArray(response) ?
-					([
-						{
-							content: response[0],
-							files: [],
-							embeds: [],
-							components: [],
-							allowedMentions: { users: [], repliedUser: true },
-						},
-						...response.slice(1),
-					] as const)
-				:	{
-						content: response,
+				([
+					{
+						content: response[0],
 						files: [],
 						embeds: [],
 						components: [],
 						allowedMentions: { users: [], repliedUser: true },
-					};
+					},
+					...response.slice(1),
+				] as const)
+				: {
+					content: response,
+					files: [],
+					embeds: [],
+					components: [],
+					allowedMentions: { users: [], repliedUser: true },
+				};
 		}
 	}
 }
