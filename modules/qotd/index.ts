@@ -1,4 +1,4 @@
-import { ChannelType } from "discord.js";
+import { ChannelType, ComponentType, TextInputStyle } from "discord.js";
 import {
 	client,
 	defineButton,
@@ -10,6 +10,7 @@ import {
 import config from "../../common/config.js";
 import getQuestionData, { addQuestion } from "./add.js";
 import { listQuestions, removeQuestion, viewQuestion } from "./list.js";
+import { DEFAULT_SHAPES } from "./misc.js";
 
 defineSubcommands(
 	{
@@ -20,8 +21,6 @@ defineSubcommands(
 			add: { description: "Add a Question of The Day" },
 			list: { description: "List Questions of The Day" },
 		},
-
-		restricted: true,
 	},
 	async (interaction, { subcommand }) => {
 		switch (subcommand) {
@@ -64,3 +63,59 @@ defineEvent("messageReactionAdd", async (partialReaction, partialUser) => {
 		))
 		await other.users.remove(user);
 });
+
+defineButton("addquestion", async (b) => {
+	const embed = b.message.embeds[0]
+
+	await b.showModal({
+		title: "Edit Suggestion",
+		customId: "_addQuestion",
+		components: [
+			{
+				type: ComponentType.ActionRow,
+				components: [
+					{
+						type: ComponentType.TextInput,
+						style: TextInputStyle.Short,
+						label: "The question to ask",
+						required: true,
+						customId: "question",
+						maxLength: 256,
+						value: (embed?.title ?? undefined)
+					},
+				],
+			},
+			{
+				type: ComponentType.ActionRow,
+				components: [
+					{
+						type: ComponentType.TextInput,
+						style: TextInputStyle.Paragraph,
+						label: `Extended description`,
+						required: false,
+						customId: "description",
+						value: (embed?.description ?? undefined)
+					},
+				],
+			},
+			{
+				type: ComponentType.ActionRow,
+				components: [
+					{
+						type: ComponentType.TextInput,
+						style: TextInputStyle.Paragraph,
+						label: `Answers (one per line; max of ${DEFAULT_SHAPES.length})`,
+						placeholder: "👍 Yes\n👎 No",
+						required: false,
+						customId: "answers",
+						value: (embed?.fields[0]?.value ?? undefined)
+					},
+				],
+			},
+			// TODO: Specify dates or ranges of dates
+		],
+	});
+
+
+
+})

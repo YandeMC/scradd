@@ -17,6 +17,7 @@ export enum SpecialReminders {
 	QOTD,
 	trivia,
 	UpdateVerificationStatus,
+	Giveaway,
 }
 export type Reminder = {
 	channel: Snowflake;
