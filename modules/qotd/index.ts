@@ -65,7 +65,7 @@ defineEvent("messageReactionAdd", async (partialReaction, partialUser) => {
 });
 
 defineButton("addquestion", async (b) => {
-	const embed = b.message.embeds[0]
+	const embed = b.message.embeds[0];
 
 	await b.showModal({
 		title: "Edit Suggestion",
@@ -81,7 +81,7 @@ defineButton("addquestion", async (b) => {
 						required: true,
 						customId: "question",
 						maxLength: 256,
-						value: (embed?.title ?? undefined)
+						value: embed?.title ?? undefined,
 					},
 				],
 			},
@@ -94,7 +94,7 @@ defineButton("addquestion", async (b) => {
 						label: `Extended description`,
 						required: false,
 						customId: "description",
-						value: (embed?.description ?? undefined)
+						value: embed?.description ?? undefined,
 					},
 				],
 			},
@@ -108,14 +108,11 @@ defineButton("addquestion", async (b) => {
 						placeholder: "👍 Yes\n👎 No",
 						required: false,
 						customId: "answers",
-						value: (embed?.fields[0]?.value ?? undefined)
+						value: embed?.fields[0]?.value ?? undefined,
 					},
 				],
 			},
 			// TODO: Specify dates or ranges of dates
 		],
 	});
-
-
-
-})
+});
