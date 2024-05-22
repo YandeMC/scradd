@@ -76,19 +76,19 @@ export function boardReactionCount(
 
 	return shift(
 		baseReactionCount(baseChannel.id) ??
-		{
-			[config.channels.info?.id || ""]: COUNTS.info,
-			[config.channels.modlogs.parent?.id || ""]: COUNTS.misc,
-			"866028754962612294": COUNTS.misc, // #The Cache
-		}[baseChannel.parent?.id || ""] ??
-		COUNTS.default,
+			{
+				[config.channels.info?.id || ""]: COUNTS.info,
+				[config.channels.modlogs.parent?.id || ""]: COUNTS.misc,
+				"866028754962612294": COUNTS.misc, // #The Cache
+			}[baseChannel.parent?.id || ""] ??
+			COUNTS.default,
 	);
 
 	function shift(count: number): number {
 		const privateThread =
 			channel instanceof BaseChannel && channel.type === ChannelType.PrivateThread ?
 				2 / 3
-				: 1;
+			:	1;
 		const timeShift = (Date.now() - +time) / 86_400_000 / DECAY_SPEED + 1;
 		return Math.max(2, Math.round(count * privateThread * timeShift));
 	}
@@ -168,7 +168,7 @@ export async function generateBoardMessage(
 		const buttons =
 			linkButton?.type === ComponentType.Button ?
 				[...(extraButtons.pre ?? []), linkButton.toJSON(), ...(extraButtons.post ?? [])]
-				: [...(extraButtons.pre ?? []), ...(extraButtons.post ?? [])];
+			:	[...(extraButtons.pre ?? []), ...(extraButtons.post ?? [])];
 
 		return {
 			allowedMentions: { users: [] },

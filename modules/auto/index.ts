@@ -59,7 +59,7 @@ defineEvent("messageCreate", async (message) => {
 		if (isArray) {
 			const reply = await (message.system ?
 				message.channel.send(response[0])
-				: message.reply(response[0]));
+			:	message.reply(response[0]));
 			autoResponses.set(message.id, reply);
 			for (const action of response.slice(1)) {
 				if (typeof action === "number") {
@@ -98,8 +98,8 @@ defineEvent("messageCreate", async (message) => {
 			} else {
 				const result = new RegExp(
 					type === "partial" || type === "raw" ? match
-						: type === "full" ? `^(?:${match})$`
-							: `\\b(?:${match})${type === "plural" ? /(?:e?s)?/.source : ""}\\b`,
+					: type === "full" ? `^(?:${match})$`
+					: `\\b(?:${match})${type === "plural" ? /(?:e?s)?/.source : ""}\\b`,
 					"iu",
 				).test(type === "raw" ? message.content : content);
 
@@ -161,7 +161,7 @@ async function handleMutatable(
 							type: ComponentType.ActionRow,
 						},
 					]
-					: [],
+				:	[],
 		};
 	if (settings.scratchEmbeds) {
 		const matches = getMatches(message.content);
@@ -195,7 +195,7 @@ async function handleMutatable(
 								type: ComponentType.ActionRow,
 							},
 						]
-						: [],
+					:	[],
 			};
 	}
 
@@ -217,23 +217,23 @@ async function handleMutatable(
 		if (name && message.member) {
 			const response = dad(name, message.member);
 			return Array.isArray(response) ?
-				([
-					{
-						content: response[0],
+					([
+						{
+							content: response[0],
+							files: [],
+							embeds: [],
+							components: [],
+							allowedMentions: { users: [], repliedUser: true },
+						},
+						...response.slice(1),
+					] as const)
+				:	{
+						content: response,
 						files: [],
 						embeds: [],
 						components: [],
 						allowedMentions: { users: [], repliedUser: true },
-					},
-					...response.slice(1),
-				] as const)
-				: {
-					content: response,
-					files: [],
-					embeds: [],
-					components: [],
-					allowedMentions: { users: [], repliedUser: true },
-				};
+					};
 		}
 	}
 }

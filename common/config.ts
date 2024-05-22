@@ -46,9 +46,9 @@ async function getConfig() {
 	const modRole = roles.find((role) => role.name.toLowerCase().startsWith("mod"));
 	const staffRole = assertOutsideTests(
 		roles.find((role) => role.name.toLowerCase().startsWith("staff")) ?? modRole,
-
 	);
-	const trialRole = roles.find((role) => role.name.toLowerCase().startsWith("trial")) ?? staffRole;
+	const trialRole =
+		roles.find((role) => role.name.toLowerCase().startsWith("trial")) ?? staffRole;
 	const execRole = roles.find((role) => role.name.toLowerCase().includes("exec")) ?? staffRole;
 
 	return {
