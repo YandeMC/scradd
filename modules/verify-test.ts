@@ -1,9 +1,8 @@
 import { CloudConnection, Profile, Project, ScratchSession } from "scratchlink";
 import { defineChatCommand } from "strife.js";
 
-
 if (process.env.SCRATCH_PASS) {
-	let status = true
+	let status = true;
 	const session = new ScratchSession();
 	await session.init("YandeTest", process.env.SCRATCH_PASS).catch(
 		console.error
@@ -12,7 +11,7 @@ if (process.env.SCRATCH_PASS) {
 	try {
 		cloud = new CloudConnection(session, 961167982);
 	} catch (error) {
-		status = false
+		status = false;
 	}
 
 	if (status) {
@@ -35,12 +34,16 @@ if (process.env.SCRATCH_PASS) {
 				};
 
 				await i.reply({ embeds: getEmbeds(resolved) });
-				const promises = [{ type: "comment", f: testComment }, { type: "project", f: testProject }, { type: "cloud", f: TestCloud }];
+				const promises = [
+					{ type: "comment", f: testComment },
+					{ type: "project", f: testProject },
+					{ type: "cloud", f: TestCloud },
+				];
 
 				for (const promise of promises) {
-					resolved[promise.type] = "wait"
+					resolved[promise.type] = "wait";
 					await i.editReply({ embeds: getEmbeds(resolved) });
-					const result = await promise.f()
+					const result = await promise.f();
 					resolved[promise.type] = result.valid ? "true" : "false";
 					await i.editReply({ embeds: getEmbeds(resolved) });
 				}
@@ -60,7 +63,7 @@ if (process.env.SCRATCH_PASS) {
 			// await wait(2000)
 			const res2 = await fetch(
 				"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
-				json.privateCode,
+					json.privateCode,
 			);
 			const json2: { valid: boolean } = await res2.json();
 			return { valid: json2.valid, type: "project" };
@@ -74,7 +77,7 @@ if (process.env.SCRATCH_PASS) {
 			// await wait(2000)
 			const res2 = await fetch(
 				"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
-				json.privateCode,
+					json.privateCode,
 			);
 			const json2: { valid: boolean } = await res2.json();
 			return { valid: json2.valid, type: "comment" };
@@ -88,7 +91,7 @@ if (process.env.SCRATCH_PASS) {
 			// await wait(4000)
 			const res2 = await fetch(
 				"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
-				json.privateCode,
+					json.privateCode,
 			);
 			const json2: { valid: boolean } = await res2.json();
 			return { valid: json2.valid, type: "cloud" };
@@ -126,8 +129,8 @@ if (process.env.SCRATCH_PASS) {
 			};
 			return (
 				status == "wait" ? `${statuses.wait} In Progress`
-					: status == "true" ? `${statuses.true} Success`
-						: `${statuses.false} Failed`
+				: status == "true" ? `${statuses.true} Success`
+				: `${statuses.false} Failed`
 			);
 		}
 	} else {
@@ -150,12 +153,15 @@ if (process.env.SCRATCH_PASS) {
 
 				await i.reply({ embeds: getEmbeds(resolved) });
 				await i.reply({ embeds: getEmbeds(resolved) });
-				const promises = [{ type: "comment", f: testComment }, { type: "project", f: testProject }];
+				const promises = [
+					{ type: "comment", f: testComment },
+					{ type: "project", f: testProject },
+				];
 
 				for (const promise of promises) {
-					resolved[promise.type] = "wait"
+					resolved[promise.type] = "wait";
 					await i.editReply({ embeds: getEmbeds(resolved) });
-					const result = await promise.f()
+					const result = await promise.f();
 					resolved[promise.type] = result.valid ? "true" : "false";
 					await i.editReply({ embeds: getEmbeds(resolved) });
 				}
@@ -176,7 +182,7 @@ if (process.env.SCRATCH_PASS) {
 				// await wait(2000)
 				const res2 = await fetch(
 					"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
-					json.privateCode,
+						json.privateCode,
 				);
 				const json2: { valid: boolean } = await res2.json();
 				return { valid: json2.valid, type: "project" };
@@ -195,7 +201,7 @@ if (process.env.SCRATCH_PASS) {
 				// await wait(2000)
 				const res2 = await fetch(
 					"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
-					json.privateCode,
+						json.privateCode,
 				);
 				const json2: { valid: boolean } = await res2.json();
 				return { valid: json2.valid, type: "comment" };
@@ -236,9 +242,9 @@ if (process.env.SCRATCH_PASS) {
 			};
 			return (
 				status == "wait" ? `${statuses.wait} In Progress`
-					: status == "true" ? `${statuses.true} Success`
-						: status == "error" ? `${statuses.error}`
-							: `${statuses.false} Failed`
+				: status == "true" ? `${statuses.true} Success`
+				: status == "error" ? `${statuses.error}`
+				: `${statuses.false} Failed`
 			);
 		}
 	}
