@@ -128,14 +128,14 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 						const statusEmoji =
 							re.monitor.statusClass == "success" ?
 								"<:green:1196987578881150976>"
-							:	"<:icons_outage:1199113890584342628>";
+								: "<:icons_outage:1199113890584342628>";
 						fields.push({
 							name: `${statusEmoji} ${re.monitor.name}`,
 							value:
 								re.monitor.statusClass == "success" ? constants.zws
-								: re.monitor.logs[0] ?
-									`Down for ${re.monitor.logs[0]?.duration}(${re.monitor.logs[0]?.reason?.code})`
-								:	`No logs.`,
+									: re.monitor.logs[0] ?
+										`Down for ${re.monitor.logs[0]?.duration}(${re.monitor.logs[0]?.reason?.code})`
+										: `No logs.`,
 						});
 					}
 					if (!config.channels.verify) return;
@@ -165,10 +165,9 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 								},
 								title:
 									downCount != 0 ?
-										`Uh oh! ${downCount} service${
-											downCount == 1 ? " is" : "s are"
+										`Uh oh! ${downCount} service${downCount == 1 ? " is" : "s are"
 										} down! `
-									:	"All good!",
+										: "All good!",
 								color: 16754688,
 							},
 						],
@@ -288,7 +287,7 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					continue;
 				}
 				case SpecialReminders.trivia: {
-					await config.channels.trivia?.send("<@&1236545704093028392> new trivia");
+					await config.channels.trivia?.send(`<@&${config.pingRoles.trivia}> new trivia`);
 					await updateTrivia();
 				}
 			}
@@ -298,12 +297,11 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 		const content = silent ? reminder.reminder.replace("@silent", "") : reminder.reminder;
 		await channel
 			.send({
-				content: `🔔 ${
-					channel.isDMBased() ? "" : userMention(reminder.user) + " "
-				}${content.trim()} (from ${time(
-					new Date(+convertBase(reminder.id + "", convertBase.MAX_BASE, 10)),
-					TimestampStyles.RelativeTime,
-				)})`,
+				content: `🔔 ${channel.isDMBased() ? "" : userMention(reminder.user) + " "
+					}${content.trim()} (from ${time(
+						new Date(+convertBase(reminder.id + "", convertBase.MAX_BASE, 10)),
+						TimestampStyles.RelativeTime,
+					)})`,
 				allowedMentions: { users: [reminder.user] },
 				flags: silent ? MessageFlags.SuppressNotifications : undefined,
 			})

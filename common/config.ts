@@ -100,6 +100,7 @@ async function getConfig() {
 			bots: getChannel("bots", ChannelType.GuildText, "partial"),
 			trivia: getChannel("trivia", ChannelType.GuildText, "partial"),
 			oldSuggestions: getChannel("suggestions", ChannelType.GuildText, "partial"),
+			help: getChannel("help", ChannelType.GuildForum, "partial"),
 		},
 
 		roles: {
@@ -113,7 +114,26 @@ async function getConfig() {
 			booster: roles.find((role) => role.name.toLowerCase().includes("booster")),
 			active: roles.find((role) => role.name.toLowerCase().includes("active")),
 			established: roles.find((role) => role.name.toLowerCase().includes("established")),
+
 		},
+		pingRoles: {
+			qotd: roles.find((role) => role.name.toLowerCase().includes("qotd") && role.name.toLowerCase().startsWith("@")),
+			trivia: roles.find((role) => role.name.toLowerCase().includes("trivia") && role.name.toLowerCase().startsWith("@")),
+			announcements: roles.find((role) => role.name.toLowerCase().includes("announ") && role.name.toLowerCase().startsWith("@")),
+			changes: roles.find((role) => role.name.toLowerCase().includes("changes") && role.name.toLowerCase().startsWith("@")),
+			givaways: roles.find((role) => role.name.toLowerCase().includes("givaway") && role.name.toLowerCase().startsWith("@")),
+			events: roles.find((role) => role.name.toLowerCase().includes("event") && role.name.toLowerCase().startsWith("@")),
+			polls: roles.find((role) => role.name.toLowerCase().includes("poll") && role.name.toLowerCase().startsWith("@")),
+			help: {
+				js: roles.find((role) => (role.name.toLowerCase().includes("javascript") || role.name.toLowerCase().includes("js")) && role.name.toLowerCase().includes("helper")),
+				py: roles.find((role) => (role.name.toLowerCase().includes("python") || role.name.toLowerCase().includes("py")) && role.name.toLowerCase().includes("helper")),
+				web: roles.find((role) => (role.name.toLowerCase().includes("html") || role.name.toLowerCase().includes("css")) && role.name.toLowerCase().includes("helper")),
+				scratch: roles.find((role) => (role.name.toLowerCase().includes("scratch") || role.name.toLowerCase().includes("scratch")) && role.name.toLowerCase().includes("helper")),
+				turbowarp: roles.find((role) => (role.name.toLowerCase().includes("turbowarp") || role.name.toLowerCase().includes("pm")) && role.name.toLowerCase().includes("helper")),
+				java: roles.find((role) => (role.name.toLowerCase().includes("java") || role.name.toLowerCase().includes("kotlin")) && role.name.toLowerCase().includes("helper")),
+				c: roles.find((role) => (role.name.toLowerCase().includes("c/") || role.name.toLowerCase().includes("cpp") || role.name.toLowerCase().includes("c#") || role.name.toLowerCase().includes("c++")) && role.name.toLowerCase().includes("helper")),
+			}
+		}
 	};
 
 	function getChannel<T extends ChannelType>(

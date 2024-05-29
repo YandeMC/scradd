@@ -5,7 +5,9 @@ import { defineChatCommand } from "strife.js";
 if (process.env.SCRATCH_PASS) {
 	let status = true
 	const session = new ScratchSession();
-	await session.init("YandeTest", process.env.SCRATCH_PASS);
+	await session.init("YandeTest", process.env.SCRATCH_PASS).catch(
+		console.error
+	);
 	let cloud: CloudConnection;
 	try {
 		cloud = new CloudConnection(session, 961167982);
@@ -23,7 +25,7 @@ if (process.env.SCRATCH_PASS) {
 		defineChatCommand(
 			{
 				name: "test-verify",
-				description: "Test the verification process to see if its workin",
+				description: "Test the verification process to see if it workin",
 			},
 			async (i) => {
 				let resolved: { [key: string]: string } = {

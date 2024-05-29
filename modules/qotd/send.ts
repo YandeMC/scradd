@@ -2,6 +2,7 @@ import type { ForumChannel, MediaChannel } from "discord.js";
 import mongoose from "mongoose";
 import { reactAll } from "../../util/discord.js";
 import log, { LogSeverity, LoggingErrorEmoji } from "../logging/misc.js";
+import config from "../../common/config.js";
 export const Question = mongoose.model(
 	"question",
 	new mongoose.Schema({
@@ -25,13 +26,12 @@ export default async function sendQuestion(channel: ForumChannel | MediaChannel)
 	}
 	if (questions.length === 1) {
 		await log(
-			`${LoggingErrorEmoji} No QOTDs remain! Please add new ones now.`,
+			`${LoggingErrorEmoji} No QOTDs remain! Please add new ones noww.`,
 			LogSeverity.Alert,
 		);
 	} else if (questions.length < 5) {
 		await log(
-			`${LoggingErrorEmoji} ${questions.length - 1} QOTD${
-				questions.length === 2 ? " remains" : "s remain"
+			`${LoggingErrorEmoji} ${questions.length - 1} QOTD${questions.length === 2 ? " remains" : "s remain"
 			}! Please add new ones before they run out.`,
 			LogSeverity.Alert,
 		);
@@ -42,11 +42,11 @@ export default async function sendQuestion(channel: ForumChannel | MediaChannel)
 		message: {
 			content:
 				question.description +
-					`\n(QOTD for ${new Date().toLocaleString([], {
-						month: "short",
-						day: "numeric",
-					})})` ||
-				`(QOTD for ${new Date().toLocaleString([], {
+				`\n${config.pingRoles.qotd?.toString()}(QOTD for ${new Date().toLocaleString([], {
+					month: "short",
+					day: "numeric",
+				})})` ||
+				`${config.pingRoles.qotd?.toString()}(QOTD for ${new Date().toLocaleString([], {
 					month: "short",
 					day: "numeric",
 				})})`,
