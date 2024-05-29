@@ -4,9 +4,7 @@ import { defineChatCommand } from "strife.js";
 if (process.env.SCRATCH_PASS) {
 	let status = true;
 	const session = new ScratchSession();
-	await session.init("YandeTest", process.env.SCRATCH_PASS).catch(
-		console.error
-	);
+	await session.init("YandeTest", process.env.SCRATCH_PASS).catch(console.error);
 	let cloud: CloudConnection;
 	try {
 		cloud = new CloudConnection(session, 961167982);

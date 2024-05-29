@@ -31,7 +31,8 @@ export default async function sendQuestion(channel: ForumChannel | MediaChannel)
 		);
 	} else if (questions.length < 5) {
 		await log(
-			`${LoggingErrorEmoji} ${questions.length - 1} QOTD${questions.length === 2 ? " remains" : "s remain"
+			`${LoggingErrorEmoji} ${questions.length - 1} QOTD${
+				questions.length === 2 ? " remains" : "s remain"
 			}! Please add new ones before they run out.`,
 			LogSeverity.Alert,
 		);
@@ -42,10 +43,13 @@ export default async function sendQuestion(channel: ForumChannel | MediaChannel)
 		message: {
 			content:
 				question.description +
-				`\n${config.pingRoles.qotd?.toString()}(QOTD for ${new Date().toLocaleString([], {
-					month: "short",
-					day: "numeric",
-				})})` ||
+					`\n${config.pingRoles.qotd?.toString()}(QOTD for ${new Date().toLocaleString(
+						[],
+						{
+							month: "short",
+							day: "numeric",
+						},
+					)})` ||
 				`${config.pingRoles.qotd?.toString()}(QOTD for ${new Date().toLocaleString([], {
 					month: "short",
 					day: "numeric",
