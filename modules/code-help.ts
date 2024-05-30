@@ -11,7 +11,7 @@ const tagMap: { [tag: string]: string } = {
 	"c/c++": "c",
 };
 const roles = config.pingRoles.help as { [name: string]: Role };
-console.log(roles);
+// console.log(roles);//
 defineEvent("messageCreate", async (message) => {
 	if (
 		message.channel.id !== message.id ||
