@@ -65,7 +65,7 @@ export default async function sayCommand(
 						customId: "json",
 						label: "json",
 						maxLength: 1,
-						required: true,
+						required: false,
 						style: TextInputStyle.Short,
 					},
 				],

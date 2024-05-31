@@ -13,7 +13,7 @@ import {
 } from "discord.js";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { client } from "strife.js";
-import config from "../../common/config.js";
+
 import constants from "../../common/constants.js";
 import { fetchUser } from "../../util/scratch.js";
 import { getRequestUrl } from "../../util/text.js";
@@ -96,7 +96,7 @@ export default async function linkScratchRole(
 		return response.writeHead(401, { "content-type": "text/html" }).end(discordHtml);
 
 	const { username } = await fetch(
-		`https://auth-api.itinerary.eu.org/auth/verifyToken/${encodeURI(scratchToken)}`,
+		`https://scratch-coders-auth-server.vercel.app/auth/verifyToken/${encodeURI(scratchToken)}`,
 	).then((verification) => verification.json<{ username: string | null }>());
 	const scratch = username && (await fetchUser(username));
 	if (!scratch)
@@ -135,13 +135,34 @@ export default async function linkScratchRole(
 		LogSeverity.ServerChange,
 		{ embeds: [await handleUser(["", "", username])] },
 	);
-	return response.writeHead(303, { location: config.guild.rulesChannel?.url }).end();
+	return response.writeHead(200, { "content-type": "text/html" }).end(`
+	<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title></title>
+		<script>
+			// Check if the current window can be closed
+			function closeWindow() {
+				// Attempt to close the current window
+				window.close();
+				// Check if the window is still open after the close attempt
+				
+			}
+		</script>
+	</head>
+	<body onload="closeWindow()">
+		<p>You may now close this tab.</p>
+	</body>
+	</html>
+	`);
 
 	function getScratchUrl(refreshToken: string): string {
 		const encodedRedirectUri = Buffer.from(
 			redirectUri + "?refresh_token=" + encodeString(refreshToken),
 		).toString("base64");
-		return `https://auth.itinerary.eu.org/auth/?name=${encodeURIComponent(
+		return `https://oauth.fly.dev/auth/?name=${encodeURIComponent(
 			client.user.displayName,
 		)}&redirect=${encodedRedirectUri}`;
 	}
