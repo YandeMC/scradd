@@ -1,15 +1,17 @@
 import { CloudConnection, Profile, Project, ScratchSession } from "scratchlink";
 import { defineChatCommand } from "strife.js";
-let status = true;
-const session = new ScratchSession();
-let cloud: CloudConnection;
-try {
-	cloud = new CloudConnection(session, 961167982);
-} catch (error) {
-	status = false;
-}
 
 if (process.env.SCRATCH_PASS) {
+	let status = true;
+	const session = new ScratchSession();
+	await session.init("YandeTest", process.env.SCRATCH_PASS).catch(console.error);
+	let cloud: CloudConnection;
+	try {
+		cloud = new CloudConnection(session, 961167982);
+	} catch (error) {
+		status = false;
+	}
+
 	if (status) {
 		await session.init("YandeTest", process.env.SCRATCH_PASS);
 		if (!session.auth) throw Error();
@@ -20,24 +22,29 @@ if (process.env.SCRATCH_PASS) {
 		defineChatCommand(
 			{
 				name: "test-verify",
-				description: "Test the verification process to see if its workin",
+				description: "Test the verification process to see if it workin",
 			},
 			async (i) => {
 				let resolved: { [key: string]: string } = {
-					project: "wait",
-					comment: "wait",
-					cloud: "wait",
+					project: "queued",
+					comment: "queued",
+					cloud: "queued",
 				};
 
 				await i.reply({ embeds: getEmbeds(resolved) });
-				const promises = [testComment(), testProject(), TestCloud()];
+				const promises = [
+					{ type: "comment", f: testComment },
+					{ type: "project", f: testProject },
+					{ type: "cloud", f: TestCloud },
+				];
 
-				promises.forEach((promise) => {
-					promise.then((result) => {
-						resolved[result.type] = result.valid ? "true" : "false";
-						i.editReply({ embeds: getEmbeds(resolved) });
-					});
-				});
+				for (const promise of promises) {
+					resolved[promise.type] = "wait";
+					await i.editReply({ embeds: getEmbeds(resolved) });
+					const result = await promise.f();
+					resolved[promise.type] = result.valid ? "true" : "false";
+					await i.editReply({ embeds: getEmbeds(resolved) });
+				}
 			},
 		);
 		interface res {
@@ -115,6 +122,8 @@ if (process.env.SCRATCH_PASS) {
 				wait: "<a:loading:1237879519948439583>",
 				true: "<:green:1196987578881150976>",
 				false: "<:icons_outage:1199113890584342628>",
+				error: `<:icons_outage:1199113890584342628> Server down`,
+				queued: `<:draw:1196987416939069490> Queued`,
 			};
 			return (
 				status == "wait" ? `${statuses.wait} In Progress`
@@ -135,20 +144,25 @@ if (process.env.SCRATCH_PASS) {
 			},
 			async (i) => {
 				let resolved: { [key: string]: string } = {
-					project: "wait",
-					comment: "wait",
+					project: "queued",
+					comment: "queued",
 					cloud: "error",
 				};
 
 				await i.reply({ embeds: getEmbeds(resolved) });
-				const promises = [testComment(), testProject()];
+				await i.reply({ embeds: getEmbeds(resolved) });
+				const promises = [
+					{ type: "comment", f: testComment },
+					{ type: "project", f: testProject },
+				];
 
-				promises.forEach((promise) => {
-					promise.then((result) => {
-						resolved[result.type] = result.valid ? "true" : "false";
-						i.editReply({ embeds: getEmbeds(resolved) });
-					});
-				});
+				for (const promise of promises) {
+					resolved[promise.type] = "wait";
+					await i.editReply({ embeds: getEmbeds(resolved) });
+					const result = await promise.f();
+					resolved[promise.type] = result.valid ? "true" : "false";
+					await i.editReply({ embeds: getEmbeds(resolved) });
+				}
 			},
 		);
 		interface res {
@@ -222,6 +236,7 @@ if (process.env.SCRATCH_PASS) {
 				true: "<:green:1196987578881150976>",
 				false: "<:icons_outage:1199113890584342628>",
 				error: `<:icons_outage:1199113890584342628> Server down`,
+				queued: `<:draw:1196987416939069490> Queued`,
 			};
 			return (
 				status == "wait" ? `${statuses.wait} In Progress`
