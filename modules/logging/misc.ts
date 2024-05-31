@@ -39,8 +39,8 @@ export function shouldLog(channel: TextBasedChannel | null): boolean {
 
 	return Boolean(
 		baseChannel?.type !== ChannelType.DM &&
-			baseChannel?.guild.id === config.guild.id &&
-			baseChannel.permissionsFor(config.roles.staff).has("ViewChannel"),
+		baseChannel?.guild.id === config.guild.id &&
+		baseChannel.permissionsFor(config.roles.staff).has("ViewChannel"),
 	);
 }
 
@@ -104,6 +104,12 @@ export enum LogSeverity {
 	 * - Voice channel state changed.
 	 */
 	Resource,
+	/**
+	 * Logged for lurkurs, 
+	 *
+	 * - User changed presence
+	 */
+	Lurk,
 }
 
 export default async function log(
@@ -134,8 +140,8 @@ export default async function log(
 
 			const lines = file.content.split("\n");
 			return lines.length > 10 || lines.some((line) => line.length > 100) ?
-					{ embedded: accumulator.embedded, external: [...accumulator.external, file] }
-				:	{ embedded: [...accumulator.embedded, file], external: accumulator.external };
+				{ embedded: accumulator.embedded, external: [...accumulator.external, file] }
+				: { embedded: [...accumulator.embedded, file], external: accumulator.external };
 		},
 		{ external: [], embedded: [] },
 	) ?? { external: [], embedded: [] };
@@ -147,7 +153,7 @@ export default async function log(
 				embedded
 					.map((file) => `\n\`\`\`${file.extension || ""}\n${file.content}\n\`\`\``)
 					.join("")
-			:	""),
+				: ""),
 		allowedMentions: { users: [] },
 		embeds: extra.embeds?.filter(Boolean),
 		components: extra.buttons && [
@@ -226,20 +232,19 @@ export function extraAuditLogsInfo(entry: {
 	reason?: string | null;
 }): string {
 	const reason = entry.reason?.trim();
-	return `${entry.executor ? ` by ${entry.executor.toString()}` : ""}${
-		reason?.includes("\n") ? `:\n${reason}`
-		: reason ? ` (${reason})`
-		: ""
-	}`;
+	return `${entry.executor ? ` by ${entry.executor.toString()}` : ""}${reason?.includes("\n") ? `:\n${reason}`
+			: reason ? ` (${reason})`
+				: ""
+		}`;
 }
 
 export type AuditLogTargets<Type extends AuditLogEvent> =
 	Type extends (
 		AuditLogEvent.ThreadCreate | AuditLogEvent.ThreadDelete | AuditLogEvent.ThreadUpdate
 	) ?
-		AnyThreadChannel | { id: Snowflake }
+	AnyThreadChannel | { id: Snowflake }
 	: Type extends AuditLogEvent.ApplicationCommandPermissionUpdate ?
-		ApplicationCommand | { id: Snowflake }
+	ApplicationCommand | { id: Snowflake }
 	: Type extends (
 		| AuditLogEvent.AutoModerationBlockMessage
 		| AuditLogEvent.AutoModerationFlagToChannel
@@ -248,29 +253,29 @@ export type AuditLogTargets<Type extends AuditLogEvent> =
 		| AuditLogEvent.AutoModerationRuleUpdate
 		| AuditLogEvent.AutoModerationUserCommunicationDisabled
 	) ?
-		AutoModerationRule
+	AutoModerationRule
 	: Type extends (
 		| AuditLogEvent.IntegrationCreate
 		| AuditLogEvent.IntegrationDelete
 		| AuditLogEvent.IntegrationUpdate
 	) ?
-		Integration
+	Integration
 	: Type extends (
 		AuditLogEvent.InviteCreate | AuditLogEvent.InviteDelete | AuditLogEvent.InviteUpdate
 	) ?
-		Invite
+	Invite
 	: Type extends AuditLogEvent.GuildUpdate ? Guild
 	: Type extends AuditLogEvent.MessageBulkDelete ? Guild | { id: Snowflake }
 	: Type extends (
 		AuditLogEvent.EmojiCreate | AuditLogEvent.EmojiDelete | AuditLogEvent.EmojiUpdate
 	) ?
-		GuildEmoji | { id: Snowflake }
+	GuildEmoji | { id: Snowflake }
 	: Type extends (
 		| AuditLogEvent.GuildScheduledEventCreate
 		| AuditLogEvent.GuildScheduledEventDelete
 		| AuditLogEvent.GuildScheduledEventUpdate
 	) ?
-		GuildScheduledEvent
+	GuildScheduledEvent
 	: Type extends (
 		| AuditLogEvent.ChannelCreate
 		| AuditLogEvent.ChannelDelete
@@ -279,23 +284,23 @@ export type AuditLogTargets<Type extends AuditLogEvent> =
 		| AuditLogEvent.ChannelOverwriteUpdate
 		| AuditLogEvent.ChannelUpdate
 	) ?
-		NonThreadGuildBasedChannel | { id: Snowflake }
+	NonThreadGuildBasedChannel | { id: Snowflake }
 	: Type extends AuditLogEvent.RoleCreate | AuditLogEvent.RoleDelete | AuditLogEvent.RoleUpdate ?
-		Role | { id: Snowflake }
+	Role | { id: Snowflake }
 	: Type extends (
 		| AuditLogEvent.StageInstanceCreate
 		| AuditLogEvent.StageInstanceDelete
 		| AuditLogEvent.StageInstanceUpdate
 	) ?
-		StageInstance
+	StageInstance
 	: Type extends (
 		AuditLogEvent.StickerCreate | AuditLogEvent.StickerDelete | AuditLogEvent.StickerUpdate
 	) ?
-		Sticker
+	Sticker
 	: Type extends (
 		AuditLogEvent.MessageDelete | AuditLogEvent.MessagePin | AuditLogEvent.MessageUnpin
 	) ?
-		User
+	User
 	: Type extends (
 		| AuditLogEvent.BotAdd
 		| AuditLogEvent.MemberBanAdd
@@ -307,22 +312,22 @@ export type AuditLogTargets<Type extends AuditLogEvent> =
 		| AuditLogEvent.MemberRoleUpdate
 		| AuditLogEvent.MemberUpdate
 	) ?
-		User | null
+	User | null
 	: Type extends (
 		AuditLogEvent.WebhookCreate | AuditLogEvent.WebhookDelete | AuditLogEvent.WebhookUpdate
 	) ?
-		Webhook
-	:	{ id: Snowflake } | null;
+	Webhook
+	: { id: Snowflake } | null;
 export type AuditLog<
 	Event extends AuditLogEvent,
 	ExtraChangeKeys extends string = never,
 	Target = AuditLogTargets<Event>,
 	AllKeys extends string =
-		| ExtraChangeKeys
-		| Extract<
-				APIAuditLogChange["key"],
-				Extract<Target, Base> extends never ? string : keyof Extract<Target, Base>
-		  >,
+	| ExtraChangeKeys
+	| Extract<
+		APIAuditLogChange["key"],
+		Extract<Target, Base> extends never ? string : keyof Extract<Target, Base>
+	>,
 > = Omit<GuildAuditLogsEntry<Event>, "changes" | "target"> & {
 	target: Target;
 	changes: {
@@ -336,11 +341,11 @@ export type AuditLog<
 
 type ChangeValue<Target extends Base, Key extends string, Type extends "new" | "old"> =
 	Key extends keyof Target ?
-		Target[Key] extends actualPrimitives ?
-			Target[Key] | undefined
-		:	Change<Key>[`${Type}_value`] | Target[Key]
-	:	Change<Key>[`${Type}_value`];
+	Target[Key] extends actualPrimitives ?
+	Target[Key] | undefined
+	: Change<Key>[`${Type}_value`] | Target[Key]
+	: Change<Key>[`${Type}_value`];
 
 type Change<Key extends string> =
 	Extract<APIAuditLogChange, { key: Key }> extends never ? APIAuditLogChange
-	:	Extract<APIAuditLogChange, { key: Key }>;
+	: Extract<APIAuditLogChange, { key: Key }>;

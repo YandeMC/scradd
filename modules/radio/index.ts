@@ -25,7 +25,6 @@ if (channel && files) {
             let currentIndex = Math.floor(Math.random() * (files.length))
             const player = createAudioPlayer();
             connection.subscribe(player);
-
             function playNext() {
                 const filePath = path.join(__dirname, mp3Directory, files[currentIndex] ?? "")
 
