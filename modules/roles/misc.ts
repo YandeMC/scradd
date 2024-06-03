@@ -2,6 +2,7 @@ import twemojiRegexp from "@twemoji/parser/dist/lib/regex.js";
 import { Colors, FormattingPatterns, type ColorResolvable } from "discord.js";
 import config from "../../common/config.js";
 
+
 export const CUSTOM_ROLE_PREFIX = "✨ ";
 
 const validContentTypes = ["image/jpeg", "image/png", "image/apng", "image/gif", "image/webp"];
@@ -59,6 +60,6 @@ export function parseColor(
 	if (!/^#([\da-f]{6}|[\da-f]{3})$/i.test(color)) return undefined;
 
 	return color.length === 4 ?
-			`#${color[1] ?? ""}${color.slice(1, 3)}${color.slice(2, 4)}${color[3] ?? ""}`
-		:	color;
+		`#${color[1] ?? ""}${color.slice(1, 3)}${color.slice(2, 4)}${color[3] ?? ""}`
+		: color;
 }

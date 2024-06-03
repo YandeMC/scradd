@@ -81,11 +81,11 @@ defineChatCommand(
 								url: options.image.url,
 							},
 						}
-					:	{}),
+						: {}),
 				},
 			],
 		});
-		console.log(options.emoji);
+		// console.log(options.emoji);
 
 		remindersDatabase.data = [
 			...remindersDatabase.data,

@@ -115,6 +115,8 @@ async function getConfig() {
 			booster: roles.find((role) => role.name.toLowerCase().includes("booster")),
 			active: roles.find((role) => role.name.toLowerCase().includes("active")),
 			established: roles.find((role) => role.name.toLowerCase().includes("established")),
+			verified: roles.find((role) => role.name.toLowerCase() == "verified"),
+			verifiedPerms: roles.find((role) => role.name.toLowerCase() == "verified perms"),
 		},
 		pingRoles: {
 			qotd: roles.find(
@@ -150,6 +152,11 @@ async function getConfig() {
 			polls: roles.find(
 				(role) =>
 					role.name.toLowerCase().includes("poll") &&
+					role.name.toLowerCase().startsWith("@"),
+			),
+			qdex: roles.find(
+				(role) =>
+					role.name.toLowerCase().includes("qdex") &&
 					role.name.toLowerCase().startsWith("@"),
 			),
 			help: {

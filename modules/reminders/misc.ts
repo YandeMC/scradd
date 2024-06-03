@@ -18,6 +18,7 @@ export enum SpecialReminders {
 	trivia,
 	UpdateVerificationStatus,
 	Giveaway,
+	LockChannel,
 }
 export type Reminder = {
 	channel: Snowflake;

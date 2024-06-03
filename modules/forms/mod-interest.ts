@@ -29,8 +29,8 @@ import { parseIds } from "./appeals/generate-appeal.js";
 // import { LoggingEmojis } from "../logging/misc.js";
 import { escapeMessage } from "../../util/markdown.js";
 
-export const NEEDED_ACCEPT = 6,
-	NEEDED_REJECT = 5;
+export const NEEDED_ACCEPT = 5,
+	NEEDED_REJECT = 4;
 
 const thread =
 	getInitialChannelThreads(config.channels.admin).find(
@@ -230,7 +230,7 @@ async function makeCanvasFiles(
 		context.textAlign = "end";
 		context.fillText(
 			"Date: " +
-				progressJoin.toLocaleString([], { maximumFractionDigits: 1, style: "percent" }),
+			progressJoin.toLocaleString([], { maximumFractionDigits: 1, style: "percent" }),
 			canvas.width - paddingPixels,
 			canvas.height - paddingPixels,
 		);
@@ -238,7 +238,7 @@ async function makeCanvasFiles(
 		context.fillStyle = "#0009";
 		context.fillText(
 			"Date: " +
-				progressJoin.toLocaleString([], { maximumFractionDigits: 1, style: "percent" }),
+			progressJoin.toLocaleString([], { maximumFractionDigits: 1, style: "percent" }),
 			paddingPixels,
 			canvas.height - paddingPixels,
 		);
@@ -352,7 +352,7 @@ export async function submitInterest(interaction: ModalSubmitInteraction): Promi
 					} as const,
 					...(totalStrikeCount === "0" ?
 						[]
-					:	([
+						: ([
 							{
 								style: ButtonStyle.Secondary,
 								type: ComponentType.Button,
@@ -373,7 +373,7 @@ export async function submitInterest(interaction: ModalSubmitInteraction): Promi
 								label: "Contact User",
 							},
 						] as const)
-					:	[]),
+						: []),
 				],
 			},
 		],
@@ -404,8 +404,8 @@ export function generateApp(
 			{
 				title:
 					users.accepters.size === NEEDED_ACCEPT ? "Accepted"
-					: users.rejecters.size === NEEDED_REJECT ? "Rejected"
-					: "Pending",
+						: users.rejecters.size === NEEDED_REJECT ? "Rejected"
+							: "Pending",
 				fields: [
 					{
 						name: "Accepters",
@@ -523,9 +523,8 @@ export async function submitAcceptApp(
 ): Promise<void> {
 	const users = parseIds(ids);
 	await interaction.reply({
-		content: `${
-			constants.emojis.statuses.yes
-		} ${interaction.user.toString()} accepted the Mod Application.`,
+		content: `${constants.emojis.statuses.yes
+			} ${interaction.user.toString()} accepted the Mod Application.`,
 		ephemeral: users.accepters.has(interaction.user.id),
 	});
 	users.accepters.add(interaction.user.id);
@@ -564,10 +563,9 @@ export async function submitAcceptApp(
 				.catch(() => false));
 		// appeals[mention] = { unbanned: true, note, date: new Date().toISOString() };
 		await interaction.message?.reply(
-			`${constants.emojis.statuses[roleGiven ? "yes" : "no"]}  ${
-				roleGiven ?
-					`${mention} has joined the mod team!`
-				:	"failed to give the role or they already have mod"
+			`${constants.emojis.statuses[roleGiven ? "yes" : "no"]}  ${roleGiven ?
+				`${mention} has joined the mod team!`
+				: "failed to give the role or they already have mod"
 			}`,
 		);
 		const embed = interaction.message?.embeds ?? [];
@@ -591,9 +589,8 @@ export async function submitRejectApp(
 ): Promise<void> {
 	const users = parseIds(ids);
 	await interaction.reply({
-		content: `${
-			constants.emojis.statuses.no
-		} ${interaction.user.toString()} rejected the Mod Application.`,
+		content: `${constants.emojis.statuses.no
+			} ${interaction.user.toString()} rejected the Mod Application.`,
 		ephemeral: users.rejecters.has(interaction.user.id),
 	});
 	users.rejecters.add(interaction.user.id);

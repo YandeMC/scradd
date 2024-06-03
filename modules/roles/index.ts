@@ -75,3 +75,4 @@ defineModal("customRole", createCustomRole);
 defineEvent("guildMemberRemove", recheckAllRoles);
 defineEvent("guildMemberUpdate", recheckMemberRole);
 defineEvent("applicationCommandPermissionsUpdate", recheckAllRoles);
+

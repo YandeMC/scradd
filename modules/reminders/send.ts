@@ -64,6 +64,17 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 		const channel = await client.channels.fetch(reminder.channel).catch(() => void 0);
 		if (reminder.user === client.user.id) {
 			switch (reminder.id) {
+				case SpecialReminders.LockChannel: {
+					if (!channel?.isTextBased() || channel.isDMBased()) continue
+					if (channel.isThread()) continue
+					if (!config.roles.verifiedPerms) continue
+					const talkPerms = channel.permissionsFor(config.roles.verifiedPerms).has("SendMessages")
+					if (!talkPerms) {
+						await channel.permissionOverwrites.edit(config.roles.verifiedPerms, { SendMessages: true, AddReactions: true, CreatePublicThreads: true })
+						await channel.send(`${constants.emojis.statuses.yes} Unlocked ${channel.toString()}`)
+					}
+					continue
+				}
 				case SpecialReminders.Giveaway: {
 					const [channelid, messageid] = reminder.channel.split("_");
 					const channel = await client.channels.fetch(channelid).catch(() => void 0);
@@ -128,14 +139,14 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 						const statusEmoji =
 							re.monitor.statusClass == "success" ?
 								"<:green:1196987578881150976>"
-							:	"<:icons_outage:1199113890584342628>";
+								: "<:icons_outage:1199113890584342628>";
 						fields.push({
 							name: `${statusEmoji} ${re.monitor.name}`,
 							value:
 								re.monitor.statusClass == "success" ? constants.zws
-								: re.monitor.logs[0] ?
-									`Down for ${re.monitor.logs[0]?.duration}(${re.monitor.logs[0]?.reason?.code})`
-								:	`No logs.`,
+									: re.monitor.logs[0] ?
+										`Down for ${re.monitor.logs[0]?.duration}(${re.monitor.logs[0]?.reason?.code})`
+										: `No logs.`,
 						});
 					}
 					if (!config.channels.verify) return;
@@ -165,10 +176,9 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 								},
 								title:
 									downCount != 0 ?
-										`Uh oh! ${downCount} service${
-											downCount == 1 ? " is" : "s are"
+										`Uh oh! ${downCount} service${downCount == 1 ? " is" : "s are"
 										} down! `
-									:	"All good!",
+										: "All good!",
 								color: 16754688,
 							},
 						],
@@ -298,12 +308,11 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 		const content = silent ? reminder.reminder.replace("@silent", "") : reminder.reminder;
 		await channel
 			.send({
-				content: `🔔 ${
-					channel.isDMBased() ? "" : userMention(reminder.user) + " "
-				}${content.trim()} (from ${time(
-					new Date(+convertBase(reminder.id + "", convertBase.MAX_BASE, 10)),
-					TimestampStyles.RelativeTime,
-				)})`,
+				content: `🔔 ${channel.isDMBased() ? "" : userMention(reminder.user) + " "
+					}${content.trim()} (from ${time(
+						new Date(+convertBase(reminder.id + "", convertBase.MAX_BASE, 10)),
+						TimestampStyles.RelativeTime,
+					)})`,
 				allowedMentions: { users: [reminder.user] },
 				flags: silent ? MessageFlags.SuppressNotifications : undefined,
 			})

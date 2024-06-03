@@ -15,7 +15,7 @@ export default function dad(
 	_: GuildMember,
 ): string | readonly [string, ...(number | string)[]] {
 	const split = name.split(/\b/);
-	console.log(split);
+	// console.log(split);
 	const firstName =
 		split.find(
 			(word) =>
