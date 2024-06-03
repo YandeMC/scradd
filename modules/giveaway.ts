@@ -81,7 +81,7 @@ defineChatCommand(
 								url: options.image.url,
 							},
 						}
-						: {}),
+					:	{}),
 				},
 			],
 		});

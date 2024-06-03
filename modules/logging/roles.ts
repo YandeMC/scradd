@@ -31,10 +31,10 @@ export async function memberRoleUpdate(
 						accumulator[change.key] ?? { assignable: [], unassignable: [] },
 					),
 				}
-				: accumulator,
+			:	accumulator,
 		{},
 	);
-	updateCategories(await config.guild.members.fetch(entry.target))
+	updateCategories(await config.guild.members.fetch(entry.target));
 	if ($add) {
 		await logRoles($add.assignable, "gained", LogSeverity.Resource);
 		await logRoles($add.unassignable, "gained", LogSeverity.ServerChange);
@@ -74,10 +74,12 @@ export async function roleUpdate(
 		switch (change.key) {
 			case "name": {
 				await log(
-					`${LoggingEmojis.Role} ${roleMention(entry.target.id)} ${change.old ? `(@${change.old}) ` : ""
-					}renamed to @${change.new ||
-					(entry.target instanceof Role && entry.target.name) ||
-					"deleted-role"
+					`${LoggingEmojis.Role} ${roleMention(entry.target.id)} ${
+						change.old ? `(@${change.old}) ` : ""
+					}renamed to @${
+						change.new ||
+						(entry.target instanceof Role && entry.target.name) ||
+						"deleted-role"
 					}${extraAuditLogsInfo(entry)}`,
 					LogSeverity.ImportantUpdate,
 				);
@@ -85,9 +87,10 @@ export async function roleUpdate(
 			}
 			case "color": {
 				await log(
-					`${LoggingEmojis.Role} ${roleMention(entry.target.id)}’s role color ${typeof change.new === "number" && change.new ?
-						`set to \`#${change.new.toString(16).padStart(6, "0")}\``
-						: "reset"
+					`${LoggingEmojis.Role} ${roleMention(entry.target.id)}’s role color ${
+						typeof change.new === "number" && change.new ?
+							`set to \`#${change.new.toString(16).padStart(6, "0")}\``
+						:	"reset"
 					}${extraAuditLogsInfo(entry)}`,
 					LogSeverity.ImportantUpdate,
 				);
@@ -97,7 +100,8 @@ export async function roleUpdate(
 				await log(
 					`${LoggingEmojis.Role} ${roleMention(
 						entry.target.id,
-					)} set to display role members ${change.new ? "separately from" : "combined with"
+					)} set to display role members ${
+						change.new ? "separately from" : "combined with"
 					} online members${extraAuditLogsInfo(entry)}`,
 					LogSeverity.ImportantUpdate,
 				);
@@ -105,7 +109,8 @@ export async function roleUpdate(
 			}
 			case "mentionable": {
 				await log(
-					`${LoggingEmojis.Role} ${roleMention(entry.target.id)} set to ${change.new ? "" : "dis"
+					`${LoggingEmojis.Role} ${roleMention(entry.target.id)} set to ${
+						change.new ? "" : "dis"
 					}allow anyone to @mention this role${extraAuditLogsInfo(entry)}`,
 					LogSeverity.ImportantUpdate,
 				);
@@ -119,7 +124,7 @@ export async function roleUpdate(
 					LogSeverity.ImportantUpdate,
 					change.new === undefined ?
 						{}
-						: {
+					:	{
 							buttons: [
 								{
 									label: "New Permissions",
@@ -143,9 +148,10 @@ export async function roleUpdate(
 
 	if (!iconChanged || !(entry.target instanceof Role)) return;
 	await log(
-		`${LoggingEmojis.Role} ${roleMention(entry.target.id)}’s role icon ${entry.target.unicodeEmoji ? `set to ${entry.target.unicodeEmoji}`
+		`${LoggingEmojis.Role} ${roleMention(entry.target.id)}’s role icon ${
+			entry.target.unicodeEmoji ? `set to ${entry.target.unicodeEmoji}`
 			: entry.target.icon ? "changed"
-				: "removed"
+			: "removed"
 		}${extraAuditLogsInfo(entry)}`,
 		LogSeverity.ImportantUpdate,
 		{ files: entry.target.icon ? [entry.target.iconURL({ size: 64 }) ?? ""] : [] },

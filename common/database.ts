@@ -35,12 +35,12 @@ for (const message of allDatabaseMessages) {
 	if (name) {
 		databases[name] =
 			message.author.id === client.user.id ? message
-				: message.attachments.size ?
-					await databaseThread.send({
-						...extractMessageExtremities(message),
-						content: message.content,
-					})
-					: undefined;
+			: message.attachments.size ?
+				await databaseThread.send({
+					...extractMessageExtremities(message),
+					content: message.content,
+				})
+			:	undefined;
 	}
 }
 
@@ -83,7 +83,7 @@ export default class Database<Data extends Record<string, boolean | number | str
 								delimiter: ",",
 							}).data,
 					)
-				: [];
+			:	[];
 
 		// eslint-disable-next-line @typescript-eslint/prefer-destructuring
 		this.#extra = this.message.content.split("\n")[5];
@@ -153,8 +153,13 @@ export default class Database<Data extends Record<string, boolean | number | str
 
 			const files =
 				data ?
-					[{ attachment: Buffer.from(data, "utf8"), name: `${this.name}.${process.env.NODE_ENV == "production" ? "scrubdb" : "txt"}` }]
-					: [];
+					[
+						{
+							attachment: Buffer.from(data, "utf8"),
+							name: `${this.name}.${process.env.NODE_ENV == "production" ? "scrubdb" : "txt"}`,
+						},
+					]
+				:	[];
 			const messageContent = message.content.split("\n");
 			messageContent[3] = "";
 			messageContent[4] = this.#extra ? "Extra misc info:" : "";

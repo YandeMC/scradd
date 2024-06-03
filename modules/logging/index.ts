@@ -64,7 +64,8 @@ const events: { [Event in AuditLogEvent]?: (entry: AuditLog<Event>) => Awaitable
 	[AuditLogEvent.MemberRoleUpdate]: memberRoleUpdate,
 	async [AuditLogEvent.BotAdd](entry) {
 		await log(
-			`${LoggingEmojis.Integration} ${entry.target?.toString() ?? "Bot"
+			`${LoggingEmojis.Integration} ${
+				entry.target?.toString() ?? "Bot"
 			} added${extraAuditLogsInfo(entry)}`,
 			LogSeverity.ImportantUpdate,
 		);
@@ -75,7 +76,8 @@ const events: { [Event in AuditLogEvent]?: (entry: AuditLog<Event>) => Awaitable
 	async [AuditLogEvent.WebhookCreate](entry) {
 		if (entry.target.type !== WebhookType.Incoming) return;
 		await log(
-			`${LoggingEmojis.Integration} Webhook ${entry.target.name} (ID: ${entry.target.id
+			`${LoggingEmojis.Integration} Webhook ${entry.target.name} (ID: ${
+				entry.target.id
 			}) created${extraAuditLogsInfo(entry)}`,
 			LogSeverity.ImportantUpdate,
 		);
@@ -93,14 +95,16 @@ const events: { [Event in AuditLogEvent]?: (entry: AuditLog<Event>) => Awaitable
 	[AuditLogEvent.EmojiDelete]: emojiDelete,
 	async [AuditLogEvent.IntegrationCreate](entry) {
 		await log(
-			`${LoggingEmojis.Integration} ${entry.target.name} (ID: ${entry.target.id
+			`${LoggingEmojis.Integration} ${entry.target.name} (ID: ${
+				entry.target.id
 			}) added${extraAuditLogsInfo(entry)}`,
 			LogSeverity.ImportantUpdate,
 		);
 	},
 	async [AuditLogEvent.IntegrationDelete](entry) {
 		await log(
-			`${LoggingEmojis.Integration} ${entry.target.name} (ID: ${entry.target.id
+			`${LoggingEmojis.Integration} ${entry.target.name} (ID: ${
+				entry.target.id
 			}) removed${extraAuditLogsInfo(entry)}`,
 			LogSeverity.ImportantUpdate,
 		);
@@ -122,20 +126,23 @@ const events: { [Event in AuditLogEvent]?: (entry: AuditLog<Event>) => Awaitable
 	},
 	async [AuditLogEvent.AutoModerationRuleCreate](entry) {
 		await log(
-			`${LoggingEmojis.Integration} ${{
-				[AutoModerationRuleTriggerType.Keyword]: "Block Custom Words",
-				[AutoModerationRuleTriggerType.Spam]: "Block Suspected Spam Content",
-				[AutoModerationRuleTriggerType.KeywordPreset]: "Block Commonly Flagged Words",
-				[AutoModerationRuleTriggerType.MentionSpam]: "Block Mention Spam",
-			}[entry.target.triggerType]
-			} AutoMod Rule ${entry.target.name} (ID: ${entry.target.id
+			`${LoggingEmojis.Integration} ${
+				{
+					[AutoModerationRuleTriggerType.Keyword]: "Block Custom Words",
+					[AutoModerationRuleTriggerType.Spam]: "Block Suspected Spam Content",
+					[AutoModerationRuleTriggerType.KeywordPreset]: "Block Commonly Flagged Words",
+					[AutoModerationRuleTriggerType.MentionSpam]: "Block Mention Spam",
+				}[entry.target.triggerType]
+			} AutoMod Rule ${entry.target.name} (ID: ${
+				entry.target.id
 			}) created${extraAuditLogsInfo(entry)}`,
 			LogSeverity.ImportantUpdate,
 		);
 	},
 	async [AuditLogEvent.AutoModerationRuleDelete](entry) {
 		await log(
-			`${LoggingEmojis.Integration} AutoMod Rule ${entry.target.name} (ID: ${entry.target.id
+			`${LoggingEmojis.Integration} AutoMod Rule ${entry.target.name} (ID: ${
+				entry.target.id
 			}) deleted${extraAuditLogsInfo(entry)}`,
 			LogSeverity.ImportantUpdate,
 		);

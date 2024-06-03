@@ -13,17 +13,16 @@ import config from "../common/config.js";
 // await flagDB.init()
 
 defineEvent("messageCreate", async (msg) => {
-	const qdexId = "1169972566056763482"
-	if (msg.author.id != qdexId) return
-
+	const qdexId = "1169972566056763482";
+	if (msg.author.id != qdexId) return;
 
 	if (msg.content.toLowerCase() == "a wild queer spawned!" && config.pingRoles.qdex) {
-		msg.reply({ content: config.pingRoles.qdex.toString(), allowedMentions: { roles: [config.pingRoles.qdex.id] } })
+		msg.reply({
+			content: config.pingRoles.qdex.toString(),
+			allowedMentions: { roles: [config.pingRoles.qdex.id] },
+		});
 	}
-})
-
-
-
+});
 
 // export async function giveFlags(to: string, amount = 1): Promise<void> {
 // 	const user = to
