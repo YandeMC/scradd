@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for scratchcodersautoomd on 2024-04-16T14:45:42-04:00
+# fly.toml app configuration file generated for scratchcodersautoomod on 2024-06-05T18:02:38-04:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'scratchcodersautoomd'
+app = 'scratchcodersautoomod'
 primary_region = 'iad'
 kill_timeout = '1m0s'
 
