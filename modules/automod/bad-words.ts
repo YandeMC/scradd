@@ -73,11 +73,13 @@ const badWords: [RegExp[]?, RegExp[]?, RegExp[]?][] = [
 			/fcvpf?/,
 			/j?uber/,
 			/av+t{2,}(?:(?:h|r)?e|n)(?: ?rq|l|qbz|urnq|vat|vf(?:u|z)|yvat)?f?/,
+			/av+t{2,}(?:(?:h|r)?e|n)/,
 			/snv?t+(?:rq|vr(?:e|fg)|va|vg|bgf?|bge?l|l)?f?/,
 			/wnc(?:rq?|r?f|vatf?|crq|cvat|cn)?/,
 		],
 	],
 ];
+
 
 if (process.env.NODE_ENV !== "production") badWords[1]?.[0]?.push(/nhgbzbqzhgr/);
 
