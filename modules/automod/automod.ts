@@ -22,8 +22,8 @@ export function warn(
 	config.channels.modlogs?.send(
 		"WARN " +
 			JSON.stringify({
-				user:{
-					id: user.id
+				user: {
+					id: user.id,
 				},
 				reason,
 				rawStrikes,
