@@ -1,16 +1,13 @@
 import {
-	ApplicationCommandOptionType,
+	
 	AutoModerationActionType,
-	GuildMember,
-	// MessageType,
-	underline,
+	
 	type CommandInteractionOption,
 } from "discord.js";
-import { commands, defineChatCommand, defineEvent } from "strife.js";
+import { commands,  defineEvent } from "strife.js";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
-import { escapeMessage } from "../../util/markdown.js";
-import { joinWithAnd } from "../../util/text.js";
+
 import { ignoredDeletions } from "../logging/messages.js";
 import warn from "../punishments/warn.js";
 // import automodMessage from "./automod.js";
@@ -68,24 +65,11 @@ defineEvent.pre("messageCreate", async (message) => {
 });
 defineEvent("messageCreate", async (message) => {
 	if (message.channel.id != config.channels.modlogs?.id) return;
-	if (message.author.id != "1229863889592778894") return;
+	if (message.author.id != "1248032347027406952") return;
 	if (!message.content.match(/^WARN\s/)) return;
 	const w: {
 		user: {
 			id: string;
-			bot: boolean;
-			system: boolean;
-			flags: number;
-			username: string;
-			globalName: string;
-			discriminator: string;
-			avatar: string;
-			avatarDecoration: any;
-			createdTimestamp: number;
-			defaultAvatarURL: string;
-			tag: string;
-			avatarURL: string;
-			displayAvatarURL: string;
 		};
 		reason: string;
 		rawStrikes: number;
@@ -93,19 +77,6 @@ defineEvent("messageCreate", async (message) => {
 	} = JSON.parse(message.content.replace(/^WARN\s/, "")) as {
 		user: {
 			id: string;
-			bot: boolean;
-			system: boolean;
-			flags: number;
-			username: string;
-			globalName: string;
-			discriminator: string;
-			avatar: string;
-			avatarDecoration: any;
-			createdTimestamp: number;
-			defaultAvatarURL: string;
-			tag: string;
-			avatarURL: string;
-			displayAvatarURL: string;
 		};
 		reason: string;
 		rawStrikes: number;
@@ -113,53 +84,6 @@ defineEvent("messageCreate", async (message) => {
 	};
 	warn(await config.guild.members.fetch(w.user.id), w.reason, w.rawStrikes, w.contextOrModerator);
 });
-
-defineChatCommand(
-	{
-		name: "is-bad-word",
-		description: "Check text for banned language",
-
-		options: {
-			text: {
-				type: ApplicationCommandOptionType.String,
-				description: "Text to check",
-				required: true,
-			},
-		},
-
-		censored: false,
-	},
-
-	async (interaction, options) => {
-		const result = tryCensor(options.text);
-		if (!result)
-			return await interaction.reply({
-				ephemeral: true,
-				content: `${constants.emojis.statuses.yes} No bad words found.`,
-			});
-
-		const words = result.words.flat();
-		const strikes = Math.trunc(result.strikes);
-
-		const isMod =
-			interaction.member instanceof GuildMember ?
-				interaction.member.roles.resolve(config.roles.mod.id)
-			:	interaction.member.roles.includes(config.roles.mod.id);
-
-		await interaction.reply({
-			ephemeral: true,
-
-			content:
-				`## ⚠️ ${words.length} bad word${words.length === 1 ? "s" : ""} detected!\n` +
-				(isMod ?
-					`That text gives **${strikes} strike${strikes === 1 ? "" : "s"}**.\n\n`
-				:	"") +
-				`*I detected the following words as bad*: ${joinWithAnd(words, (word) =>
-					underline(escapeMessage(word)),
-				)}`,
-		});
-	},
-);
 
 defineEvent("autoModerationActionExecution", async (action) => {
 	if (
