@@ -57,7 +57,7 @@ if (process.env.CANVAS !== "false") {
 	});
 }
 // @ts-expect-error
-globalThis.window = globalThis
+globalThis.window = globalThis;
 await login({
 	modulesDirectory: fileURLToPath(new URL("./modules", import.meta.url)),
 	defaultCommandAccess: process.env.GUILD_ID,

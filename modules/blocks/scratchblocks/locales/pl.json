@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "płynność dźwięku",
-    "przesuń w lewo/prawo"
-  ],
-  "microbitWhen": [
-    "poruszony",
-    "potrząśnięty",
-    "podrzucony"
-  ],
-  "osis": [
-    "inne skrypty duszka"
-  ],
-  "definePrefix": [
-    "definiuj"
-  ],
+  "soundEffects": ["płynność dźwięku", "przesuń w lewo/prawo"],
+  "microbitWhen": ["poruszony", "potrząśnięty", "podrzucony"],
+  "osis": ["inne skrypty duszka"],
+  "definePrefix": ["definiuj"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Ruch",

@@ -216,17 +216,9 @@
     "izinga elidlulele / iphimbo",
     "jikisa isinxele-nangakwesokudla"
   ],
-  "microbitWhen": [
-    "nyakazile",
-    "ukunyakaziswa",
-    "gxumile"
-  ],
-  "osis": [
-    "eminye imibhalo kumlingisi"
-  ],
-  "definePrefix": [
-    "chaza"
-  ],
+  "microbitWhen": ["nyakazile", "ukunyakaziswa", "gxumile"],
+  "osis": ["eminye imibhalo kumlingisi"],
+  "definePrefix": ["chaza"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Ukunyakaza",

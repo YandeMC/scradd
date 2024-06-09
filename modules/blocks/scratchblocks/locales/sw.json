@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "uzito wa sauti",
-    "peleka sauti kushoto/kulia"
-  ],
-  "microbitWhen": [
-    "inaposongwa",
-    "inapotikiswa",
-    "inaporushwa"
-  ],
-  "osis": [
-    "hati nyingine katika kihusika"
-  ],
-  "definePrefix": [
-    "fafanua"
-  ],
+  "soundEffects": ["uzito wa sauti", "peleka sauti kushoto/kulia"],
+  "microbitWhen": ["inaposongwa", "inapotikiswa", "inaporushwa"],
+  "osis": ["hati nyingine katika kihusika"],
+  "definePrefix": ["fafanua"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Mwendo",

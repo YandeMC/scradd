@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "tlhabelelo",
-    "hwidinyetša go la nngele/la go ja"
-  ],
-  "microbitWhen": [
-    "šutile",
-    "šikinyegile",
-    "fofile"
-  ],
-  "osis": [
-    "dingwalwa tše dingwe tša motšeakarolo"
-  ],
-  "definePrefix": [
-    "hlalosa"
-  ],
+  "soundEffects": ["tlhabelelo", "hwidinyetša go la nngele/la go ja"],
+  "microbitWhen": ["šutile", "šikinyegile", "fofile"],
+  "osis": ["dingwalwa tše dingwe tša motšeakarolo"],
+  "definePrefix": ["hlalosa"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Mosepelo",

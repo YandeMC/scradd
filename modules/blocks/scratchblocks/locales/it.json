@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "frequenza",
-    "panning sinistra/destra"
-  ],
-  "microbitWhen": [
-    "si muove",
-    "si scuote",
-    "salta"
-  ],
-  "osis": [
-    "tutti gli altri script dello sprite"
-  ],
-  "definePrefix": [
-    "definisci"
-  ],
+  "soundEffects": ["frequenza", "panning sinistra/destra"],
+  "microbitWhen": ["si muove", "si scuote", "salta"],
+  "osis": ["tutti gli altri script dello sprite"],
+  "definePrefix": ["definisci"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Movimento",

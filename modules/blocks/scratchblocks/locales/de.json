@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "Höhe",
-    "Aussteuern links/rechts"
-  ],
-  "microbitWhen": [
-    "bewegt",
-    "geschüttelt",
-    "hochgehüpft"
-  ],
-  "osis": [
-    "andere Skripte der Figur"
-  ],
-  "definePrefix": [
-    "Definiere"
-  ],
+  "soundEffects": ["Höhe", "Aussteuern links/rechts"],
+  "microbitWhen": ["bewegt", "geschüttelt", "hochgehüpft"],
+  "osis": ["andere Skripte der Figur"],
+  "definePrefix": ["Definiere"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Bewegung",

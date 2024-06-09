@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "nada",
-    "pan kiri/kanan"
-  ],
-  "microbitWhen": [
-    "bergerak",
-    "tergoyang",
-    "melompat"
-  ],
-  "osis": [
-    "skrip lain di sprite ini"
-  ],
-  "definePrefix": [
-    "artikan"
-  ],
+  "soundEffects": ["nada", "pan kiri/kanan"],
+  "microbitWhen": ["bergerak", "tergoyang", "melompat"],
+  "osis": ["skrip lain di sprite ini"],
+  "definePrefix": ["artikan"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Gerakan",

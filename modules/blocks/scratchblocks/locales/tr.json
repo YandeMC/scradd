@@ -212,23 +212,11 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "ses perdesi",
-    "sağa-sola kaydır"
-  ],
-  "microbitWhen": [
-    "taşınmış",
-    "sallanmış",
-    "atlanmış"
-  ],
-  "osis": [
-    "kukladaki diğer dizileri"
-  ],
+  "soundEffects": ["ses perdesi", "sağa-sola kaydır"],
+  "microbitWhen": ["taşınmış", "sallanmış", "atlanmış"],
+  "osis": ["kukladaki diğer dizileri"],
   "definePrefix": [],
-  "defineSuffix": [
-    "i",
-    "tanımla"
-  ],
+  "defineSuffix": ["i", "tanımla"],
   "palette": {
     "Motion": "Hareket",
     "Looks": "Görünüm",

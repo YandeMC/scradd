@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "toanhichte",
-    "ferskowe links/rjochts"
-  ],
-  "microbitWhen": [
-    "bewege",
-    "skodde",
-    "sprong"
-  ],
-  "osis": [
-    "oare skripts yn sprite"
-  ],
-  "definePrefix": [
-    "definiearje"
-  ],
+  "soundEffects": ["toanhichte", "ferskowe links/rjochts"],
+  "microbitWhen": ["bewege", "skodde", "sprong"],
+  "osis": ["oare skripts yn sprite"],
+  "definePrefix": ["definiearje"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Beweging",

@@ -199,15 +199,14 @@ async function handleMutatable(
 					:	[],
 			};
 	}
-	const blocks = /block{(.*)}/ms.exec(message.content)
+	const blocks = /block{(.*)}/ms.exec(message.content);
 	if (blocks?.[1]) {
-	
 		return {
 			content: "",
-			files:[await scratchBlocksToImage(blocks[1])],
-			embeds:[],
+			files: [await scratchBlocksToImage(blocks[1])],
+			embeds: [],
 			components: [],
-		}; 
+		};
 	}
 	const ignored = ignoreTriggers.some((trigger) => message.content.match(trigger));
 	if (ignored) return true;

@@ -212,23 +212,11 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "ovoz balandligi",
-    "ovoz manzili o'ng-chap"
-  ],
-  "microbitWhen": [
-    "harakatlangan",
-    "silkingan",
-    "sakragan"
-  ],
-  "osis": [
-    "boshqa spraytlardagi skriptlar"
-  ],
+  "soundEffects": ["ovoz balandligi", "ovoz manzili o'ng-chap"],
+  "microbitWhen": ["harakatlangan", "silkingan", "sakragan"],
+  "osis": ["boshqa spraytlardagi skriptlar"],
   "definePrefix": [],
-  "defineSuffix": [
-    "ni",
-    "belgilash"
-  ],
+  "defineSuffix": ["ni", "belgilash"],
   "palette": {
     "Motion": "Harakatlar",
     "Looks": "Ko'rinishlar",

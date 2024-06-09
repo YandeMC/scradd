@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "גובה צליל",
-    "ערוץ שמע שמאלי/ימני"
-  ],
-  "microbitWhen": [
-    "זז",
-    "רעד",
-    "קפץ"
-  ],
-  "osis": [
-    "תסריטים אחרים בדמות"
-  ],
-  "definePrefix": [
-    "הגדר"
-  ],
+  "soundEffects": ["גובה צליל", "ערוץ שמע שמאלי/ימני"],
+  "microbitWhen": ["זז", "רעד", "קפץ"],
+  "osis": ["תסריטים אחרים בדמות"],
+  "definePrefix": ["הגדר"],
   "defineSuffix": [],
   "palette": {
     "Motion": "תנועה",

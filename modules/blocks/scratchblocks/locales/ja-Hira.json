@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "ピッチ",
-    "さゆうにパン"
-  ],
-  "microbitWhen": [
-    "うごいた",
-    "ふられた",
-    "ジャンプした"
-  ],
-  "osis": [
-    "スプライトのほかのスクリプトをとめる"
-  ],
-  "definePrefix": [
-    "ていぎ"
-  ],
+  "soundEffects": ["ピッチ", "さゆうにパン"],
+  "microbitWhen": ["うごいた", "ふられた", "ジャンプした"],
+  "osis": ["スプライトのほかのスクリプトをとめる"],
+  "definePrefix": ["ていぎ"],
   "defineSuffix": [],
   "palette": {
     "Motion": "うごき",

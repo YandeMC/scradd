@@ -212,23 +212,11 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "ፒች",
-    "ሸብልል ወደ ግራ/ቀኝ"
-  ],
-  "microbitWhen": [
-    "ተንቀሳቅሷል",
-    "አራድቷል",
-    "ዘልሏል"
-  ],
-  "osis": [
-    "ሌሎች በስፕራይት ላይ ያሉ ስክሪፕቶች"
-  ],
+  "soundEffects": ["ፒች", "ሸብልል ወደ ግራ/ቀኝ"],
+  "microbitWhen": ["ተንቀሳቅሷል", "አራድቷል", "ዘልሏል"],
+  "osis": ["ሌሎች በስፕራይት ላይ ያሉ ስክሪፕቶች"],
   "definePrefix": [],
-  "defineSuffix": [
-    "ን",
-    "ደንግግ"
-  ],
+  "defineSuffix": ["ን", "ደንግግ"],
   "palette": {
     "Motion": "እንቅስቃሴ",
     "Looks": "ገጽታ",

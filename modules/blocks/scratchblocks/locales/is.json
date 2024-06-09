@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "tónhæð",
-    "skima til vinstri/hægri"
-  ],
-  "microbitWhen": [
-    "moved",
-    "shaken",
-    "jumped"
-  ],
-  "osis": [
-    "önnur forrit á karakter"
-  ],
-  "definePrefix": [
-    "skilgreina"
-  ],
+  "soundEffects": ["tónhæð", "skima til vinstri/hægri"],
+  "microbitWhen": ["moved", "shaken", "jumped"],
+  "osis": ["önnur forrit á karakter"],
+  "definePrefix": ["skilgreina"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Hreyfing",

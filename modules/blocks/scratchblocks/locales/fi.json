@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "sävelkorkeus",
-    "panoroi vasen/oikea"
-  ],
-  "microbitWhen": [
-    "siirretty",
-    "ravistettu",
-    "hypätty"
-  ],
-  "osis": [
-    "hahmon muut koodit"
-  ],
-  "definePrefix": [
-    "määrittele"
-  ],
+  "soundEffects": ["sävelkorkeus", "panoroi vasen/oikea"],
+  "microbitWhen": ["siirretty", "ravistettu", "hypätty"],
+  "osis": ["hahmon muut koodit"],
+  "definePrefix": ["määrittele"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Liike",

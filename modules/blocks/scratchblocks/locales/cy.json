@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "traw",
-    "troi chwith/de"
-  ],
-  "microbitWhen": [
-    "symudodd",
-    "ysgydwyd",
-    "neidiodd"
-  ],
-  "osis": [
-    "sgriptiau eraill yn y ciplun"
-  ],
-  "definePrefix": [
-    "diffinio"
-  ],
+  "soundEffects": ["traw", "troi chwith/de"],
+  "microbitWhen": ["symudodd", "ysgydwyd", "neidiodd"],
+  "osis": ["sgriptiau eraill yn y ciplun"],
+  "definePrefix": ["diffinio"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Symudiad",

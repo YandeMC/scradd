@@ -212,22 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "tinis",
-    "i-pan kaliwa/kanan"
-  ],
-  "microbitWhen": [
-    "gumalaw",
-    "niyugyog",
-    "tumalon"
-  ],
-  "osis": [
-    "ibang script sa sprite"
-  ],
-  "definePrefix": [
-    "i-define",
-    "ang"
-  ],
+  "soundEffects": ["tinis", "i-pan kaliwa/kanan"],
+  "microbitWhen": ["gumalaw", "niyugyog", "tumalon"],
+  "osis": ["ibang script sa sprite"],
+  "definePrefix": ["i-define", "ang"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Galaw",

@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "segalo",
-    "letswela la molema/moja"
-  ],
-  "microbitWhen": [
-    "sutisitswe",
-    "reketlisiwa",
-    "tloletse"
-  ],
-  "osis": [
-    "makwalo a mangwe mo go sprite"
-  ],
-  "definePrefix": [
-    "tlhalosa"
-  ],
+  "soundEffects": ["segalo", "letswela la molema/moja"],
+  "microbitWhen": ["sutisitswe", "reketlisiwa", "tloletse"],
+  "osis": ["makwalo a mangwe mo go sprite"],
+  "definePrefix": ["tlhalosa"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Motsamao",

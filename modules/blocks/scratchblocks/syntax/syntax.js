@@ -1,4 +1,3 @@
-
 function assert(bool, message) {
   if (!bool) {
     throw new Error(`Assertion failed! ${message || ""}`)

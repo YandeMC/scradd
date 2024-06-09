@@ -212,22 +212,11 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "hangmagasság",
-    "pásztázás balra/jobbra"
-  ],
-  "microbitWhen": [
-    "elmozdult",
-    "megrázva",
-    "átugrott"
-  ],
-  "osis": [
-    "szereplő többi eljárása"
-  ],
+  "soundEffects": ["hangmagasság", "pásztázás balra/jobbra"],
+  "microbitWhen": ["elmozdult", "megrázva", "átugrott"],
+  "osis": ["szereplő többi eljárása"],
   "definePrefix": [],
-  "defineSuffix": [
-    "meghatározása"
-  ],
+  "defineSuffix": ["meghatározása"],
   "palette": {
     "Motion": "Mozgás",
     "Looks": "Kinézet",

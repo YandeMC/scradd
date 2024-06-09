@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "garso aukštis",
-    "kairiau/dešiniau"
-  ],
-  "microbitWhen": [
-    "pajudinta",
-    "papurtyta",
-    "šuolis"
-  ],
-  "osis": [
-    "kitus veikėjo scenarijus"
-  ],
-  "definePrefix": [
-    "komanda"
-  ],
+  "soundEffects": ["garso aukštis", "kairiau/dešiniau"],
+  "microbitWhen": ["pajudinta", "papurtyta", "šuolis"],
+  "osis": ["kitus veikėjo scenarijus"],
+  "definePrefix": ["komanda"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Judėjimas",

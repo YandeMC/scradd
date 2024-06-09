@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "augstums",
-    "bīdīt pa labi/pa kreisi"
-  ],
-  "microbitWhen": [
-    "pārvietojās",
-    "pakratījās",
-    "palēcās"
-  ],
-  "osis": [
-    "citi skripti gariņā"
-  ],
-  "definePrefix": [
-    "definēt"
-  ],
+  "soundEffects": ["augstums", "bīdīt pa labi/pa kreisi"],
+  "microbitWhen": ["pārvietojās", "pakratījās", "palēcās"],
+  "osis": ["citi skripti gariņā"],
+  "definePrefix": ["definēt"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Kustība",

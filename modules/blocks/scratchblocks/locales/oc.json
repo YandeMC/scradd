@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "ton",
-    "equilibrar drecha/esquèrra"
-  ],
-  "microbitWhen": [
-    "bolegat",
-    "brandit",
-    "sautat"
-  ],
-  "osis": [
-    "autres escripts dins sprite"
-  ],
-  "definePrefix": [
-    "define"
-  ],
+  "soundEffects": ["ton", "equilibrar drecha/esquèrra"],
+  "microbitWhen": ["bolegat", "brandit", "sautat"],
+  "osis": ["autres escripts dins sprite"],
+  "definePrefix": ["define"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Moviment",

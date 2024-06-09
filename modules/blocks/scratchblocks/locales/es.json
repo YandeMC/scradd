@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "altura",
-    "balance izquierda/derecha"
-  ],
-  "microbitWhen": [
-    "mover",
-    "agitar",
-    "saltar"
-  ],
-  "osis": [
-    "otros programas en el objeto"
-  ],
-  "definePrefix": [
-    "definir"
-  ],
+  "soundEffects": ["altura", "balance izquierda/derecha"],
+  "microbitWhen": ["mover", "agitar", "saltar"],
+  "osis": ["otros programas en el objeto"],
+  "definePrefix": ["definir"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Movimiento",

@@ -212,22 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "poloha",
-    "stereo vlevo/vpravo"
-  ],
-  "microbitWhen": [
-    "se pohne",
-    "se zatřese",
-    "poskočí"
-  ],
-  "osis": [
-    "jiné scénáře postavy"
-  ],
-  "definePrefix": [
-    "scénář",
-    "pro"
-  ],
+  "soundEffects": ["poloha", "stereo vlevo/vpravo"],
+  "microbitWhen": ["se pohne", "se zatřese", "poskočí"],
+  "osis": ["jiné scénáře postavy"],
+  "definePrefix": ["scénář", "pro"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Pohyb",

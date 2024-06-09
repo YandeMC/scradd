@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "tono",
-    "balanz zurda/dreita"
-  ],
-  "microbitWhen": [
-    "moviu",
-    "sobatiu",
-    "blincau"
-  ],
-  "osis": [
-    "atros programas en l'obchecto"
-  ],
-  "definePrefix": [
-    "definir"
-  ],
+  "soundEffects": ["tono", "balanz zurda/dreita"],
+  "microbitWhen": ["moviu", "sobatiu", "blincau"],
+  "osis": ["atros programas en l'obchecto"],
+  "definePrefix": ["definir"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Movimiento",

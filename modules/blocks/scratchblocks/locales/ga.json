@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "tuinairde",
-    "peanáil ar chlé/ar dheis"
-  ],
-  "microbitWhen": [
-    "bogtha",
-    "croite",
-    "léimthe"
-  ],
-  "osis": [
-    "scripteanna eile sa sprid"
-  ],
-  "definePrefix": [
-    "sainmhínigh"
-  ],
+  "soundEffects": ["tuinairde", "peanáil ar chlé/ar dheis"],
+  "microbitWhen": ["bogtha", "croite", "léimthe"],
+  "osis": ["scripteanna eile sa sprid"],
+  "definePrefix": ["sainmhínigh"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Gluaiseacht",

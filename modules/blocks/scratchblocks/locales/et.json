@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "helikõrgus",
-    "heli vasakul/paremal"
-  ],
-  "microbitWhen": [
-    "liikus",
-    "rappus",
-    "hüppas"
-  ],
-  "osis": [
-    "teised spraidi skriptid"
-  ],
-  "definePrefix": [
-    "defineeri"
-  ],
+  "soundEffects": ["helikõrgus", "heli vasakul/paremal"],
+  "microbitWhen": ["liikus", "rappus", "hüppas"],
+  "osis": ["teised spraidi skriptid"],
+  "definePrefix": ["defineeri"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Liikumine",

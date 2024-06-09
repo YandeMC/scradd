@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "hauoro",
-    "huri whakatemauī/whakatekatau"
-  ],
-  "microbitWhen": [
-    "i neke",
-    "i rūrū",
-    "i peke"
-  ],
-  "osis": [
-    "hōtuhi kē i roto i te parehe"
-  ],
-  "definePrefix": [
-    "tautuhia"
-  ],
+  "soundEffects": ["hauoro", "huri whakatemauī/whakatekatau"],
+  "microbitWhen": ["i neke", "i rūrū", "i peke"],
+  "osis": ["hōtuhi kē i roto i te parehe"],
+  "definePrefix": ["tautuhia"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Nekehanga",

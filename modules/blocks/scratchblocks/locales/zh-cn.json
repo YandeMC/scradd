@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "音调",
-    "左右平衡"
-  ],
-  "microbitWhen": [
-    "移动",
-    "晃动",
-    "抛起"
-  ],
-  "osis": [
-    "该角色的其他脚本"
-  ],
-  "definePrefix": [
-    "定义"
-  ],
+  "soundEffects": ["音调", "左右平衡"],
+  "microbitWhen": ["移动", "晃动", "抛起"],
+  "osis": ["该角色的其他脚本"],
+  "definePrefix": ["定义"],
   "defineSuffix": [],
   "palette": {
     "Motion": "运动",
