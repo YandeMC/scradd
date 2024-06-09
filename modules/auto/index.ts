@@ -22,6 +22,7 @@ import github from "./github.js";
 
 import dad from "./dad.js";
 import { getMatches, handleMatch } from "./scratch.js";
+import { scratchBlocksToImage } from "../blocks/index.js";
 
 const REACTION_CAP = 3;
 
@@ -198,7 +199,16 @@ async function handleMutatable(
 					:	[],
 			};
 	}
-
+	const blocks = /block{(.*)}/ms.exec(message.content)
+	if (blocks?.[1]) {
+	
+		return {
+			content: "",
+			files:[await scratchBlocksToImage(blocks[1])],
+			embeds:[],
+			components: [],
+		}; 
+	}
 	const ignored = ignoreTriggers.some((trigger) => message.content.match(trigger));
 	if (ignored) return true;
 

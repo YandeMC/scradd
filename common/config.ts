@@ -115,8 +115,8 @@ async function getConfig() {
 			booster: roles.find((role) => role.name.toLowerCase().includes("booster")),
 			active: roles.find((role) => role.name.toLowerCase().includes("active")),
 			established: roles.find((role) => role.name.toLowerCase().includes("established")),
-			verified: roles.find((role) => role.name.toLowerCase() == "verified"),
-			verifiedPerms: roles.find((role) => role.name.toLowerCase() == "verified perms"),
+			verified: roles.find((role) => role.name.toLowerCase() == "linked scratch"),
+			verifiedPerms: roles.find((role) => role.name.toLowerCase() == "verified"),
 		},
 		pingRoles: {
 			qotd: roles.find(
