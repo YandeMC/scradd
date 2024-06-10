@@ -63,7 +63,7 @@ export default class Database<Data extends Record<string, boolean | number | str
 	async init(): Promise<void> {
 		if (this.message) return;
 		this.message = databases[this.name] ||= await databaseThread.send(
-			`__**SCRUB ${this.name.toUpperCase()} DATABASE**__\n\n*Please don’t delete this message. If you do, all ${this.name.replaceAll(
+			`__**SCRADD ${this.name.toUpperCase()} DATABASE**__\n\n*Please don’t delete this message. If you do, all ${this.name.replaceAll(
 				"_",
 				" ",
 			)} information may be reset.*`,
@@ -153,12 +153,7 @@ export default class Database<Data extends Record<string, boolean | number | str
 
 			const files =
 				data ?
-					[
-						{
-							attachment: Buffer.from(data, "utf8"),
-							name: `${this.name}.${process.env.NODE_ENV == "production" ? "scrubdb" : "txt"}`,
-						},
-					]
+					[{ attachment: Buffer.from(data, "utf8"), name: `${this.name}.${process.env.NODE_ENV == "production" ? "scrubdb" : "txt"}` }]
 				:	[];
 			const messageContent = message.content.split("\n");
 			messageContent[3] = "";
@@ -168,21 +163,26 @@ export default class Database<Data extends Record<string, boolean | number | str
 			const content = messageContent.join("\n").trim();
 			const promise = message
 				.edit({ content, files })
-				.catch(async (error) => {
-					if (error.code !== RESTJSONErrorCodes.UnknownMessage) {
-						return await message.edit({ content, files }).catch((retryError) => {
-							throw new AggregateError(
-								[error, retryError],
-								"Failed to write to database!",
-								{ cause: { data, database: this.name } },
-							);
-						});
+				.catch(async (error: unknown) => {
+					if (
+						error &&
+						typeof error === "object" &&
+						"code" in error &&
+						error.code === RESTJSONErrorCodes.UnknownMessage
+					) {
+						databases[this.name] = undefined;
+						this.message = undefined;
+						await this.init();
+						return await callback();
 					}
 
-					databases[this.name] = undefined;
-					this.message = undefined;
-					await this.init();
-					return await callback();
+					return await message.edit({ content, files }).catch((retryError: unknown) => {
+						throw new AggregateError(
+							[error, retryError],
+							"Failed to write to database!",
+							{ cause: { data, database: this.name } },
+						);
+					});
 				})
 				.then(async (edited) => {
 					const attachment = edited.attachments.first()?.url;
