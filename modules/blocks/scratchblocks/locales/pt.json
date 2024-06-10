@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "tom",
-    "canal esquerdo/direito"
-  ],
-  "microbitWhen": [
-    "se mover",
-    "for abanado",
-    "saltar"
-  ],
-  "osis": [
-    "os teus outros guiões"
-  ],
-  "definePrefix": [
-    "Define"
-  ],
+  "soundEffects": ["tom", "canal esquerdo/direito"],
+  "microbitWhen": ["se mover", "for abanado", "saltar"],
+  "osis": ["os teus outros guiões"],
+  "definePrefix": ["Define"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Movimento",

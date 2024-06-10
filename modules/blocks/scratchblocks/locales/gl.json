@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "ton",
-    "canle esquerda/dereita"
-  ],
-  "microbitWhen": [
-    "movido",
-    "abalado",
-    "saltado"
-  ],
-  "osis": [
-    "outros programas na figura"
-  ],
-  "definePrefix": [
-    "definir"
-  ],
+  "soundEffects": ["ton", "canle esquerda/dereita"],
+  "microbitWhen": ["movido", "abalado", "saltado"],
+  "osis": ["outros programas na figura"],
+  "definePrefix": ["definir"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Movemento",

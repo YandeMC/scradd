@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "luqyay",
-    "paniyay alliqman / ichuqman"
-  ],
-  "microbitWhen": [
-    "musuqmi",
-    "tapsiy",
-    "pawarqun"
-  ],
-  "osis": [
-    "huk qillqaykuna ipupi"
-  ],
-  "definePrefix": [
-    "nin"
-  ],
+  "soundEffects": ["luqyay", "paniyay alliqman / ichuqman"],
+  "microbitWhen": ["musuqmi", "tapsiy", "pawarqun"],
+  "osis": ["huk qillqaykuna ipupi"],
+  "definePrefix": ["nin"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Muyuy",

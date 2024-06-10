@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "ton",
-    "voye sou bò goch/dwat"
-  ],
-  "microbitWhen": [
-    "deplase",
-    "te souke",
-    "sote"
-  ],
-  "osis": [
-    "lòt eskrip nan aktè la"
-  ],
-  "definePrefix": [
-    "defini"
-  ],
+  "soundEffects": ["ton", "voye sou bò goch/dwat"],
+  "microbitWhen": ["deplase", "te souke", "sote"],
+  "osis": ["lòt eskrip nan aktè la"],
+  "definePrefix": ["defini"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Mouvman",

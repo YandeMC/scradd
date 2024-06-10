@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "frekvencia",
-    "stereo"
-  ],
-  "microbitWhen": [
-    "pohybe",
-    "zatrasení",
-    "skoku"
-  ],
-  "osis": [
-    "moje iné scenáre"
-  ],
-  "definePrefix": [
-    "blok"
-  ],
+  "soundEffects": ["frekvencia", "stereo"],
+  "microbitWhen": ["pohybe", "zatrasení", "skoku"],
+  "osis": ["moje iné scenáre"],
+  "definePrefix": ["blok"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Pohyb",

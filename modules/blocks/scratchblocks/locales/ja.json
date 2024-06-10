@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "ピッチ",
-    "左右にパン"
-  ],
-  "microbitWhen": [
-    "動いた",
-    "振られた",
-    "ジャンプした"
-  ],
-  "osis": [
-    "スプライトの他のスクリプトを止める"
-  ],
-  "definePrefix": [
-    "定義"
-  ],
+  "soundEffects": ["ピッチ", "左右にパン"],
+  "microbitWhen": ["動いた", "振られた", "ジャンプした"],
+  "osis": ["スプライトの他のスクリプトを止める"],
+  "definePrefix": ["定義"],
   "defineSuffix": [],
   "palette": {
     "Motion": "動き",

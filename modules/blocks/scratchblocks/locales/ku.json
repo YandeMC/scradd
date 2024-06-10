@@ -212,24 +212,11 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "perdeya deng",
-    "bikişîne rastê-çepê"
-  ],
-  "microbitWhen": [
-    "veguheztî",
-    "hejandî",
-    "gavkirî"
-  ],
-  "osis": [
-    "di pêlîstikê de rêzikên din"
-  ],
+  "soundEffects": ["perdeya deng", "bikişîne rastê-çepê"],
+  "microbitWhen": ["veguheztî", "hejandî", "gavkirî"],
+  "osis": ["di pêlîstikê de rêzikên din"],
   "definePrefix": [],
-  "defineSuffix": [
-    "ê",
-    "pênase",
-    "bike"
-  ],
+  "defineSuffix": ["ê", "pênase", "bike"],
   "palette": {
     "Motion": "Tevger",
     "Looks": "Xuyang",

@@ -212,23 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "roa roatano",
-    "haka iri te reʾo o a te maui o a te mataʾu"
-  ],
-  "microbitWhen": [
-    "moved",
-    "shaken",
-    "jumped"
-  ],
-  "osis": [
-    "te tahi programa i te sprite"
-  ],
-  "definePrefix": [
-    "haka",
-    "tano",
-    "te"
-  ],
+  "soundEffects": ["roa roatano", "haka iri te reʾo o a te maui o a te mataʾu"],
+  "microbitWhen": ["moved", "shaken", "jumped"],
+  "osis": ["te tahi programa i te sprite"],
+  "definePrefix": ["haka", "tano", "te"],
   "defineSuffix": [],
   "palette": {
     "Motion": "makenu",

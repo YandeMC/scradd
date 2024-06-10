@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "tonehøjde",
-    "balance venstre/højre"
-  ],
-  "microbitWhen": [
-    "bevæget",
-    "rystet",
-    "hoppet"
-  ],
-  "osis": [
-    "andre scripts i sprite"
-  ],
-  "definePrefix": [
-    "definer"
-  ],
+  "soundEffects": ["tonehøjde", "balance venstre/højre"],
+  "microbitWhen": ["bevæget", "rystet", "hoppet"],
+  "osis": ["andre scripts i sprite"],
+  "definePrefix": ["definer"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Bevægelse",

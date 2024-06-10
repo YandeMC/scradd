@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "tonehøgd",
-    "venstre–høgre-panorering"
-  ],
-  "microbitWhen": [
-    "flytta",
-    "rista",
-    "hoppa"
-  ],
-  "osis": [
-    "andre skript i figuren"
-  ],
-  "definePrefix": [
-    "definer"
-  ],
+  "soundEffects": ["tonehøgd", "venstre–høgre-panorering"],
+  "microbitWhen": ["flytta", "rista", "hoppa"],
+  "osis": ["andre skript i figuren"],
+  "definePrefix": ["definer"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Rørsle",

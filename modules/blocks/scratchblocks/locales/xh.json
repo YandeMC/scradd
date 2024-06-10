@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "inqanaba",
-    "bhala ekhohlo/ekunene"
-  ],
-  "microbitWhen": [
-    "isuile",
-    "shukunyisiwe",
-    "yatsiba"
-  ],
-  "osis": [
-    "eminye imibhalo kwispraythi"
-  ],
-  "definePrefix": [
-    "chaza"
-  ],
+  "soundEffects": ["inqanaba", "bhala ekhohlo/ekunene"],
+  "microbitWhen": ["isuile", "shukunyisiwe", "yatsiba"],
+  "osis": ["eminye imibhalo kwispraythi"],
+  "definePrefix": ["chaza"],
   "defineSuffix": [],
   "palette": {
     "Motion": "intshukumo",

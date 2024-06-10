@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "gleusa",
-    "panachaidh gu clì/deas"
-  ],
-  "microbitWhen": [
-    "gluasad",
-    "crith",
-    "leum"
-  ],
-  "osis": [
-    "sgriobtaichean eile na sprìde"
-  ],
-  "definePrefix": [
-    "mìnich"
-  ],
+  "soundEffects": ["gleusa", "panachaidh gu clì/deas"],
+  "microbitWhen": ["gluasad", "crith", "leum"],
+  "osis": ["sgriobtaichean eile na sprìde"],
+  "definePrefix": ["mìnich"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Gluasad",

@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "hauteur",
-    "stéréo gauche/droite"
-  ],
-  "microbitWhen": [
-    "bougé",
-    "secoué",
-    "sauté"
-  ],
-  "osis": [
-    "autres scripts dans sprite"
-  ],
-  "definePrefix": [
-    "définir"
-  ],
+  "soundEffects": ["hauteur", "stéréo gauche/droite"],
+  "microbitWhen": ["bougé", "secoué", "sauté"],
+  "osis": ["autres scripts dans sprite"],
+  "definePrefix": ["définir"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Mouvement",

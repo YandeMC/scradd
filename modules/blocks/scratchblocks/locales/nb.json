@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "tonehøyde",
-    "retning"
-  ],
-  "microbitWhen": [
-    "flyttet",
-    "ristet",
-    "hoppet"
-  ],
-  "osis": [
-    "andre skript i figuren"
-  ],
-  "definePrefix": [
-    "definer"
-  ],
+  "soundEffects": ["tonehøyde", "retning"],
+  "microbitWhen": ["flyttet", "ristet", "hoppet"],
+  "osis": ["andre skript i figuren"],
+  "definePrefix": ["definer"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Bevegelse",

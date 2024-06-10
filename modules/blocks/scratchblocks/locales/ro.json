@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "înălțimea sunetului",
-    "deplasare la stânga/dreapta"
-  ],
-  "microbitWhen": [
-    "mutat",
-    "scuturat",
-    "sărit"
-  ],
-  "osis": [
-    "alte scripturi pentru personaj"
-  ],
-  "definePrefix": [
-    "definește"
-  ],
+  "soundEffects": ["înălțimea sunetului", "deplasare la stânga/dreapta"],
+  "microbitWhen": ["mutat", "scuturat", "sărit"],
+  "osis": ["alte scripturi pentru personaj"],
+  "definePrefix": ["definește"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Mișcare",

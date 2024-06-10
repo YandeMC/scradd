@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "tsarin sauti",
-    "fitar da sauti a hagu/dama"
-  ],
-  "microbitWhen": [
-    "an motsa",
-    "an girgiza",
-    "anyi tsalle"
-  ],
-  "osis": [
-    "sauran rubutun cikin sprite"
-  ],
-  "definePrefix": [
-    "ayyana"
-  ],
+  "soundEffects": ["tsarin sauti", "fitar da sauti a hagu/dama"],
+  "microbitWhen": ["an motsa", "an girgiza", "anyi tsalle"],
+  "osis": ["sauran rubutun cikin sprite"],
+  "definePrefix": ["ayyana"],
   "defineSuffix": [],
   "palette": {
     "Motion": "motsi",

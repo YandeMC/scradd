@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "tonu",
-    "panéu izquierda/drecha"
-  ],
-  "microbitWhen": [
-    "movió",
-    "batulláu",
-    "saltó"
-  ],
-  "osis": [
-    "otros scripts nel personaxe"
-  ],
-  "definePrefix": [
-    "definir"
-  ],
+  "soundEffects": ["tonu", "panéu izquierda/drecha"],
+  "microbitWhen": ["movió", "batulláu", "saltó"],
+  "osis": ["otros scripts nel personaxe"],
+  "definePrefix": ["definir"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Movimientu",

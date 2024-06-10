@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "音高",
-    "聲道左/右"
-  ],
-  "microbitWhen": [
-    "移動",
-    "晃動",
-    "跳動"
-  ],
-  "osis": [
-    "這個物件的其它程式"
-  ],
-  "definePrefix": [
-    "定義"
-  ],
+  "soundEffects": ["音高", "聲道左/右"],
+  "microbitWhen": ["移動", "晃動", "跳動"],
+  "osis": ["這個物件的其它程式"],
+  "definePrefix": ["定義"],
   "defineSuffix": [],
   "palette": {
     "Motion": "動作",

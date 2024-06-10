@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "višina tona",
-    "premik levo/desno"
-  ],
-  "microbitWhen": [
-    "premaknjeno",
-    "streseno",
-    "poskok"
-  ],
-  "osis": [
-    "ostale ukaze za ta lik"
-  ],
-  "definePrefix": [
-    "definiraj"
-  ],
+  "soundEffects": ["višina tona", "premik levo/desno"],
+  "microbitWhen": ["premaknjeno", "streseno", "poskok"],
+  "osis": ["ostale ukaze za ta lik"],
+  "definePrefix": ["definiraj"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Gibanje",

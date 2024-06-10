@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "toonhoogte",
-    "kanaal links/rechts"
-  ],
-  "microbitWhen": [
-    "bewogen",
-    "geschud",
-    "gesprongen"
-  ],
-  "osis": [
-    "andere scripts in sprite"
-  ],
-  "definePrefix": [
-    "definieer"
-  ],
+  "soundEffects": ["toonhoogte", "kanaal links/rechts"],
+  "microbitWhen": ["bewogen", "geschud", "gesprongen"],
+  "osis": ["andere scripts in sprite"],
+  "definePrefix": ["definieer"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Beweging",

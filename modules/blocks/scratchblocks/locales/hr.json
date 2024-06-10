@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "visina tona",
-    "kretanje lijevo/desno"
-  ],
-  "microbitWhen": [
-    "pomaknuto",
-    "protresen",
-    "skok"
-  ],
-  "osis": [
-    "druge programe lika"
-  ],
-  "definePrefix": [
-    "definiraj"
-  ],
+  "soundEffects": ["visina tona", "kretanje lijevo/desno"],
+  "microbitWhen": ["pomaknuto", "protresen", "skok"],
+  "osis": ["druge programe lika"],
+  "definePrefix": ["definiraj"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Kretanje",

@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "pitch",
-    "pan esquerra/dreta"
-  ],
-  "microbitWhen": [
-    "es mogui",
-    "es sacsegi",
-    "salti"
-  ],
-  "osis": [
-    "altres programes del personatge"
-  ],
-  "definePrefix": [
-    "defineix"
-  ],
+  "soundEffects": ["pitch", "pan esquerra/dreta"],
+  "microbitWhen": ["es mogui", "es sacsegi", "salti"],
+  "osis": ["altres programes del personatge"],
+  "definePrefix": ["defineix"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Moviment",

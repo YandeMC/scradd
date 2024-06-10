@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "pitch",
-    "pan left/right"
-  ],
-  "microbitWhen": [
-    "সরানো হয়েছে",
-    "ঝাঁকাও",
-    "লাফ দিয়েছিল"
-  ],
-  "osis": [
-    "স্প্রাইটে অন্যান্য স্ক্রিপ্টসমূহ"
-  ],
-  "definePrefix": [
-    "ডিফাইন"
-  ],
+  "soundEffects": ["pitch", "pan left/right"],
+  "microbitWhen": ["সরানো হয়েছে", "ঝাঁকাও", "লাফ দিয়েছিল"],
+  "osis": ["স্প্রাইটে অন্যান্য স্ক্রিপ্টসমূহ"],
+  "definePrefix": ["ডিফাইন"],
   "defineSuffix": [],
   "palette": {
     "Motion": "গতি",

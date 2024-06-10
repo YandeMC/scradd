@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "tonalto",
-    "aŭdigi maldekstre/dekstre"
-  ],
-  "microbitWhen": [
-    "movita",
-    "ŝancelita",
-    "saltigita"
-  ],
-  "osis": [
-    "aliajn skriptojn en la rolulo"
-  ],
-  "definePrefix": [
-    "difini"
-  ],
+  "soundEffects": ["tonalto", "aŭdigi maldekstre/dekstre"],
+  "microbitWhen": ["movita", "ŝancelita", "saltigita"],
+  "osis": ["aliajn skriptojn en la rolulo"],
+  "definePrefix": ["difini"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Movado",

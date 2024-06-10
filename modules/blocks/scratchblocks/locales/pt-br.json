@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "tom",
-    "balanço esquerda/direita"
-  ],
-  "microbitWhen": [
-    "mover",
-    "agitar",
-    "pular"
-  ],
-  "osis": [
-    "outros scripts no ator"
-  ],
-  "definePrefix": [
-    "defina"
-  ],
+  "soundEffects": ["tom", "balanço esquerda/direita"],
+  "microbitWhen": ["mover", "agitar", "pular"],
+  "osis": ["outros scripts no ator"],
+  "definePrefix": ["defina"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Movimento",

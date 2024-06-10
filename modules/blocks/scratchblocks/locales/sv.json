@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "tonhöjd",
-    "panorera vänster/höger"
-  ],
-  "microbitWhen": [
-    "rör sig",
-    "skaka",
-    "hoppa"
-  ],
-  "osis": [
-    "andra skript i sprajten"
-  ],
-  "definePrefix": [
-    "definiera"
-  ],
+  "soundEffects": ["tonhöjd", "panorera vänster/höger"],
+  "microbitWhen": ["rör sig", "skaka", "hoppa"],
+  "osis": ["andra skript i sprajten"],
+  "definePrefix": ["definiera"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Rörelse",

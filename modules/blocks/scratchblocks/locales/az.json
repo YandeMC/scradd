@@ -212,23 +212,11 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "kökləmək",
-    "tas sol/sağ"
-  ],
-  "microbitWhen": [
-    "moved",
-    "shaken",
-    "jumped"
-  ],
-  "osis": [
-    "spraytın digər skriptləri"
-  ],
+  "soundEffects": ["kökləmək", "tas sol/sağ"],
+  "microbitWhen": ["moved", "shaken", "jumped"],
+  "osis": ["spraytın digər skriptləri"],
   "definePrefix": [],
-  "defineSuffix": [
-    "təyin",
-    "et"
-  ],
+  "defineSuffix": ["təyin", "et"],
   "palette": {
     "Motion": "Hərəkət",
     "Looks": "Görünüş",

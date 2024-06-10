@@ -212,22 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "cao độ",
-    "pan trái/phải"
-  ],
-  "microbitWhen": [
-    "moved",
-    "shaken",
-    "jumped"
-  ],
-  "osis": [
-    "other scripts in sprite"
-  ],
-  "definePrefix": [
-    "định",
-    "nghĩa"
-  ],
+  "soundEffects": ["cao độ", "pan trái/phải"],
+  "microbitWhen": ["moved", "shaken", "jumped"],
+  "osis": ["other scripts in sprite"],
+  "definePrefix": ["định", "nghĩa"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Chuyển động",

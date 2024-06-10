@@ -212,21 +212,10 @@
   },
   "dropdowns": {},
   "ignorelt": [],
-  "soundEffects": [
-    "tonua",
-    "ezker/eskuin balantzea"
-  ],
-  "microbitWhen": [
-    "mugitua",
-    "astindua",
-    "salto egina"
-  ],
-  "osis": [
-    "pertsonaiaren beste script batzuk"
-  ],
-  "definePrefix": [
-    "definitu"
-  ],
+  "soundEffects": ["tonua", "ezker/eskuin balantzea"],
+  "microbitWhen": ["mugitua", "astindua", "salto egina"],
+  "osis": ["pertsonaiaren beste script batzuk"],
+  "definePrefix": ["definitu"],
   "defineSuffix": [],
   "palette": {
     "Motion": "Mugimendua",
