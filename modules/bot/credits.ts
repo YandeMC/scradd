@@ -57,21 +57,21 @@ export default async function credits(interaction: ChatInputCommandInteraction):
 				description: `Scrub is hosted on [ fly.io](https://fly.io) using Node.JS ${process.version}.`,
 
 				fields: [
-					{ name: "🧑‍💻 Developers", value: await getRole(developers)},
-					{ name: "🧩 Contributers", value: await getRole(contributer)},
-					{ name: "🖌️ Designers", value: await getRole(designers)},
+					{ name: "🧑‍💻 Developers", value: await getRole(developers) },
+					{ name: "🧩 Contributers", value: await getRole(contributer) },
+					{ name: "🖌️ Designers", value: await getRole(designers) },
 					{
 						name: "🧪 Additional beta testers",
 						value: await getRole(testers),
 						// inline: true,
 					},
 					{
-						name: "❤️ Special Credits", 
+						name: "❤️ Special Credits",
 						value: `<@462098932571308033> - Scratch Blocks Images`,
 						// inline: false,
 					},
 					...(await columnize(
-						dependencies.slice(0,dependencies.length / 2),
+						dependencies.slice(0, dependencies.length / 2),
 						([specifier, link]) =>
 							"- " + (link ? `[${specifier}](${link})` : specifier),
 						"🗄️ Third-party code libraries",
@@ -92,7 +92,6 @@ export default async function credits(interaction: ChatInputCommandInteraction):
 	async function getRole(roleId: Snowflake): Promise<string> {
 		const role = await config.guilds.testing.roles?.fetch(roleId);
 		const members: { user: User }[] = [...(role?.members.values() ?? [])];
-		
 
 		return joinWithAnd(
 			await Promise.all(

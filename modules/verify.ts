@@ -68,7 +68,7 @@ if (process.env.SCRATCH_PASS) {
 			// await wait(2000)
 			const res2 = await fetch(
 				"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
-				json.privateCode,
+					json.privateCode,
 			);
 			const json2: { valid: boolean } = await res2.json();
 			return { valid: json2.valid, type: "project" };
@@ -82,7 +82,7 @@ if (process.env.SCRATCH_PASS) {
 			// await wait(2000)
 			const res2 = await fetch(
 				"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
-				json.privateCode,
+					json.privateCode,
 			);
 			const json2: { valid: boolean } = await res2.json();
 			return { valid: json2.valid, type: "comment" };
@@ -96,7 +96,7 @@ if (process.env.SCRATCH_PASS) {
 			// await wait(4000)
 			const res2 = await fetch(
 				"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
-				json.privateCode,
+					json.privateCode,
 			);
 			const json2: { valid: boolean } = await res2.json();
 			return { valid: json2.valid, type: "cloud" };
@@ -134,8 +134,8 @@ if (process.env.SCRATCH_PASS) {
 			};
 			return (
 				status == "wait" ? `${statuses.wait} In Progress`
-					: status == "true" ? `${statuses.true} Success`
-						: `${statuses.false} Failed`
+				: status == "true" ? `${statuses.true} Success`
+				: `${statuses.false} Failed`
 			);
 		}
 	} else {
@@ -187,7 +187,7 @@ if (process.env.SCRATCH_PASS) {
 				// await wait(2000)
 				const res2 = await fetch(
 					"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
-					json.privateCode,
+						json.privateCode,
 				);
 				const json2: { valid: boolean } = await res2.json();
 				return { valid: json2.valid, type: "project" };
@@ -206,7 +206,7 @@ if (process.env.SCRATCH_PASS) {
 				// await wait(2000)
 				const res2 = await fetch(
 					"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
-					json.privateCode,
+						json.privateCode,
 				);
 				const json2: { valid: boolean } = await res2.json();
 				return { valid: json2.valid, type: "comment" };
@@ -247,65 +247,84 @@ if (process.env.SCRATCH_PASS) {
 			};
 			return (
 				status == "wait" ? `${statuses.wait} In Progress`
-					: status == "true" ? `${statuses.true} Success`
-						: status == "error" ? `${statuses.error}`
-							: `${statuses.false} Failed`
+				: status == "true" ? `${statuses.true} Success`
+				: status == "error" ? `${statuses.error}`
+				: `${statuses.false} Failed`
 			);
 		}
 	}
 }
 if (config.roles.verified) {
-	defineChatCommand({
-		name: "verify",
-		description: "Verify with a scratch account."
-	}, async (i) => {
-		const member = await i.guild?.members.fetch(i.user)
-		if (!member) throw "what the heck"
-		const message = await i.reply({
-			content: "Starting", components: [],
-			fetchReply: true
-		})
-		while (true) {
-			const roles = [...member.roles.valueOf().values()].map((r) => r.id);
-			if (config.roles.verified && roles.includes(config.roles.verified.id)) return await i.editReply({ content: "You're already verified!" })
-			await message.edit({
-				content: "Pick a method to verify:", components: [{
-					type: ComponentType.ActionRow,
+	defineChatCommand(
+		{
+			name: "verify",
+			description: "Verify with a scratch account.",
+		},
+		async (i) => {
+			const member = await i.guild?.members.fetch(i.user);
+			if (!member) throw "what the heck";
+			const message = await i.reply({
+				content: "Starting",
+				components: [],
+				fetchReply: true,
+			});
+			while (true) {
+				const roles = [...member.roles.valueOf().values()].map((r) => r.id);
+				if (config.roles.verified && roles.includes(config.roles.verified.id))
+					return await i.editReply({ content: "You're already verified!" });
+				await message.edit({
+					content: "Pick a method to verify:",
 					components: [
 						{
-							type: ComponentType.StringSelect,
-							customId: "method",
-							placeholder: "Select A Method:",
-							options: [
-								{ label: "Cloud", value: "cloud" },
-								{ label: "Project Comment", value: "comment" },
-								{ label: "Profile Comment", value: "profile-comment" },
+							type: ComponentType.ActionRow,
+							components: [
+								{
+									type: ComponentType.StringSelect,
+									customId: "method",
+									placeholder: "Select A Method:",
+									options: [
+										{ label: "Cloud", value: "cloud" },
+										{ label: "Project Comment", value: "comment" },
+										{ label: "Profile Comment", value: "profile-comment" },
+									],
+								},
 							],
 						},
 					],
-				},],
-			})
-			const choice = (await message.awaitMessageComponent({
-				componentType: ComponentType.StringSelect,
-				filter: (b) => b.user.id === i.user.id
-			}))
-			choice.deferUpdate()
-			const method = choice.values[0]
-			let username = ""
-			let valid: any
+				});
+				const choice = await message.awaitMessageComponent({
+					componentType: ComponentType.StringSelect,
+					filter: (b) => b.user.id === i.user.id,
+				});
+				choice.deferUpdate();
+				const method = choice.values[0];
+				let username = "";
+				let valid: any;
 
-			if (method == "profile-comment") {
-				await message.edit({ components: [], content: `Send your scratch username (note: do not include anything else in your message, just your username)` })
-				const reply = [...(await message.channel.awaitMessages({
-					filter: (m) => m.author.id === i.user.id,
-					max: 1
-				})).values()][0]
-				if (!reply) return await message.edit({ components: [], content: `no username recieved` })
-				username = reply.content.trim()
-		await	reply.delete()
-				const codes = await gracefulFetch(`https://scratch-coders-auth-server.vercel.app/auth/gettokens?redirect=aa&method=${method}&username=${username}`)
-				await message.edit(
-					{
+				if (method == "profile-comment") {
+					await message.edit({
+						components: [],
+						content: `Send your scratch username (note: do not include anything else in your message, just your username)`,
+					});
+					const reply = [
+						...(
+							await message.channel.awaitMessages({
+								filter: (m) => m.author.id === i.user.id,
+								max: 1,
+							})
+						).values(),
+					][0];
+					if (!reply)
+						return await message.edit({
+							components: [],
+							content: `no username recieved`,
+						});
+					username = reply.content.trim();
+					await reply.delete();
+					const codes = await gracefulFetch(
+						`https://scratch-coders-auth-server.vercel.app/auth/gettokens?redirect=aa&method=${method}&username=${username}`,
+					);
+					await message.edit({
 						content: `1. open [the your profile](https://scratch.mit.edu/users/${username})\n2. Paste \`${codes.publicCode}\` into your profile comments\n3. Click the button below`,
 						components: [
 							{
@@ -315,76 +334,90 @@ if (config.roles.verified) {
 										type: ComponentType.Button,
 										customId: "finish",
 										label: "Finish",
-										style: ButtonStyle.Success
-
+										style: ButtonStyle.Success,
 									},
 								],
-							}
-						]
-					}
-				);
-				await (await message.awaitMessageComponent({
-					componentType: ComponentType.Button,
-					filter: (b) => b.user.id === i.user.id
-				})).deferUpdate()
-				await message.edit({ components: [], content: "Checking..." })
-				valid = await gracefulFetch(`https://scratch-coders-auth-server.vercel.app/auth/verifytoken/${codes.privateCode}`)
-			} else {
-				await message.edit({ components: [], content: `Fetching Auth Codes...` })
-				const codes = await gracefulFetch(`https://scratch-coders-auth-server.vercel.app/auth/gettokens?redirect=aa&method=${method}`)
-				await message.edit({
-					content: `1. open [the scratch project](https://scratch.mit.edu/projects/${codes.authProject}/)\n2. Paste \`${codes.publicCode}\` in the project${method == "comment" ? "'s comments" : ""}\n3. Click the button below`,
-					components: [{
-						type: ComponentType.ActionRow,
-						components: [
-							{
-								type: ComponentType.Button,
-								customId: "finish",
-								label: "Finish",
-								style: ButtonStyle.Success
-
 							},
 						],
-					},]
-				});
-				await (await message.awaitMessageComponent({
-					componentType: ComponentType.Button,
-					filter: (b) => b.user.id === i.user.id
-				})).deferUpdate()
-				await message.edit({ components: [], content: "Checking..." })
-				valid = await gracefulFetch(`https://scratch-coders-auth-server.vercel.app/auth/verifytoken/${codes.privateCode}`) 
-				username = valid?.username
-			}
-			if (valid?.valid && config.roles.verified) {
-				await member.roles.add(config.roles.verified)
-				await log(
-					`${LoggingEmojis.Integration} ${userMention(
-						i.user.id,
-					)} linked their Scratch account [${username}](${constants.domains.scratch
-					}/users/${username})`,
-					LogSeverity.ServerChange,
-					{ embeds: [await handleUser(["", "", username])] },
-
-				);
-				return await message.edit({ components: [], content: "Success" })
-			}
-			await message.edit({
-				components: [{
-					type: ComponentType.ActionRow,
+					});
+					await (
+						await message.awaitMessageComponent({
+							componentType: ComponentType.Button,
+							filter: (b) => b.user.id === i.user.id,
+						})
+					).deferUpdate();
+					await message.edit({ components: [], content: "Checking..." });
+					valid = await gracefulFetch(
+						`https://scratch-coders-auth-server.vercel.app/auth/verifytoken/${codes.privateCode}`,
+					);
+				} else {
+					await message.edit({ components: [], content: `Fetching Auth Codes...` });
+					const codes = await gracefulFetch(
+						`https://scratch-coders-auth-server.vercel.app/auth/gettokens?redirect=aa&method=${method}`,
+					);
+					await message.edit({
+						content: `1. open [the scratch project](https://scratch.mit.edu/projects/${codes.authProject}/)\n2. Paste \`${codes.publicCode}\` in the project${method == "comment" ? "'s comments" : ""}\n3. Click the button below`,
+						components: [
+							{
+								type: ComponentType.ActionRow,
+								components: [
+									{
+										type: ComponentType.Button,
+										customId: "finish",
+										label: "Finish",
+										style: ButtonStyle.Success,
+									},
+								],
+							},
+						],
+					});
+					await (
+						await message.awaitMessageComponent({
+							componentType: ComponentType.Button,
+							filter: (b) => b.user.id === i.user.id,
+						})
+					).deferUpdate();
+					await message.edit({ components: [], content: "Checking..." });
+					valid = await gracefulFetch(
+						`https://scratch-coders-auth-server.vercel.app/auth/verifytoken/${codes.privateCode}`,
+					);
+					username = valid?.username;
+				}
+				if (valid?.valid && config.roles.verified) {
+					await member.roles.add(config.roles.verified);
+					await log(
+						`${LoggingEmojis.Integration} ${userMention(
+							i.user.id,
+						)} linked their Scratch account [${username}](${
+							constants.domains.scratch
+						}/users/${username})`,
+						LogSeverity.ServerChange,
+						{ embeds: [await handleUser(["", "", username])] },
+					);
+					return await message.edit({ components: [], content: "Success" });
+				}
+				await message.edit({
 					components: [
 						{
-							type: ComponentType.Button,
-							customId: "retry",
-							label: "Try again",
-							style: ButtonStyle.Success
-
+							type: ComponentType.ActionRow,
+							components: [
+								{
+									type: ComponentType.Button,
+									customId: "retry",
+									label: "Try again",
+									style: ButtonStyle.Success,
+								},
+							],
 						},
 					],
-				},], content: "Failed :("
-			})
-			await (await message.awaitMessageComponent({
-				componentType: ComponentType.Button
-			})).deferUpdate()
-		}
-	})
+					content: "Failed :(",
+				});
+				await (
+					await message.awaitMessageComponent({
+						componentType: ComponentType.Button,
+					})
+				).deferUpdate();
+			}
+		},
+	);
 }
