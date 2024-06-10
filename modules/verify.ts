@@ -11,7 +11,7 @@ import constants from "../common/constants.js";
 if (process.env.SCRATCH_PASS) {
 	let status = true;
 	const session = new ScratchSession();
-	await session.init("YandeTest", process.env.SCRATCH_PASS).catch(console.error);
+	await session.init("YandeTest", process.env.SCRATCH_PASS).catch(console.log);
 	let cloud: CloudConnection;
 	try {
 		cloud = new CloudConnection(session, 961167982);
@@ -139,7 +139,7 @@ if (process.env.SCRATCH_PASS) {
 			);
 		}
 	} else {
-		await session.init("YandeTest", process.env.SCRATCH_PASS);
+		await session.init("YandeTest", process.env.SCRATCH_PASS).catch(console.log);
 		if (!session.auth) throw Error();
 		const project = new Project(session, 961167982);
 		const user = new Profile(session, session.auth?.username);
@@ -302,6 +302,7 @@ if (config.roles.verified) {
 				})).values()][0]
 				if (!reply) return await message.edit({ components: [], content: `no username recieved` })
 				username = reply.content.trim()
+		await	reply.delete()
 				const codes = await gracefulFetch(`https://scratch-coders-auth-server.vercel.app/auth/gettokens?redirect=aa&method=${method}&username=${username}`)
 				await message.edit(
 					{

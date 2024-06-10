@@ -24,7 +24,7 @@ function assertOutsideTests<T>(value: T): NonFalsy<T> {
 }
 
 const guildIds = {
-	testing: "938438560925761619",
+	testing: "1021061241260740713",
 	development: "751206349614088204",
 } as const;
 

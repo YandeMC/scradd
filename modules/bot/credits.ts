@@ -4,7 +4,6 @@ import {
 	type Snowflake,
 	type User,
 } from "discord.js";
-import { client } from "strife.js";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
 import lockFile from "../../package-lock.json" assert { type: "json" };
@@ -13,9 +12,10 @@ import { columnize } from "../../util/discord.js";
 import { joinWithAnd } from "../../util/text.js";
 import { mentionUser } from "../settings.js";
 
-const designers = "966174686142672917",
-	developers = "938439909742616616",
-	testers = "938440159102386276";
+const designers = "1021061241260740719",
+	developers = "1021061241260740720",
+	contributer = "1195901524069601350",
+	testers = "1021061241260740718";
 
 export default async function credits(interaction: ChatInputCommandInteraction): Promise<void> {
 	await interaction.deferReply();
@@ -54,21 +54,33 @@ export default async function credits(interaction: ChatInputCommandInteraction):
 		embeds: [
 			{
 				title: "Credits",
-				description: `Scradd is hosted on [Railway](${constants.urls.railway}) using Node.JS ${process.version}.`,
+				description: `Scrub is hosted on [ fly.io](https://fly.io) using Node.JS ${process.version}.`,
 
 				fields: [
-					{ name: "🧑‍💻 Developers", value: await getRole(developers), inline: true },
-					{ name: "🖌️ Designers", value: await getRole(designers), inline: true },
+					{ name: "🧑‍💻 Developers", value: await getRole(developers)},
+					{ name: "🧩 Contributers", value: await getRole(contributer)},
+					{ name: "🖌️ Designers", value: await getRole(designers)},
 					{
 						name: "🧪 Additional beta testers",
 						value: await getRole(testers),
-						inline: true,
+						// inline: true,
+					},
+					{
+						name: "❤️ Special Credits", 
+						value: `<@462098932571308033> - Scratch Blocks Images`,
+						// inline: false,
 					},
 					...(await columnize(
-						dependencies,
+						dependencies.slice(0,dependencies.length / 2),
 						([specifier, link]) =>
 							"- " + (link ? `[${specifier}](${link})` : specifier),
 						"🗄️ Third-party code libraries",
+					)),
+					...(await columnize(
+						dependencies.slice(dependencies.length / 2),
+						([specifier, link]) =>
+							"- " + (link ? `[${specifier}](${link})` : specifier),
+						constants.zws,
 					)),
 				],
 
@@ -80,8 +92,7 @@ export default async function credits(interaction: ChatInputCommandInteraction):
 	async function getRole(roleId: Snowflake): Promise<string> {
 		const role = await config.guilds.testing.roles?.fetch(roleId);
 		const members: { user: User }[] = [...(role?.members.values() ?? [])];
-		if (roleId === designers)
-			members.push({ user: await client.users.fetch(constants.users.weirdo) });
+		
 
 		return joinWithAnd(
 			await Promise.all(
