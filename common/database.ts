@@ -153,7 +153,12 @@ export default class Database<Data extends Record<string, boolean | number | str
 
 			const files =
 				data ?
-					[{ attachment: Buffer.from(data, "utf8"), name: `${this.name}.${process.env.NODE_ENV == "production" ? "scrubdb" : "txt"}` }]
+					[
+						{
+							attachment: Buffer.from(data, "utf8"),
+							name: `${this.name}.${process.env.NODE_ENV == "production" ? "scrubdb" : "txt"}`,
+						},
+					]
 				:	[];
 			const messageContent = message.content.split("\n");
 			messageContent[3] = "";
