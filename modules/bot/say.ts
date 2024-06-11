@@ -9,7 +9,7 @@ import {
 } from "discord.js";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
-import { getBaseChannel, mentionChatCommand } from "../../util/discord.js";
+import { mentionChatCommand } from "../../util/discord.js";
 import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
 import { client } from "strife.js";
 
@@ -21,7 +21,7 @@ export default async function sayCommand(
 ): Promise<void> {
 	if (
 		config.channels.board?.id === interaction.channel?.id ||
-		config.channels.modlogs.id === getBaseChannel(interaction.channel)?.id ||
+		// config.channels.modlogs.id === getBaseChannel(interaction.channel)?.id ||
 		!interaction.channel?.permissionsFor(client.user)?.has("SendMessages")
 	) {
 		await interaction.reply({
