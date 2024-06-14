@@ -3,10 +3,13 @@ import { defineChatCommand } from "strife.js";
 
 if (process.env.SCRATCH_PASS) {
 	let status = true;
+	
 	const session = new ScratchSession();
-	await session.init("YandeTest", process.env.SCRATCH_PASS).catch(console.error);
 	let cloud: CloudConnection;
 	try {
+	await session.init("YandeTest", process.env.SCRATCH_PASS).catch(() => false);
+	
+	
 		cloud = new CloudConnection(session, 961167982);
 	} catch (error) {
 		status = false;
@@ -132,8 +135,8 @@ if (process.env.SCRATCH_PASS) {
 			);
 		}
 	} else {
-		await session.init("YandeTest", process.env.SCRATCH_PASS);
-		if (!session.auth) throw Error();
+		await session.init("YandeTest", process.env.SCRATCH_PASS).catch(() => {});
+		if (session.auth) {
 		const project = new Project(session, 961167982);
 		const user = new Profile(session, session.auth?.username);
 
@@ -244,6 +247,6 @@ if (process.env.SCRATCH_PASS) {
 				: status == "error" ? `${statuses.error}`
 				: `${statuses.false} Failed`
 			);
-		}
+		}}
 	}
 }
