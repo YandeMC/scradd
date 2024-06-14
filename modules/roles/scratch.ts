@@ -136,9 +136,8 @@ export default async function linkScratchRole(
 		LogSeverity.ServerChange,
 		{ embeds: [await handleUser(["", "", username])] },
 	);
-	const member =await config.guild.members.fetch(user.id);
-	if (config.roles.verified) 
-		await member.roles.add(config.roles.verified)
+	const member = await config.guild.members.fetch(user.id);
+	if (config.roles.verified) await member.roles.add(config.roles.verified);
 	return response.writeHead(200, { "content-type": "text/html" }).end(`
 	<!DOCTYPE html>
 	<html lang="en">
