@@ -19,7 +19,7 @@ if (
 await mongoose.connect(process.env.MONGO_URI);
 
 if (process.env.CANVAS !== "false") {
-	const { GlobalFonts } = await import("@napi-rs/canvas");
+	let { GlobalFonts } = await import("@napi-rs/canvas");
 	GlobalFonts.registerFromPath(
 		fileURLToPath(
 			import.meta.resolve("@fontsource-variable/sora/files/sora-latin-wght-normal.woff2"),
@@ -56,7 +56,8 @@ if (process.env.CANVAS !== "false") {
 			new Date(time).toLocaleString([], { weekday: "short", day: "numeric", month: "short" }),
 	});
 }
-
+// @ts-expect-error
+globalThis.window = globalThis;
 await login({
 	modulesDirectory: fileURLToPath(new URL("./modules", import.meta.url)),
 	defaultCommandAccess: process.env.GUILD_ID,

@@ -24,7 +24,7 @@ function assertOutsideTests<T>(value: T): NonFalsy<T> {
 }
 
 const guildIds = {
-	testing: "938438560925761619",
+	testing: "1021061241260740713",
 	development: "751206349614088204",
 } as const;
 
@@ -115,8 +115,8 @@ async function getConfig() {
 			booster: roles.find((role) => role.name.toLowerCase().includes("booster")),
 			active: roles.find((role) => role.name.toLowerCase().includes("active")),
 			established: roles.find((role) => role.name.toLowerCase().includes("established")),
-			verified: roles.find((role) => role.name.toLowerCase() == "verified"),
-			verifiedPerms: roles.find((role) => role.name.toLowerCase() == "verified perms"),
+			verified: roles.find((role) => role.name.toLowerCase() == "linked scratch"),
+			verifiedPerms: roles.find((role) => role.name.toLowerCase() == "verified"),
 		},
 		pingRoles: {
 			qotd: roles.find(

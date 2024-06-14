@@ -1,10 +1,5 @@
-import {
-	
-	AutoModerationActionType,
-	
-	type CommandInteractionOption,
-} from "discord.js";
-import { commands,  defineEvent } from "strife.js";
+import { AutoModerationActionType, type CommandInteractionOption } from "discord.js";
+import { commands, defineEvent } from "strife.js";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
 
