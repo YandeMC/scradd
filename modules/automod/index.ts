@@ -23,12 +23,12 @@ export function warn(
 ) {
 	config.channels.modlogs?.send(
 		"WARN " +
-		JSON.stringify({
-			user,
-			reason,
-			rawStrikes,
-			contextOrModerator,
-		}),
+			JSON.stringify({
+				user,
+				reason,
+				rawStrikes,
+				contextOrModerator,
+			}),
 	);
 }
 defineEvent.pre("interactionCreate", async (interaction) => {
@@ -57,8 +57,9 @@ defineEvent.pre("interactionCreate", async (interaction) => {
 	if (censored.strikes) {
 		await interaction.reply({
 			ephemeral: true,
-			content: `${constants.emojis.statuses.no} Please ${censored.strikes < 1 ? "don’t say that here" : "watch your language"
-				}!`,
+			content: `${constants.emojis.statuses.no} Please ${
+				censored.strikes < 1 ? "don’t say that here" : "watch your language"
+			}!`,
 		});
 		await warn(
 			interaction.user,
@@ -114,8 +115,10 @@ defineEvent.pre("threadCreate", async (thread, newlyCreated) => {
 
 	const censored = tryCensor(thread.name);
 	if (censored && censored.warning && censored.strikes) {
-		config.channels.modlogs?.send(`Possible bad words detected in thread name of ${thread.toString()}`)
-		return true
+		config.channels.modlogs?.send(
+			`Possible bad words detected in thread name of ${thread.toString()}`,
+		);
+		return true;
 	}
 	if (censored && !badWordsAllowed(thread)) {
 		await thread.delete("Bad words");
@@ -128,8 +131,10 @@ defineEvent("threadUpdate", async (oldThread, newThread) => {
 
 	const censored = tryCensor(newThread.name);
 	if (censored && censored.warning && censored.strikes) {
-		config.channels.modlogs?.send(`Possible bad words detected in thread name of ${newThread.toString()}`)
-		return true
+		config.channels.modlogs?.send(
+			`Possible bad words detected in thread name of ${newThread.toString()}`,
+		);
+		return true;
 	}
 	if (censored && !badWordsAllowed(newThread)) {
 		await newThread.setName(oldThread.name, "Censored bad word");
@@ -207,28 +212,28 @@ defineChatCommand(
 			(interaction.member instanceof GuildMember
 				? interaction.member.roles.resolve(config.roles.staff.id)
 				: interaction.member.roles.includes(config.roles.staff.id));
-		
-		
+
 		await interaction.reply({
 			ephemeral: true,
 			embeds: [
 				{
-					title: `## ⚠️ ${words.length} bad word${words.length === 1 ? "s" : ""} detected!\n`,
-					description:(isMod
-						? (`That text gives **${strikes} strike${strikes === 1 ? "" : "s"
-						}**`)
-						: undefined),
+					title: `## ⚠️ ${words.length} bad word${
+						words.length === 1 ? "s" : ""
+					} detected!\n`,
+					description: isMod
+						? `That text gives **${strikes} strike${strikes === 1 ? "" : "s"}**`
+						: undefined,
 					fields: [
 						{
 							name: "Bad words",
-							value: `*I detected the following words as bad*: ${joinWithAnd(words, (word) =>
-								underline(escapeMessage(word)),
-							)}`
-						}
-					]
+							value: `*I detected the following words as bad*: ${joinWithAnd(
+								words,
+								(word) => underline(escapeMessage(word)),
+							)}`,
+						},
+					],
 				},
 			],
-
 		});
 	},
 );

@@ -152,17 +152,23 @@ export default async function automodMessage(message: Message): Promise<boolean>
 							...words,
 							...(censored.words[index] ?? []),
 						]),
-						warning: bad.warning && censored.warning
+						warning: bad.warning && censored.warning,
 				  },
-		{ strikes: 0, words: Array.from<string[]>({ length: badWordRegexps.length }).fill([]), warning: true },
+		{
+			strikes: 0,
+			words: Array.from<string[]>({ length: badWordRegexps.length }).fill([]),
+			warning: true,
+		},
 	);
 	if (badWords.warning && badWords.words.flat().length) {
-		config.channels.modlogs?.send(`Possible bad words (${badWords.words.flat().join(", ")}) detected in ${message.url}, it would give ${badWords.strikes}`)
-		return true
+		config.channels.modlogs?.send(
+			`Possible bad words (${badWords.words.flat().join(", ")}) detected in ${
+				message.url
+			}, it would give ${badWords.strikes}`,
+		);
+		return true;
 	}
-	if (badWords.strikes ) needsDelete = true;
-
-
+	if (badWords.strikes) needsDelete = true;
 
 	if (!([...Constants.NonSystemMessageTypes] as const).includes(message.type)) needsDelete = true;
 
