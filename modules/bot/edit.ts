@@ -18,7 +18,6 @@ export default async function editMessage(
 ): Promise<InteractionResponse | undefined> {
 	if (
 		!interaction.targetMessage.editable ||
-		!interaction.targetMessage.interaction ||
 		config.channels.board?.id === interaction.channel?.id //||
 		// (config.channels.modlogs.id === getBaseChannel(interaction.channel)?.id &&
 		// 	databaseThread.id !== interaction.channel?.id)

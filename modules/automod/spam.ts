@@ -1,4 +1,4 @@
-const x: number = 5;
+const x: number = 3;
 const timeWindow: number = 20;
 
 interface Message {
@@ -23,6 +23,10 @@ export function isSpam(userId: string, message: string): boolean {
 
 	if ((userMessages[userId]?.length || 0) < x) {
 		return false;
+	}
+
+	if ((userMessages[userId]?.filter((m) => timestamp - m.timestamp <= 3).length || 0) > 5) {
+		return true;
 	}
 
 	const recentMessages = userMessages[userId]?.slice(-x);
