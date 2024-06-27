@@ -1,22 +1,10 @@
-import {
-	type BaseMessageOptions,
-	type Message,
-	type Snowflake,
-} from "discord.js";
+import { type BaseMessageOptions, type Message, type Snowflake } from "discord.js";
 import { setTimeout as wait } from "node:timers/promises";
 import { defineEvent } from "strife.js";
 
-
-
-
 import { scratchBlocksToImage } from "../blocks/index.js";
 
-
-
 defineEvent("messageCreate", async (message) => {
-
-
-
 	const response = await handleMutatable(message);
 	if (response) {
 		if (response === true) return;
@@ -51,8 +39,7 @@ defineEvent("messageUpdate", async (_, message) => {
 
 	const response = await handleMutatable(message);
 	const data = typeof response === "object" && !Array.isArray(response) && response;
-	if (found)
-		await found.edit(data || { content: ".", components: [], embeds: [], files: [] });
+	if (found) await found.edit(data || { content: ".", components: [], embeds: [], files: [] });
 	else if (data)
 		autoResponses.set(
 			message.id,
@@ -63,12 +50,9 @@ defineEvent("messageUpdate", async (_, message) => {
 async function handleMutatable(
 	message: Message,
 ): Promise<BaseMessageOptions | true | [BaseMessageOptions, ...(number | string)[]] | undefined> {
-	
-
-	
 	const blocks = /block{(.*)}/ms.exec(message.content);
 	if (blocks?.[1]) {
-		message.channel.sendTyping()
+		message.channel.sendTyping();
 		return {
 			content: "",
 			files: [await scratchBlocksToImage(blocks[1])],
@@ -76,7 +60,6 @@ async function handleMutatable(
 			components: [],
 		};
 	}
-	
 }
 
 defineEvent("messageDelete", async (message) => {
@@ -89,5 +72,3 @@ defineEvent("messageDelete", async (message) => {
 });
 
 const autoResponses = new Map<Snowflake, Message>();
-
-

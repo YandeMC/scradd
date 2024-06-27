@@ -21,14 +21,12 @@ if (process.env.CANVAS !== "false") {
 	);
 
 	// eslint-disable-next-line @typescript-eslint/naming-convention
-	
 
 	/**
 	 * @author Parts Of this code were taken from
 	 *   [org.jgrapes.webconsole.provider.chartjs](https://github.com/mnlipp/jgrapes-webconsole/blob/9381b2c/org.jgrapes.webconsole.provider.chartjs/resources/org/jgrapes/webconsole/provider/chartjs/chart.js/adapters/chartjs-adapter-simple.js)
 	 *   and [chartjs-adapter-date-std](https://github.com/gcollin/chartjs-adapter-date-std/blob/c806f2b/src/index.ts)
 	 */
-
 }
 // @ts-expect-error
 globalThis.window = globalThis;
@@ -36,9 +34,7 @@ await login({
 	modulesDirectory: fileURLToPath(new URL("./modules", import.meta.url)),
 	defaultCommandAccess: true,
 	async handleError(error, event) {
-		
-
-		 console.log(error, event);
+		console.log(error, event);
 	},
 	clientOptions: {
 		intents:
@@ -60,8 +56,5 @@ await login({
 	},
 	commandErrorMessage: `An error occurred.`,
 });
-
-
-
 
 client.user.setStatus("online");

@@ -33,6 +33,6 @@
 		"verbatimModuleSyntax": true
 	},
 	"exclude": ["./node_modules", "./.git", "./dist"],
-	"typeAcquisition": { "enable": true },
+	"typeAcquisition": { "enable": true }
 	// "include": ["./**/*", "./.*"]
 }
