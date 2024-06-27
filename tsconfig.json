@@ -34,5 +34,5 @@
 	},
 	"exclude": ["./node_modules", "./.git", "./dist"],
 	"typeAcquisition": { "enable": true },
-	"include": ["./**/*", "./.*"]
+	// "include": ["./**/*", "./.*"]
 }

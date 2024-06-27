@@ -48,6 +48,7 @@
 		"strife.js": "4.0.1"
 	},
 	"devDependencies": {
+		"@flydotio/dockerfile": "^0.5.7",
 		"@redguy12/prettier-config": "3.0.1",
 		"@types/difflib": "<=0.2",
 		"@types/eslint": "<=8.57",

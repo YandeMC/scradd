@@ -1,9 +1,9 @@
-# fly.toml app configuration file generated for scrub on 2024-04-16T15:18:28-04:00
+# fly.toml app configuration file generated for scratchblocks on 2024-06-26T20:46:04-04:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'scrub'
+app = 'scratchblocks'
 primary_region = 'iad'
 kill_timeout = '1m0s'
 
@@ -13,11 +13,9 @@ kill_timeout = '1m0s'
   internal_port = 3000
   force_https = true
   auto_stop_machines = false
-  auto_start_machines = false
+  auto_start_machines = true
   min_machines_running = 1
   processes = ['app']
 
 [[vm]]
-  cpu_kind = 'shared'
-  cpus = 1
-  memory_mb = 256
+  size = 'shared-cpu-1x'
