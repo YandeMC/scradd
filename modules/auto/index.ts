@@ -198,7 +198,7 @@ async function handleMutatable(
 					:	[],
 			};
 	}
-	
+
 	const ignored = ignoreTriggers.some((trigger) => message.content.match(trigger));
 	if (ignored) return true;
 
