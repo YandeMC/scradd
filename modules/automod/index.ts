@@ -51,10 +51,14 @@ defineEvent.pre("interactionCreate", async (interaction) => {
 	return true;
 });
 defineEvent.pre("messageCreate", async (message) => {
+	if (message.author.bot) return true
 	const a = handleMessage(message.author.id, message.content);
 	if (a) {
+		await message.reply("Slow down!")
 		await message.delete();
 		await warn(message.author, "Spamming");
+		const member = await config.guild.members.fetch(message.author.id)
+		member.disableCommunicationUntil(Date.now() + 30_000)
 	}
 	return !a;
 });
