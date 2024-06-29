@@ -157,7 +157,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 		{ strikes: 0, words: Array.from<string[]>({ length: badWordRegexps.length }).fill([]), warning: true },
 	);
 	if (badWords.warning && badWords.words.flat().length) {
-		config.channels.modlogs?.send(`Possible bad words (${badWords.words.flat().join(", ")}) detected in ${message.url}, it would give ${badWords.strikes}`)
+		config.channels.modlogs?.send(`Possible bad words (${badWords.words.flat().join(", ")}) detected in ${message.url} it would give ${badWords.strikes} strikes`)
 		return true
 	}
 	if (badWords.strikes ) needsDelete = true;

@@ -19,7 +19,7 @@ export const warningRegexps = badWords.map(
 		new RegExp(
 			((strings.length ? `${decodeRegexps(strings, true)}|` : "(?!x)x") +
 			`\\b(?:${words.length ? `(?:${decodeRegexps(words, true)})\\b` : "(?!x)x"}${prefixes.length ? `|${decodeRegexps(prefixes, true)}` : "(?!x)x"
-			})` ).replace(/\.\{0,3}\+/g,"+.{0,3}").replace(/\.\{0,3}\*/g,"*.{0,3}").replace(/\.\{0,3}\?/g,"?.{0,3}").replace(/\.\{0,3}\|/g,"|").replace(/\.\{0,3}\{(\d+)\,\}/g, "{$1,}.{0,3}"),
+			})` ).replace(/\.\{0,2}\+/g,"+.{0,2}").replace(/\.\{0,2}\*/g,"*.{0,2}").replace(/\.\{0,2}\?/g,"?.{0,2}").replace(/\.\{0,2}\|/g,"|").replace(/\.\{0,2}\{(\d+)\,\}/g, "{$1,}.{0,2}"),
 			regexpFlags,
 		),
 );
@@ -30,7 +30,7 @@ function decodeRegexps(regexps: RegExp[], hasInbetween: boolean): string {
 	return regexps.map((regx) => decodeRegexp(regx, hasInbetween)).join("|");
 }
 export function decodeRegexp({ source }: RegExp, hasInbetween: boolean): string {
-	const inbetweenCharMatch = hasInbetween ? ".{0,3}" : ""
+	const inbetweenCharMatch = hasInbetween ? ".{0,2}" : ""
 	return caesar(source).replaceAll(
 		/(?<!\\)[ a-z]/gi,
 		(letter) =>
