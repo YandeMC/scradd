@@ -153,17 +153,31 @@ export default async function automodMessage(message: Message): Promise<boolean>
 							...words,
 							...(censored.words[index] ?? []),
 						]),
-						warning: bad.warning && censored.warning
+						warning: bad.warning && censored.warning,
 				  },
-		{ strikes: 0, words: Array.from<string[]>({ length: badWordRegexps.length }).fill([]), warning: true },
+		{
+			strikes: 0,
+			words: Array.from<string[]>({ length: badWordRegexps.length }).fill([]),
+			warning: true,
+		},
 	);
 	if (badWords.warning && badWords.words.flat().length) {
-		config.channels.modlogs?.send(`Possible bad words (${badWords.words.flat().join(", ")}) detected in ${message.url} it would give ${badWords.strikes} strikes\n${badWords.words.flat().map((word) => `${word} (${ findTriggeringRegex(word).map((regex) => regex.regex).join(", ")})`).join("\n")}`)
-		return true
+		config.channels.modlogs?.send(
+			`Possible bad words (${badWords.words.flat().join(", ")}) detected in ${
+				message.url
+			} it would give ${badWords.strikes} strikes\n${badWords.words
+				.flat()
+				.map(
+					(word) =>
+						`${word} (${findTriggeringRegex(word)
+							.map((regex) => regex.regex)
+							.join(", ")})`,
+				)
+				.join("\n")}`,
+		);
+		return true;
 	}
-	if (badWords.strikes ) needsDelete = true;
-
-
+	if (badWords.strikes) needsDelete = true;
 
 	if (!([...Constants.NonSystemMessageTypes] as const).includes(message.type)) needsDelete = true;
 
@@ -195,15 +209,14 @@ export default async function automodMessage(message: Message): Promise<boolean>
 	return true;
 }
 
-
-function findTriggeringRegex(text:string) {
+function findTriggeringRegex(text: string) {
 	return badWords
-	.flat(2)
-	.map((regex) => {
-		if (new RegExp(caesar(regex?.source || ""), regexpFlags).test(text))
-			return { regex: regex?.source, raw: true };
-		if (new RegExp(decodeRegexp(regex ?? / /, true), regexpFlags).test(text))
-			return { regex: regex?.source, raw: false };
-	})
-	.filter(Boolean)
+		.flat(2)
+		.map((regex) => {
+			if (new RegExp(caesar(regex?.source || ""), regexpFlags).test(text))
+				return { regex: regex?.source, raw: true };
+			if (new RegExp(decodeRegexp(regex ?? / /, true), regexpFlags).test(text))
+				return { regex: regex?.source, raw: false };
+		})
+		.filter(Boolean);
 }
