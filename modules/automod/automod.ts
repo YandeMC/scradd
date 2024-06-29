@@ -9,9 +9,10 @@ import {
 	getBaseChannel,
 } from "../../util/discord.js";
 import { stripMarkdown } from "../../util/markdown.js";
-import { joinWithAnd } from "../../util/text.js";
-import tryCensor, { badWordRegexps, badWordsAllowed } from "./misc.js";
+import { caesar, joinWithAnd } from "../../util/text.js";
+import tryCensor, { badWordRegexps, badWordsAllowed, decodeRegexp, regexpFlags } from "./misc.js";
 import { createWorker } from "tesseract.js";
+import badWords from "./bad-words.js";
 const DEFAULT_STRIKES = 1;
 export function warn(
 	user: GuildMember | User,
@@ -157,7 +158,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 		{ strikes: 0, words: Array.from<string[]>({ length: badWordRegexps.length }).fill([]), warning: true },
 	);
 	if (badWords.warning && badWords.words.flat().length) {
-		config.channels.modlogs?.send(`Possible bad words (${badWords.words.flat().join(", ")}) detected in ${message.url} it would give ${badWords.strikes} strikes`)
+		config.channels.modlogs?.send(`Possible bad words (${badWords.words.flat().join(", ")}) detected in ${message.url} it would give ${badWords.strikes} strikes\n${badWords.words.flat().map((word) => `${word} (${ findTriggeringRegex(word).map((regex) => regex.regex).join(", ")})`).join("\n")}`)
 		return true
 	}
 	if (badWords.strikes ) needsDelete = true;
@@ -192,4 +193,17 @@ export default async function automodMessage(message: Message): Promise<boolean>
 	}
 
 	return true;
+}
+
+
+function findTriggeringRegex(text:string) {
+	return badWords
+	.flat(2)
+	.map((regex) => {
+		if (new RegExp(caesar(regex?.source || ""), regexpFlags).test(text))
+			return { regex: regex?.source, raw: true };
+		if (new RegExp(decodeRegexp(regex ?? / /, true), regexpFlags).test(text))
+			return { regex: regex?.source, raw: false };
+	})
+	.filter(Boolean)
 }
