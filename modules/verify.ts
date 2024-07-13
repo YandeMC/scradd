@@ -9,7 +9,6 @@ import log, { LoggingEmojis, LogSeverity } from "./logging/misc.js";
 import constants from "../common/constants.js";
 
 if (process.env.SCRATCH_PASS) {
-
 	defineChatCommand(
 		{
 			name: "test-verify",
@@ -18,15 +17,20 @@ if (process.env.SCRATCH_PASS) {
 		async (i) => {
 			let cloudStatus = true;
 			const session = new ScratchSession();
-			const loginSuccess = await session.init("YandeTest", process.env.SCRATCH_PASS ?? "").then(() => true).catch(() => { i.reply("Login Failed."); return false });
-			if (!loginSuccess) return
+			const loginSuccess = await session
+				.init("YandeTest", process.env.SCRATCH_PASS ?? "")
+				.then(() => true)
+				.catch(() => {
+					i.reply("Login Failed.");
+					return false;
+				});
+			if (!loginSuccess) return;
 			let cloud: CloudConnection;
 			try {
 				cloud = new CloudConnection(session, 961167982);
 			} catch (error) {
 				cloudStatus = false;
 			}
-
 
 			await session.init("YandeTest", process.env.SCRATCH_PASS ?? "");
 			if (!session.auth) throw Error();
@@ -42,7 +46,7 @@ if (process.env.SCRATCH_PASS) {
 				// await wait(2000)
 				const res2 = await fetch(
 					"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
-					json.privateCode,
+						json.privateCode,
 				);
 				const json2: { valid: boolean } = await res2.json();
 				return { valid: json2.valid, type: "project" };
@@ -56,7 +60,7 @@ if (process.env.SCRATCH_PASS) {
 				// await wait(2000)
 				const res2 = await fetch(
 					"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
-					json.privateCode,
+						json.privateCode,
 				);
 				const json2: { valid: boolean } = await res2.json();
 				return { valid: json2.valid, type: "comment" };
@@ -70,31 +74,37 @@ if (process.env.SCRATCH_PASS) {
 				// await wait(4000)
 				const res2 = await fetch(
 					"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
-					json.privateCode,
+						json.privateCode,
 				);
 				const json2: { valid: boolean } = await res2.json();
 				return { valid: json2.valid, type: "cloud" };
 			}
 
-			let resolved: { [key: string]: string } = cloudStatus ? {
-				project: "queued",
-				comment: "queued",
-				cloud: "queued",
-			} : {
-				project: "queued",
-				comment: "queued",
-				cloud: "error",
-			};
+			let resolved: { [key: string]: string } =
+				cloudStatus ?
+					{
+						project: "queued",
+						comment: "queued",
+						cloud: "queued",
+					}
+				:	{
+						project: "queued",
+						comment: "queued",
+						cloud: "error",
+					};
 
 			await i.reply({ embeds: getEmbeds(resolved) });
-			const promises = cloudStatus ?  [
-				{ type: "comment", f: testComment },
-				{ type: "project", f: testProject },
-				{ type: "cloud", f: TestCloud },
-			] : [
-				{ type: "comment", f: testComment },
-				{ type: "project", f: testProject },
-			];
+			const promises =
+				cloudStatus ?
+					[
+						{ type: "comment", f: testComment },
+						{ type: "project", f: testProject },
+						{ type: "cloud", f: TestCloud },
+					]
+				:	[
+						{ type: "comment", f: testComment },
+						{ type: "project", f: testProject },
+					];
 
 			for (const promise of promises) {
 				resolved[promise.type] = "wait";
@@ -109,8 +119,6 @@ if (process.env.SCRATCH_PASS) {
 		publicCode: string;
 		privateCode: string;
 	}
-
-
 
 	function getEmbeds(promises: { [key: string]: string }) {
 		return [
@@ -144,13 +152,12 @@ if (process.env.SCRATCH_PASS) {
 		};
 		return (
 			status == "wait" ? `${statuses.wait} In Progress`
-				: status == "true" ? `${statuses.true} Success`
-					: status == "queued" ? `${statuses.queued} Queued`
-						: status == "error" ? `${statuses.error} Cloud Server Down `
-							: `${statuses.false} Failed`
+			: status == "true" ? `${statuses.true} Success`
+			: status == "queued" ? `${statuses.queued} Queued`
+			: status == "error" ? `${statuses.error} Cloud Server Down `
+			: `${statuses.false} Failed`
 		);
 	}
-
 }
 if (config.roles.verified) {
 	defineChatCommand(
@@ -286,7 +293,8 @@ if (config.roles.verified) {
 					await log(
 						`${LoggingEmojis.Integration} ${userMention(
 							i.user.id,
-						)} linked their Scratch account [${username}](${constants.domains.scratch
+						)} linked their Scratch account [${username}](${
+							constants.domains.scratch
 						}/users/${username})`,
 						LogSeverity.ServerChange,
 						{ embeds: [await handleUser(["", "", username])] },
