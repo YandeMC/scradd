@@ -1,19 +1,21 @@
 import {
 	ActivityType,
-	ChannelType,
+	Message,
+	// ChannelType,
 	MessageFlags,
 	TimestampStyles,
 	chatInputApplicationCommandMention,
 	time,
 	userMention,
 } from "discord.js";
+import { setTimeout as wait } from "node:timers/promises";
 import { client } from "strife.js";
 import config from "../../common/config.js";
-import constants from "../../common/constants.js";
+// import constants from "../../common/constants.js";
 import { backupDatabases, prepareExit } from "../../common/database.js";
 import { statuses } from "../../common/strings.js";
 import { convertBase } from "../../util/numbers.js";
-import { gracefulFetch } from "../../util/promises.js";
+// import { gracefulFetch } from "../../util/promises.js";
 import { syncRandomBoard } from "../board/update.js";
 import getWeekly, { getChatters } from "../xp/weekly.js";
 import {
@@ -24,6 +26,9 @@ import {
 	type Reminder,
 } from "./misc.js";
 import sendQuestion from "../qotd/send.js";
+import updateTrivia from "../trivia.js";
+import constants from "../../common/constants.js";
+import { gracefulFetch } from "../../util/promises.js";
 
 let nextReminder: NodeJS.Timeout | undefined;
 export default async function queueReminders(): Promise<NodeJS.Timeout | undefined> {
@@ -59,6 +64,46 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 		const channel = await client.channels.fetch(reminder.channel).catch(() => void 0);
 		if (reminder.user === client.user.id) {
 			switch (reminder.id) {
+				case SpecialReminders.LockChannel: {
+					if (!channel?.isTextBased() || channel.isDMBased()) continue;
+					if (channel.isThread()) continue;
+					if (!config.roles.verifiedPerms) continue;
+					const talkPerms = channel
+						.permissionsFor(config.roles.verifiedPerms)
+						.has("SendMessages");
+					if (!talkPerms) {
+						await channel.permissionOverwrites.edit(config.roles.verifiedPerms, {
+							SendMessages: true,
+							AddReactions: true,
+							CreatePublicThreads: true,
+						});
+						await channel.send(
+							`${constants.emojis.statuses.yes} Unlocked ${channel.toString()}`,
+						);
+					}
+					continue;
+				}
+				case SpecialReminders.Giveaway: {
+					const [channelid, messageid] = reminder.channel.split("_");
+					const channel = await client.channels.fetch(channelid).catch(() => void 0);
+					if (!channel || !messageid) continue;
+					if (!channel?.isTextBased()) continue;
+					const msg = await channel.messages.fetch(messageid);
+					const rawReactions = (
+						await (await msg.fetch(true)).reactions.valueOf().at(0)?.users.fetch()
+					)?.filter((u) => u.id != client.user.id);
+					if (!rawReactions) return;
+					const reactions = [...rawReactions.values()];
+					const winner = reactions[Math.floor(Math.random() * reactions.length)];
+					const reply = await msg.reply(`${reactions.map((u) => u.toString())}`);
+					await reply.edit({
+						content: `# Drawing A Winner ${time(Math.floor(Date.now() / 1000) + 60, TimestampStyles.RelativeTime)}`,
+					});
+					await wait(60_000);
+					await reply.edit({ content: `# The Winner is...` });
+					await wait(4_000);
+					await reply.edit({ content: `# The Winner is ${winner?.toString()}!` });
+				}
 				case SpecialReminders.Weekly: {
 					if (!channel?.isTextBased()) continue;
 
@@ -78,34 +123,76 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					await thread.send(chatters);
 					continue;
 				}
-				case SpecialReminders.UpdateSACategory: {
-					if (channel?.type !== ChannelType.GuildCategory) continue;
-
+				case SpecialReminders.UpdateVerificationStatus: {
 					remindersDatabase.data = [
 						...remindersDatabase.data,
 						{
-							channel: reminder.channel,
-							date: Number(Date.now() + 3_600_000),
-							reminder: undefined,
-							id: SpecialReminders.UpdateSACategory,
+							channel: "0",
+							date: Date.now() + 60000 * 5,
+							id: SpecialReminders.UpdateVerificationStatus,
 							user: client.user.id,
 						},
 					];
 
-					const count = await gracefulFetch<{ count: number; _chromeCountDate: string }>(
-						`${constants.urls.usercount}?date=${Date.now()}`,
+					const ScratchOauth = await gracefulFetch(
+						"https://stats.uptimerobot.com/api/getMonitorList/K2V4js80Pk",
 					);
-					if (!count) continue;
+					if (!ScratchOauth) return;
+					let fields: any[] = [];
 
-					await channel.setName(
-						`Scratch Addons - ${count.count.toLocaleString([], {
-							compactDisplay: "short",
-							maximumFractionDigits: 1,
-							minimumFractionDigits: +(count.count > 999),
-							notation: "compact",
-						})} users`,
-						"Automated update to sync count",
+					for (const monitor of ScratchOauth.psp.monitors) {
+						const re = await gracefulFetch(
+							`https://stats.uptimerobot.com/api/getMonitor/K2V4js80Pk?m=${monitor.monitorId}`,
+						);
+						const statusEmoji =
+							re.monitor.statusClass == "success" ?
+								"<:green:1196987578881150976>"
+							:	"<:icons_outage:1199113890584342628>";
+						fields.push({
+							name: `${statusEmoji} ${re.monitor.name}`,
+							value:
+								re.monitor.statusClass == "success" ? constants.zws
+								: re.monitor.logs[0] ?
+									`Down for ${re.monitor.logs[0]?.duration}(${re.monitor.logs[0]?.reason?.code})`
+								:	`No logs.`,
+						});
+					}
+					if (!config.channels.verify) return;
+					let verifyMessages: any = await config.channels.verify?.messages.fetch({
+						limit: 100,
+					});
+					if (!verifyMessages) return;
+					let messgae: any = verifyMessages.find(
+						(msg: Message) => msg.author.id == client.user.id,
 					);
+					if (!messgae) {
+						messgae = await config.channels.verify?.send({ content: "..." });
+					}
+					const downCount: number = ScratchOauth.statistics.counts.down;
+					fields.push({
+						name: `Next update <t:${Math.floor(Date.now() / 1000) + 60 * 5}:R>.`,
+						value: constants.zws,
+					});
+					messgae.edit({
+						content: ``,
+						embeds: [
+							{
+								fields: fields,
+
+								author: {
+									name: "Verification Status",
+								},
+								title:
+									downCount != 0 ?
+										`Uh oh! ${downCount} service${
+											downCount == 1 ? " is" : "s are"
+										} down! `
+									:	"All good!",
+								color: 16754688,
+							},
+						],
+					});
+
 					continue;
 				}
 				case SpecialReminders.Bump: {
@@ -218,6 +305,10 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					];
 					await sendQuestion(channel);
 					continue;
+				}
+				case SpecialReminders.trivia: {
+					await config.channels.trivia?.send(`<@&${config.pingRoles.trivia}> new trivia`);
+					await updateTrivia();
 				}
 			}
 		}

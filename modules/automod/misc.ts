@@ -107,7 +107,6 @@ export function badWordsAllowed(channel?: TextBasedChannel | null): boolean {
 	return (
 		baseChannel?.type === ChannelType.DM ||
 		baseChannel?.guild.id !== config.guild.id ||
-		baseChannel.id === config.channels.devs?.id ||
 		baseChannel.parent?.id === config.channels.mod.parent?.id ||
 		(channel?.type === ChannelType.PrivateThread &&
 			baseChannel.id === config.channels.tickets?.id)

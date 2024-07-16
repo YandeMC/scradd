@@ -17,6 +17,7 @@ import type { CustomOperation } from "../util.js";
 const data: CustomOperation = {
 	name: "config",
 	description: "View and (admins only) update my configuration",
+	permissions: () => true,
 	options: [
 		{
 			name: "dynamic",

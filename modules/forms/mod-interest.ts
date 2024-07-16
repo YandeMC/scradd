@@ -1,10 +1,17 @@
 import {
 	ButtonStyle,
 	ComponentType,
+	Embed,
 	GuildMember,
+	MessageMentions,
 	TextInputStyle,
 	time,
+	userMention,
+	type ActionRowData,
 	type ButtonInteraction,
+	type InteractionButtonComponentData,
+	type MessageActionRowComponent,
+	type MessageEditOptions,
 	type ModalSubmitInteraction,
 } from "discord.js";
 import { client } from "strife.js";
@@ -16,6 +23,14 @@ import { strikeDatabase } from "../punishments/util.js";
 import giveXp from "../xp/give-xp.js";
 import { getLevelForXp } from "../xp/misc.js";
 import { getWeeklyXp, xpDatabase } from "../xp/util.js";
+import { joinWithAnd } from "../../util/text.js";
+import { convertBase } from "../../util/numbers.js";
+import { parseIds } from "./appeals/generate-appeal.js";
+// import { LoggingEmojis } from "../logging/misc.js";
+import { escapeMessage } from "../../util/markdown.js";
+
+export const NEEDED_ACCEPT = 5,
+	NEEDED_REJECT = 4;
 
 const thread =
 	getInitialChannelThreads(config.channels.admin).find(
@@ -56,7 +71,7 @@ export default async function confirmInterest(interaction: ButtonInteraction): P
 	await interaction.reply({
 		ephemeral: true,
 		content:
-			"## Moderator Interest Form\n__This is not a mod application.__ This form mainly exists just to determine who in the server wants moderator in the first place. Filling out this form does not guarantee anything. However, if you don’t fill out the form, you do not have any chance of promotion.\nAlso, know that this form is not the only step in being promoted. If admins think you are a good candidate for moderator, they will DM you further questions before promoting you.\nFinally, please note that 2-factor authentication (2FA) is required for moderators in this server. If you are unable to enable 2FA, please try using an online service such as <https://totp.app/>.\nThanks for being a part of the server and filling out the form!",
+			"## Moderator Application\n If admins think you are a good candidate for moderator, they will DM you further questions before promoting you.\nFinally, please note that 2-factor authentication (2FA) is required for moderators in this server. If you are unable to enable 2FA, please try using an online service such as <https://totp.app/>.\nThanks for being a part of the server and filling out the form!",
 
 		components: [
 			{
@@ -75,6 +90,29 @@ export default async function confirmInterest(interaction: ButtonInteraction): P
 }
 
 export async function fillInterest(interaction: ButtonInteraction): Promise<void> {
+	const member = await config.guild.members.fetch(interaction.user);
+	if (!member.joinedTimestamp)
+		return void interaction.reply({ ephemeral: true, content: "aRRRRR MATEY" });
+	const xp = xpDatabase.data.find((e) => e.user == interaction.user.id)?.xp || 0;
+	const xpRequirement = xp > 5000;
+	const joinRequirement =
+		Math.min(1, (Date.now() - 1209600 * 1000) / member.joinedTimestamp).toLocaleString([], {
+			maximumFractionDigits: 1,
+			style: "percent",
+		}) == "100%";
+
+	if (!(xpRequirement && joinRequirement)) {
+		return void (await interaction.reply({
+			ephemeral: true,
+			content:
+				"You do not meet the requirements to apply.\nhere are the requirements:\n```The person must have been in the server for atleast 2 weeks\nThe person must have atleast 5k xp```",
+			files: await makeCanvasFiles(
+				Math.min(1, xp / 5000),
+				Math.min(1, (Date.now() - 1209600 * 1000) / member.joinedTimestamp),
+			),
+		}));
+	}
+
 	const mention = interaction.user.toString();
 	await interaction.showModal({
 		customId: "_modInterestForm",
@@ -149,7 +187,64 @@ export async function fillInterest(interaction: ButtonInteraction): Promise<void
 		],
 	});
 }
+async function makeCanvasFiles(
+	progressXp: number,
+	progressJoin: number,
+): Promise<{ attachment: Buffer; name: string }[]> {
+	if (process.env.CANVAS === "false") return [];
 
+	const { createCanvas } = await import("@napi-rs/canvas");
+	const canvas = createCanvas(1000, 100);
+	const context = canvas.getContext("2d");
+	context.font = `${(canvas.height / 2) * 0.9}px ${constants.fonts}`;
+	context.fillStyle = "#0003";
+	context.fillRect(0, 0, canvas.width, canvas.height);
+	context.fillStyle = `#${constants.themeColor.toString(16)}`;
+	let rectangleSize = canvas.width * progressXp;
+	let paddingPixels = (0.18 * canvas.height) / 2;
+	context.fillRect(0, 0, rectangleSize, canvas.height / 2);
+
+	if (progressXp < 0.145) {
+		context.fillStyle = "#666";
+		context.textAlign = "end";
+		context.fillText(
+			"XP: " + progressXp.toLocaleString([], { maximumFractionDigits: 1, style: "percent" }),
+			canvas.width - paddingPixels,
+			canvas.height / 2 - paddingPixels,
+		);
+	} else {
+		context.fillStyle = "#0009";
+		context.fillText(
+			"XP: " + progressXp.toLocaleString([], { maximumFractionDigits: 1, style: "percent" }),
+			paddingPixels,
+			canvas.height / 2 - paddingPixels,
+		);
+	}
+	context.fillStyle = `#${(0x008f75).toString(16)}`;
+	rectangleSize = canvas.width * progressJoin;
+
+	context.fillRect(0, canvas.height / 2, rectangleSize, canvas.height);
+
+	if (progressJoin < 0.345) {
+		context.fillStyle = "#666";
+		context.textAlign = "end";
+		context.fillText(
+			"Date: " +
+				progressJoin.toLocaleString([], { maximumFractionDigits: 1, style: "percent" }),
+			canvas.width - paddingPixels,
+			canvas.height - paddingPixels,
+		);
+	} else {
+		context.fillStyle = "#0009";
+		context.fillText(
+			"Date: " +
+				progressJoin.toLocaleString([], { maximumFractionDigits: 1, style: "percent" }),
+			paddingPixels,
+			canvas.height - paddingPixels,
+		);
+	}
+	return [{ attachment: canvas.toBuffer("image/png"), name: "progress.png" }];
+}
 export async function submitInterest(interaction: ModalSubmitInteraction): Promise<void> {
 	if (!(interaction.member instanceof GuildMember))
 		throw new TypeError("interaction.member is not a GuildMember");
@@ -239,6 +334,7 @@ export async function submitInterest(interaction: ModalSubmitInteraction): Promi
 		],
 
 		components: [
+			getAppComponents(),
 			{
 				type: ComponentType.ActionRow,
 				components: [
@@ -291,4 +387,248 @@ export async function submitInterest(interaction: ModalSubmitInteraction): Promi
 		ephemeral: true,
 		content: `${constants.emojis.statuses.yes} Thanks for filling it out!`,
 	});
+}
+
+export function generateApp(
+	data: { components?: ActionRowData<MessageActionRowComponent>; appeal?: Embed },
+	notes: { accepted?: string; rejected?: string },
+	users: { accepters: Set<string>; rejecters: Set<string> },
+): MessageEditOptions {
+	return {
+		components: [
+			getAppComponents(users),
+			data.components ?? { type: ComponentType.ActionRow, components: [] },
+		],
+		embeds: [
+			data.appeal ?? {},
+			{
+				title:
+					users.accepters.size === NEEDED_ACCEPT ? "Accepted"
+					: users.rejecters.size === NEEDED_REJECT ? "Rejected"
+					: "Pending",
+				fields: [
+					{
+						name: "Accepters",
+						value: joinWithAnd([...users.accepters], userMention) || "Nobody",
+						inline: true,
+					},
+					{
+						name: "Rejecters",
+						value: joinWithAnd([...users.rejecters], userMention) || "Nobody",
+						inline: true,
+					},
+					{ name: constants.zws, value: constants.zws, inline: true },
+					{ name: "Accepted Note", value: notes.accepted ?? "N/A", inline: true },
+					{ name: "Rejected Note", value: notes.rejected ?? "N/A", inline: true },
+				],
+			},
+		],
+	};
+}
+
+export function getAppComponents({
+	accepters = new Set<string>(),
+	rejecters = new Set<string>(),
+} = {}): {
+	type: ComponentType.ActionRow;
+	components: [InteractionButtonComponentData, InteractionButtonComponentData];
+} {
+	const counts = `${Array.from(accepters, (id) => convertBase(id, 10, convertBase.MAX_BASE)).join(
+		"+",
+	)}|${Array.from(rejecters, (id) => convertBase(id, 10, convertBase.MAX_BASE)).join("+")}`;
+	return {
+		components: [
+			{
+				style: ButtonStyle.Success,
+				type: ComponentType.Button,
+				customId: `${counts}_acceptApp`,
+				label: `Accept (${accepters.size}/${NEEDED_ACCEPT})`,
+				disabled: rejecters.size >= NEEDED_REJECT || accepters.size >= NEEDED_ACCEPT,
+			} as const,
+			{
+				style: ButtonStyle.Danger,
+				type: ComponentType.Button,
+				customId: `${counts}_rejectApp`,
+				label: `Reject (${rejecters.size}/${NEEDED_REJECT})`,
+				disabled: rejecters.size >= NEEDED_REJECT || accepters.size >= NEEDED_ACCEPT,
+			} as const,
+		],
+		type: ComponentType.ActionRow,
+	};
+}
+
+export async function confirmAcceptApp(
+	interaction: ButtonInteraction,
+	counts: string,
+): Promise<void> {
+	const value = interaction.message.embeds[1]?.fields.find(
+		(field) => field.name == "Accepted Note",
+	)?.value;
+	await interaction.showModal({
+		components: [
+			{
+				components: [
+					{
+						customId: "note",
+						label: "Why should they be mod?",
+						style: TextInputStyle.Paragraph,
+						type: ComponentType.TextInput,
+						value: value === "N/A" ? undefined : value,
+						minLength: 10,
+						maxLength: 1024,
+					},
+				],
+
+				type: ComponentType.ActionRow,
+			},
+		],
+
+		customId: `${counts}_acceptApp`,
+		title: "Accept Mod App (user may see the reason)",
+	});
+}
+export async function confirmRejectApp(
+	interaction: ButtonInteraction,
+	counts: string,
+): Promise<void> {
+	const value = interaction.message.embeds[1]?.fields.find(
+		(field) => field.name == "Rejected Note",
+	)?.value;
+	await interaction.showModal({
+		components: [
+			{
+				components: [
+					{
+						customId: "note",
+						label: "Why shouldn’t they be mod?",
+						style: TextInputStyle.Paragraph,
+						type: ComponentType.TextInput,
+						value: value === "N/A" ? undefined : value,
+						minLength: 10,
+						maxLength: 1024,
+					},
+				],
+
+				type: ComponentType.ActionRow,
+			},
+		],
+
+		customId: `${counts}_rejectApp`,
+		title: "Reject Mod App (user may see the reason)",
+	});
+}
+export async function submitAcceptApp(
+	interaction: ModalSubmitInteraction,
+	ids: string,
+): Promise<void> {
+	const users = parseIds(ids);
+	await interaction.reply({
+		content: `${
+			constants.emojis.statuses.yes
+		} ${interaction.user.toString()} accepted the Mod Application.`,
+		ephemeral: users.accepters.has(interaction.user.id),
+	});
+	users.accepters.add(interaction.user.id);
+	users.rejecters.delete(interaction.user.id);
+
+	const note = escapeMessage(interaction.fields.getTextInputValue("note"));
+	await interaction.message?.edit(
+		generateApp(
+			{
+				components: interaction.message.components[1],
+				appeal: interaction.message.embeds[0],
+			},
+			{
+				accepted: note,
+				rejected: interaction.message.embeds[1]?.fields.find(
+					(field) => field.name == "Rejected Note",
+				)?.value,
+			},
+			users,
+		),
+	);
+
+	if (users.accepters.size >= NEEDED_ACCEPT) {
+		const mention = interaction.message?.embeds[0]?.description ?? "";
+		const user = await config.guild.members.fetch(
+			MessageMentions.UsersPattern.exec(mention)?.[1] ?? "",
+		);
+		const roleGiven =
+			(await user.roles
+				.add(config.roles.trialMod)
+				.then(() => true)
+				.catch(() => false)) &&
+			(await user.roles
+				.add(config.roles.staff)
+				.then(() => true)
+				.catch(() => false));
+		// appeals[mention] = { unbanned: true, note, date: new Date().toISOString() };
+		await interaction.message?.reply(
+			`${constants.emojis.statuses[roleGiven ? "yes" : "no"]}  ${
+				roleGiven ?
+					`${mention} has joined the mod team!`
+				:	"failed to give the role or they already have mod"
+			}`,
+		);
+		const embed = interaction.message?.embeds ?? [];
+		await user.send({
+			content: `Your moderator application has been rejected for the reason:\n${embed[1]?.fields.find((field) => field.name == "Accepted Note")?.value} `,
+			embeds: [
+				{
+					title: "Mod Application Status",
+					description: `**Urgent News From Our Staff Team:**\n\nHi yande.dev,\n\nWe have news regarding your recent **mod application** in Scratch Coders. After reviewing your application, the admin teams have come to a decision.\n\n**Status:**\n\n||Your trial mod application has been **accepted**! Congratulations! Our staff members will reach out and acquaint you with the staff rules and procedures soon! We look forward to working with you! \n accepted reason:\n${embed[1]?.fields.find((field) => field.name == "Accepted Note")?.value} ||`,
+					color: 0xffffff,
+					fields: [],
+				},
+				embed[0] ? embed[0] : {},
+			],
+		});
+	}
+}
+export async function submitRejectApp(
+	interaction: ModalSubmitInteraction,
+	ids: string,
+): Promise<void> {
+	const users = parseIds(ids);
+	await interaction.reply({
+		content: `${
+			constants.emojis.statuses.no
+		} ${interaction.user.toString()} rejected the Mod Application.`,
+		ephemeral: users.rejecters.has(interaction.user.id),
+	});
+	users.rejecters.add(interaction.user.id);
+	users.accepters.delete(interaction.user.id);
+
+	const note = escapeMessage(interaction.fields.getTextInputValue("note"));
+	await interaction.message?.edit(
+		generateApp(
+			{
+				components: interaction.message.components[1],
+				appeal: interaction.message.embeds[0],
+			},
+			{
+				accepted: interaction.message.embeds[1]?.fields.find(
+					(field) => field.name == "Accepted Note",
+				)?.value,
+				rejected: note,
+			},
+			users,
+		),
+	);
+
+	if (users.rejecters.size >= NEEDED_REJECT) {
+		const mention = interaction.message?.embeds[0]?.description ?? "";
+		const user = await config.guild.members.fetch(
+			MessageMentions.UsersPattern.exec(mention)?.[1] ?? "",
+		);
+		// applications[mention] = { unbanned: false, note, date: new Date().toISOString() };d
+		await interaction.message?.reply(
+			`${constants.emojis.statuses.yes} ${mention} will not get mod.`,
+		);
+		const embed = interaction.message?.embeds ?? [];
+		await user.send({
+			content: `Your moderator application has been rejected for the reason:\n${embed[1]?.fields.find((field) => field.name == "Rejected Note")?.value} `,
+			embeds: [embed[0] ? embed[0] : {}],
+		});
+	}
 }

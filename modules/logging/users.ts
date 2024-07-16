@@ -1,4 +1,5 @@
 import {
+	Presence,
 	time,
 	type AuditLogEvent,
 	type GuildMember,
@@ -52,6 +53,14 @@ export async function guildMemberAdd(member: GuildMember): Promise<void> {
 		await log(
 			`${LoggingEmojis.Punishment} ${member.toString()} marked as likely spammer`,
 			LogSeverity.Alert,
+		);
+	}
+}
+export async function presenceUpdate(oldPresence: Presence | null, newPresence: Presence | null) {
+	if (oldPresence?.status != newPresence?.status) {
+		await log(
+			`${LoggingEmojis.User} ${newPresence?.user?.toString()} Changed their presence from ${oldPresence?.status} to ${newPresence?.status}`,
+			LogSeverity.Lurk,
 		);
 	}
 }

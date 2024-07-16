@@ -24,7 +24,7 @@ function assertOutsideTests<T>(value: T): NonFalsy<T> {
 }
 
 const guildIds = {
-	testing: "938438560925761619",
+	testing: "1021061241260740713",
 	development: "751206349614088204",
 } as const;
 
@@ -47,6 +47,8 @@ async function getConfig() {
 	const staffRole = assertOutsideTests(
 		roles.find((role) => role.name.toLowerCase().startsWith("staff")) ?? modRole,
 	);
+	const trialRole =
+		roles.find((role) => role.name.toLowerCase().startsWith("trial")) ?? staffRole;
 	const execRole = roles.find((role) => role.name.toLowerCase().includes("exec")) ?? staffRole;
 
 	return {
@@ -65,16 +67,16 @@ async function getConfig() {
 		),
 
 		channels: {
-			info: getChannel("Info", ChannelType.GuildCategory, "start"),
-			announcements:
-				guild?.systemChannel ?? getChannel("server", ChannelType.GuildText, "start"),
+			info: getChannel("info", ChannelType.GuildCategory, "start"),
+			announcements: getChannel("server-news", ChannelType.GuildText, "start"),
 			board: getChannel(
 				"board",
 				[ChannelType.GuildText, ChannelType.GuildAnnouncement],
 				"end",
 			),
-			servers: getChannel("servers", ChannelType.GuildText, "end"),
-			tickets: getChannel("contact", ChannelType.GuildText, "start"),
+
+			tickets: getChannel("tickets", ChannelType.GuildText, "start"),
+			verify: getChannel("verify", ChannelType.GuildText, "end"),
 			server: "1138116320249000077",
 			welcome: getChannel("welcome", ChannelType.GuildText),
 			intros: getChannel("intro", ChannelType.GuildText, "partial"),
@@ -86,40 +88,131 @@ async function getConfig() {
 
 			general: getChannel("general", ChannelType.GuildText),
 
-			support: getChannel("support", ChannelType.GuildText, "partial"),
 			updates: getChannel("updates", ChannelType.GuildText, "partial"),
 			suggestions: getChannel("suggestions", ChannelType.GuildForum),
-			bugs: getChannel("bug", ChannelType.GuildForum, "start"),
-			devs: getChannel("devs", ChannelType.GuildText, "start"),
+			level: getChannel("level", ChannelType.GuildText),
 
 			qotd: getChannel("question", ChannelType.GuildForum, "partial"),
 			share: getChannel("share", ChannelType.GuildForum),
 			advertise:
-				getChannel("advertise", ChannelType.GuildText, "partial") ??
-				getChannel("promo", ChannelType.GuildText, "partial"),
+				getChannel("advertise", ChannelType.GuildForum, "partial") ??
+				getChannel("promo", ChannelType.GuildForum, "partial"),
 			bots: getChannel("bots", ChannelType.GuildText, "partial"),
-
+			trivia: getChannel("trivia", ChannelType.GuildText, "partial"),
 			oldSuggestions: getChannel("suggestions", ChannelType.GuildText, "partial"),
+			help: getChannel("help", ChannelType.GuildForum, "partial"),
+			radio: getChannel("radio", ChannelType.GuildVoice, "partial"),
 		},
 
 		roles: {
 			mod: modRole ?? staffRole,
 			exec: execRole,
 			staff: staffRole,
+			trialMod: trialRole,
 			weeklyWinner: roles.find((role) => role.name.toLowerCase().includes("weekly")),
 			dev: roles.find((role) => role.name.toLowerCase().startsWith("dev")),
-			epic: roles.find((role) => role.name.toLowerCase().includes("epic")),
+			epic: roles.find((role) => role.name.toLowerCase().includes("premium")),
 			booster: roles.find((role) => role.name.toLowerCase().includes("booster")),
 			active: roles.find((role) => role.name.toLowerCase().includes("active")),
 			established: roles.find((role) => role.name.toLowerCase().includes("established")),
 			autoKick: roles.find((role) => role.name.toLowerCase().includes("autokick")),
+			verified: roles.find((role) => role.name.toLowerCase() == "linked scratch"),
+			verifiedPerms: roles.find((role) => role.name.toLowerCase() == "verified"),
+		},
+		pingRoles: {
+			qotd: roles.find(
+				(role) =>
+					role.name.toLowerCase().includes("qotd") &&
+					role.name.toLowerCase().startsWith("@"),
+			),
+			trivia: roles.find(
+				(role) =>
+					role.name.toLowerCase().includes("trivia") &&
+					role.name.toLowerCase().startsWith("@"),
+			),
+			announcements: roles.find(
+				(role) =>
+					role.name.toLowerCase().includes("announ") &&
+					role.name.toLowerCase().startsWith("@"),
+			),
+			changes: roles.find(
+				(role) =>
+					role.name.toLowerCase().includes("changes") &&
+					role.name.toLowerCase().startsWith("@"),
+			),
+			givaways: roles.find(
+				(role) =>
+					role.name.toLowerCase().includes("givaway") &&
+					role.name.toLowerCase().startsWith("@"),
+			),
+			events: roles.find(
+				(role) =>
+					role.name.toLowerCase().includes("event") &&
+					role.name.toLowerCase().startsWith("@"),
+			),
+			polls: roles.find(
+				(role) =>
+					role.name.toLowerCase().includes("poll") &&
+					role.name.toLowerCase().startsWith("@"),
+			),
+			qdex: roles.find(
+				(role) =>
+					role.name.toLowerCase().includes("qdex") &&
+					role.name.toLowerCase().startsWith("@"),
+			),
+			help: {
+				js: roles.find(
+					(role) =>
+						(role.name.toLowerCase().includes("javascript") ||
+							role.name.toLowerCase().includes("js")) &&
+						role.name.toLowerCase().includes("helper"),
+				),
+				py: roles.find(
+					(role) =>
+						(role.name.toLowerCase().includes("python") ||
+							role.name.toLowerCase().includes("py")) &&
+						role.name.toLowerCase().includes("helper"),
+				),
+				web: roles.find(
+					(role) =>
+						(role.name.toLowerCase().includes("html") ||
+							role.name.toLowerCase().includes("css")) &&
+						role.name.toLowerCase().includes("helper"),
+				),
+				scratch: roles.find(
+					(role) =>
+						(role.name.toLowerCase().includes("scratch") ||
+							role.name.toLowerCase().includes("scratch")) &&
+						role.name.toLowerCase().includes("helper"),
+				),
+				turbowarp: roles.find(
+					(role) =>
+						(role.name.toLowerCase().includes("turbowarp") ||
+							role.name.toLowerCase().includes("pm")) &&
+						role.name.toLowerCase().includes("helper"),
+				),
+				java: roles.find(
+					(role) =>
+						(role.name.toLowerCase().includes("java") ||
+							role.name.toLowerCase().includes("kotlin")) &&
+						role.name.toLowerCase().includes("helper"),
+				),
+				c: roles.find(
+					(role) =>
+						(role.name.toLowerCase().includes("c/") ||
+							role.name.toLowerCase().includes("cpp") ||
+							role.name.toLowerCase().includes("c#") ||
+							role.name.toLowerCase().includes("c++")) &&
+						role.name.toLowerCase().includes("helper"),
+				),
+			},
 		},
 	};
 
 	function getChannel<T extends ChannelType>(
 		name: string,
 		type: T | T[] = [],
-		matchType: "end" | "full" | "partial" | "start" = "full",
+		matchType: "end" | "full" | "partial" | "start" = "partial",
 	): Extract<NonThreadGuildBasedChannel, { type: T }> | undefined {
 		const types = new Set<ChannelType>([type].flat());
 		return channels.find(
@@ -127,10 +220,10 @@ async function getConfig() {
 				!!channel &&
 				types.has(channel.type) &&
 				{
-					end: channel.name.endsWith(name),
-					full: channel.name === name,
-					partial: channel.name.includes(name),
-					start: channel.name.startsWith(name),
+					end: channel.name.toLowerCase().endsWith(name),
+					full: channel.name.toLowerCase() === name,
+					partial: channel.name.toLowerCase().includes(name),
+					start: channel.name.toLowerCase().startsWith(name),
 				}[matchType],
 		);
 	}
@@ -149,4 +242,12 @@ export function getInitialChannelThreads(
 	channel: Extract<Channel, { threads: ThreadManager }>,
 ): Collection<string, AnyThreadChannel> {
 	return threads.filter(({ parent }) => parent?.id === channel.id);
+}
+
+export async function findRole(roleName: string) {
+	const roles =
+		(await guild?.roles.fetch())?.filter(
+			(role) => role.editable && !role.name.startsWith(CUSTOM_ROLE_PREFIX),
+		) ?? new Collection();
+	return roles.find((role) => role.name.toLowerCase().includes(roleName));
 }

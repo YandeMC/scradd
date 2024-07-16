@@ -15,6 +15,10 @@ export enum SpecialReminders {
 	SyncRandomBoard,
 	ChangeStatus,
 	QOTD,
+	trivia,
+	UpdateVerificationStatus,
+	Giveaway,
+	LockChannel,
 }
 export type Reminder = {
 	channel: Snowflake;
@@ -24,7 +28,7 @@ export type Reminder = {
 	id: SpecialReminders | string;
 };
 
-export const BUMPING_THREAD = "881619501018394725",
+export const BUMPING_THREAD = "1196269026125549578",
 	BACKUPS_THREAD = "1138197530501460030",
 	BUMP_COMMAND_ID = "947088344167366698";
 
@@ -91,7 +95,23 @@ if (
 		},
 	];
 }
-
+if (
+	process.env.NODE_ENV === "production" &&
+	!remindersDatabase.data.some(
+		(reminder) => reminder.id === SpecialReminders.UpdateVerificationStatus,
+	)
+) {
+	remindersDatabase.data = [
+		...remindersDatabase.data,
+		{
+			channel: "0",
+			date: Date.now(),
+			reminder: undefined,
+			id: SpecialReminders.UpdateVerificationStatus,
+			user: client.user.id,
+		},
+	];
+}
 if (
 	process.env.NODE_ENV === "production" &&
 	!remindersDatabase.data.some((reminder) => reminder.id === SpecialReminders.BackupDatabases)

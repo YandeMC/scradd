@@ -57,7 +57,8 @@ if (features._canvas) {
 			new Date(time).toLocaleString([], { weekday: "short", day: "numeric", month: "short" }),
 	});
 }
-
+// @ts-expect-error
+globalThis.window = globalThis;
 await login({
 	modulesDirectory: fileURLToPath(new URL("./modules", import.meta.url)),
 	defaultCommandAccess: process.env.GUILD_ID,

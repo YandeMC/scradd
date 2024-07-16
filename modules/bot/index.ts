@@ -65,7 +65,12 @@ defineMenuCommand(
 	},
 );
 defineModal("say", async (interaction, reply) => {
-	await say(interaction, interaction.fields.getTextInputValue("message"), reply || undefined);
+	await say(
+		interaction,
+		interaction.fields.getTextInputValue("message"),
+		reply || undefined,
+		interaction.fields.getTextInputValue("json") != "",
+	);
 });
 
 defineChatCommand(

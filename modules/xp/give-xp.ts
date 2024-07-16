@@ -141,7 +141,7 @@ async function sendLevelUpMessage(member: GuildMember, newXp: number, url?: stri
 	const pingsDefault = (await getDefaultSettings(member)).levelUpPings;
 	const pingsEnabled = pingsConfigured ?? pingsDefault;
 
-	await config.channels.bots?.send({
+	await config.channels.level?.send({
 		allowedMentions: pingsEnabled ? undefined : { users: [] },
 		content: `🎉 ${member.toString()}`,
 		components:

@@ -3,6 +3,7 @@ import config from "../../common/config.js";
 import { joinWithAnd } from "../../util/text.js";
 import log, { LogSeverity, LoggingEmojis, extraAuditLogsInfo, type AuditLog } from "./misc.js";
 import constants from "../../common/constants.js";
+import { updateCategories } from "../roles/categories.js";
 
 export async function memberRoleUpdate(
 	entry: AuditLog<AuditLogEvent.MemberRoleUpdate, "$add" | "$remove">,
@@ -33,7 +34,7 @@ export async function memberRoleUpdate(
 			:	accumulator,
 		{},
 	);
-
+	updateCategories(await config.guild.members.fetch(entry.target));
 	if ($add) {
 		await logRoles($add.assignable, "gained", LogSeverity.Resource);
 		await logRoles($add.unassignable, "gained", LogSeverity.ServerChange);

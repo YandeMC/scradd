@@ -22,7 +22,6 @@ const data: CustomOperation = {
 			config.guild.rulesChannel ??
 			config.channels.welcome ??
 			config.channels.announcements ??
-			config.channels.support ??
 			getBaseChannel(interaction.channel);
 		if (!channel) throw new ReferenceError("Could not find a channel to direct the invite to");
 

@@ -15,8 +15,8 @@ import Database from "../../common/database.js";
 import { extractMessageExtremities, getBaseChannel, messageToEmbed } from "../../util/discord.js";
 import tryCensor, { censor } from "../automod/misc.js";
 
-export const BOARD_EMOJI = process.env.NODE_ENV === "production" ? "🥔" : "⭐",
-	REACTIONS_NAME = process.env.NODE_ENV === "production" ? "Potatoes" : "Stars";
+export const BOARD_EMOJI = process.env.NODE_ENV === "production" ? "🍉" : "⭐",
+	REACTIONS_NAME = process.env.NODE_ENV === "production" ? "Melons" : "Stars";
 
 /** Number of days for required potato count to double. */
 const DECAY_SPEED = 750;
@@ -37,12 +37,12 @@ await boardDatabase.init();
 
 const COUNTS = {
 	admins: 2,
-	testing: 3,
-	private: 4,
-	misc: 5,
-	default: 6,
-	memes: 8,
-	info: 12,
+	testing: 2,
+	private: 2,
+	misc: 3,
+	default: 3,
+	memes: 4,
+	info: 5,
 } as const;
 /**
  * Determines the board reaction count for a channel.
@@ -99,7 +99,7 @@ function baseReactionCount(id: Snowflake): number | undefined {
 		[config.channels.exec?.id || ""]: COUNTS.private,
 		[config.channels.admin.id || ""]: COUNTS.admins,
 		"853256939089559583": COUNTS.private, // #ba-doosters
-		[config.channels.devs?.id || ""]: COUNTS.private,
+
 		"811065897057255424": COUNTS.memes, // #memes
 		"806609527281549312": COUNTS.memes, // #collabs-and-ideas
 		[config.channels.advertise?.id || ""]: COUNTS.memes,
