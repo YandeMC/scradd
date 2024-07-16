@@ -4,7 +4,6 @@ import type { CustomOperation } from "../util.js";
 const data: CustomOperation = {
 	name: "dango-farm",
 	description: "Dango Farm",
-	permissions: () => true,
 	async command(interaction) {
 		userSettingsDatabase.updateById(
 			{ id: interaction.user.id, dangoFarm: true },

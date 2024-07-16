@@ -18,7 +18,11 @@ export default async function answerSuggestion(rawEntry: GuildAuditLogsEntry): P
 
 	if (!(entry.target instanceof ThreadChannel)) return;
 	const channel = entry.target.parent;
-	if (!(channel instanceof ForumChannel)) return;
+	if (
+		!(channel instanceof ForumChannel) ||
+		![config.channels.suggestions?.id, config.channels.bugs?.id].includes(channel.id)
+	)
+		return;
 
 	const changes = entry.changes.filter(
 		(change): change is { key: "applied_tags"; old: Snowflake[]; new: Snowflake[] } =>
@@ -29,12 +33,12 @@ export default async function answerSuggestion(rawEntry: GuildAuditLogsEntry): P
 	const oldAnswer = parseSuggestionTags(
 		changes[0]?.old ?? [],
 		channel.availableTags,
-		suggestionAnswers[0],
+		channel.id === config.channels.bugs?.id ? "Unconfirmed" : suggestionAnswers[0],
 	).answer;
 	const newAnswer = parseSuggestionTags(
 		changes.at(-1)?.new ?? [],
 		channel.availableTags,
-		suggestionAnswers[0],
+		channel.id === config.channels.bugs?.id ? "Unconfirmed" : suggestionAnswers[0],
 	).answer;
 	if (oldAnswer.name === newAnswer.name) return;
 

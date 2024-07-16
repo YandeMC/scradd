@@ -71,6 +71,12 @@ defineEvent("messageCreate", async (message) => {
 								} as const,
 							]
 						:	[]),
+						{
+							type: ComponentType.Button,
+							style: ButtonStyle.Link,
+							label: "SA Support",
+							url: config.channels.support?.url ?? channelLink("", config.guild.id),
+						},
 					],
 				},
 			],
@@ -92,11 +98,12 @@ defineButton("contactMods", async (interaction) => {
 							...Object.entries({
 								appeal: "Appeal a strike",
 								report: "Report a user",
-								role: "Request a role",
-								bug: "Report a Scrub bug",
+								role: "Request a contributor role",
+								bug: "Report a Scradd bug",
 								[SERVER_CATEGORY]: "Suggest a server change",
 								rules: "Get clarification on a rule",
-								[SA_CATEGORY]: "Get help with code",
+								[SA_CATEGORY]: "Get help with Scratch Addons",
+								server: "Add your server to Other Scratch Servers",
 								other: "Other",
 							} satisfies Record<
 								Category | typeof SA_CATEGORY | typeof SERVER_CATEGORY,

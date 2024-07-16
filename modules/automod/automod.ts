@@ -6,6 +6,7 @@ import {
 	GlobalAnimatedEmoji,
 	GlobalBotInvitesPattern,
 	InvitesPattern,
+	getAllMessages,
 	getBaseChannel,
 } from "../../util/discord.js";
 import { stripMarkdown } from "../../util/markdown.js";
@@ -17,6 +18,26 @@ import { ESTABLISHED_THRESHOLD, getLevelForXp } from "../xp/misc.js";
 import { xpDatabase } from "../xp/util.js";
 import tryCensor, { badWordRegexps, badWordsAllowed } from "./misc.js";
 import { ignoredDeletions } from "../logging/messages.js";
+
+const { threads } = (await config.channels.servers?.threads.fetchActive()) ?? {};
+const whitelistedInvites = await Promise.all(
+	threads?.map(async (thread) =>
+		(await getAllMessages(thread)).flatMap(
+			({ content }) =>
+				content.match(InvitesPattern)?.map((link) => link.split("/").at(-1) ?? link) ?? [],
+		),
+	) ?? [],
+);
+const WHITELISTED_INVITE_GUILDS = new Set([
+	config.guild.id,
+	...config.otherGuildIds,
+	...(await Promise.all(
+		whitelistedInvites
+			.flat()
+			.map(async (link) => (await client.fetchInvite(link).catch(() => void 0))?.guild?.id),
+	)),
+	undefined, // Invalid links
+]);
 
 const BLACKLISTED_DOMAINS = [
 	"scratch.camp",
@@ -81,7 +102,13 @@ export default async function automodMessage(message: Message): Promise<boolean>
 		!baseChannel.isDMBased() &&
 		baseChannel.permissionsFor(baseChannel.guild.id)?.has("SendMessages")
 	) {
-		const badInvites = [...new Set(invites.map(([link]) => link))];
+		const badInvites = [
+			...new Set(
+				invites
+					.filter(([, invite]) => !WHITELISTED_INVITE_GUILDS.has(invite?.guild?.id))
+					.map(([link]) => link),
+			),
+		];
 
 		if (badInvites.length) {
 			await warn(

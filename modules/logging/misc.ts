@@ -104,12 +104,6 @@ export enum LogSeverity {
 	 * - Voice channel state changed.
 	 */
 	Resource,
-	/**
-	 * Logged for lurkurs,
-	 *
-	 * - User changed presence.
-	 */
-	Lurk,
 }
 
 export default async function log(

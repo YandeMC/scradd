@@ -1,14 +1,22 @@
-import { AutoModerationActionType, type CommandInteractionOption } from "discord.js";
-import { commands, defineEvent } from "strife.js";
+import {
+	ApplicationCommandOptionType,
+	AutoModerationActionType,
+	GuildMember,
+	MessageType,
+	underline,
+	type CommandInteractionOption,
+} from "discord.js";
+import { commands, defineChatCommand, defineEvent } from "strife.js";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
-
+import { escapeMessage } from "../../util/markdown.js";
+import { joinWithAnd } from "../../util/text.js";
 import { ignoredDeletions } from "../logging/messages.js";
 import warn from "../punishments/warn.js";
-// import automodMessage from "./automod.js";
+import automodMessage from "./automod.js";
 import tryCensor, { badWordsAllowed } from "./misc.js";
-// import changeNickname from "./nicknames.js";
-import { handleMessage } from "./spam.js";
+import changeNickname from "./nicknames.js";
+
 defineEvent.pre("interactionCreate", async (interaction) => {
 	if (
 		!interaction.inGuild() ||
@@ -51,38 +59,143 @@ defineEvent.pre("interactionCreate", async (interaction) => {
 	return true;
 });
 defineEvent.pre("messageCreate", async (message) => {
-	if (message.author.bot) return true;
-	const a = handleMessage(message.author.id, message.content);
-	if (a) {
-		await message.reply("Slow down!");
-		await message.delete();
-		await warn(message.author, "Spamming");
-		const member = await config.guild.members.fetch(message.author.id);
-		member.disableCommunicationUntil(Date.now() + 30_000);
+	if (message.flags.has("Ephemeral") || message.type === MessageType.ThreadStarterMessage)
+		return false;
+
+	if (message.guild?.id === config.guild.id) return await automodMessage(message);
+	return true;
+});
+defineEvent("messageUpdate", async (_, message) => {
+	if (message.partial) return;
+	if (
+		!message.flags.has("Ephemeral") &&
+		message.type !== MessageType.ThreadStarterMessage &&
+		message.guild?.id === config.guild.id
+	)
+		return await automodMessage(message);
+	return true;
+});
+defineEvent.pre("messageReactionAdd", async (partialReaction, partialUser) => {
+	const reaction = partialReaction.partial ? await partialReaction.fetch() : partialReaction;
+	const message = reaction.message.partial ? await reaction.message.fetch() : reaction.message;
+	if (message.guild?.id !== config.guild.id) return true;
+
+	if (reaction.emoji.name && !badWordsAllowed(message.channel)) {
+		const censored = tryCensor(reaction.emoji.name, 1);
+		if (censored) {
+			await warn(
+				partialUser.partial ? await partialUser.fetch() : partialUser,
+				"Reacted with a banned emoji",
+				censored.strikes,
+				`:${reaction.emoji.name}:`,
+			);
+			await reaction.remove();
+			return false;
+		}
 	}
-	return !a;
+	return true;
 });
-defineEvent("messageCreate", async (message) => {
-	if (message.channel.id != config.channels.modlogs?.id) return;
-	if (message.author.id != "1248032347027406952") return;
-	if (!message.content.match(/^WARN\s/)) return;
-	const w: {
-		user: {
-			id: string;
-		};
-		reason: string;
-		rawStrikes: number;
-		contextOrModerator: string;
-	} = JSON.parse(message.content.replace(/^WARN\s/, "")) as {
-		user: {
-			id: string;
-		};
-		reason: string;
-		rawStrikes: number;
-		contextOrModerator: string;
-	};
-	warn(await config.guild.members.fetch(w.user.id), w.reason, w.rawStrikes, w.contextOrModerator);
+defineEvent.pre("threadCreate", async (thread, newlyCreated) => {
+	if (!newlyCreated) return false;
+	if (thread.guild.id !== config.guild.id) return true;
+
+	const censored = tryCensor(thread.name);
+	if (censored && !badWordsAllowed(thread)) {
+		await thread.delete("Bad words");
+		return false;
+	}
+	return true;
 });
+defineEvent("threadUpdate", async (oldThread, newThread) => {
+	if (newThread.guild.id !== config.guild.id) return;
+
+	const censored = tryCensor(newThread.name);
+	if (censored && !badWordsAllowed(newThread)) {
+		await newThread.setName(oldThread.name, "Censored bad word");
+	}
+});
+defineEvent("guildMemberAdd", async (member) => {
+	if (member.guild.id !== config.guild.id) return;
+	await changeNickname(member);
+});
+defineEvent("guildMemberUpdate", async (_, member) => {
+	await changeNickname(member);
+});
+defineEvent.pre("userUpdate", async (_, user) => {
+	const member = await config.guild.members.fetch(user).catch(() => void 0);
+	if (member) {
+		await changeNickname(member);
+		return true;
+	}
+	return false;
+});
+defineEvent("presenceUpdate", async (_, newPresence) => {
+	if (newPresence.guild?.id !== config.guild.id) return;
+
+	const [presence] = newPresence.activities;
+	if (!presence) return;
+
+	const status =
+		(presence.emoji?.toString() ?? "") +
+		" " +
+		(presence.state ?? newPresence.activities.find((activity) => activity.name)?.name ?? "");
+	const censored = tryCensor(status, 1);
+	if (censored && newPresence.member?.roles.resolve(config.roles.staff.id)) {
+		await warn(
+			newPresence.member,
+			"As server representatives, staff members are not allowed to have bad words in their statuses. Please change yours now to avoid another strike.",
+			censored.strikes,
+			"Set status to " + status,
+		);
+	}
+});
+
+defineChatCommand(
+	{
+		name: "is-bad-word",
+		description: "Check text for banned language",
+
+		options: {
+			text: {
+				type: ApplicationCommandOptionType.String,
+				description: "Text to check",
+				required: true,
+			},
+		},
+
+		censored: false,
+	},
+
+	async (interaction, options) => {
+		const result = tryCensor(options.text);
+		if (!result)
+			return await interaction.reply({
+				ephemeral: true,
+				content: `${constants.emojis.statuses.yes} No bad words found.`,
+			});
+
+		const words = result.words.flat();
+		const strikes = Math.trunc(result.strikes);
+
+		const isMod =
+			interaction.member instanceof GuildMember ?
+				interaction.member.roles.resolve(config.roles.mod.id)
+			:	interaction.member.roles.includes(config.roles.mod.id);
+
+		await interaction.reply({
+			ephemeral: true,
+
+			content:
+				`## ⚠️ ${words.length} bad word${words.length === 1 ? "s" : ""} detected!\n` +
+				(isMod ?
+					`That text gives **${strikes} strike${strikes === 1 ? "" : "s"}**.\n\n`
+				:	"") +
+				`*I detected the following words as bad*: ${joinWithAnd(words, (word) =>
+					underline(escapeMessage(word)),
+				)}`,
+		});
+	},
+);
 
 defineEvent("autoModerationActionExecution", async (action) => {
 	if (

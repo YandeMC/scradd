@@ -8,19 +8,22 @@ import {
 } from "discord.js";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
-// import { databaseThread } from "../../common/database.js";
-import { getMessageJSON } from "../../util/discord.js";
+import { databaseThread } from "../../common/database.js";
+import { getBaseChannel, getMessageJSON } from "../../util/discord.js";
 import { generateError } from "../logging/errors.js";
 import log, { LogSeverity, LoggingEmojis, shouldLog } from "../logging/misc.js";
+import { chatThread } from "../auto/chat.js";
 
 export default async function editMessage(
 	interaction: MessageContextMenuCommandInteraction,
 ): Promise<InteractionResponse | undefined> {
 	if (
 		!interaction.targetMessage.editable ||
-		config.channels.board?.id === interaction.channel?.id //||
-		// (config.channels.modlogs.id === getBaseChannel(interaction.channel)?.id &&
-		// 	databaseThread.id !== interaction.channel?.id)
+		!interaction.targetMessage.interaction ||
+		chatThread?.id === interaction.channel?.id ||
+		config.channels.board?.id === interaction.channel?.id ||
+		(config.channels.modlogs.id === getBaseChannel(interaction.channel)?.id &&
+			databaseThread.id !== interaction.channel?.id)
 	) {
 		return await interaction.reply({
 			content: `${constants.emojis.statuses.no} Can not edit this message!`,

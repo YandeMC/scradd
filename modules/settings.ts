@@ -55,6 +55,7 @@ export async function getDefaultSettings(user: {
 		github: !member || (getWeeklyXp(user.id) < 100 && isDev),
 		levelUpPings: process.env.NODE_ENV === "production",
 		preDango: false,
+		scraddChat: false,
 		scratchEmbeds: true,
 		useMentions: getWeeklyXp(user.id) > 100 || isDev,
 	};
@@ -224,6 +225,7 @@ export const userSettingsDatabase = new Database<
 		id: Snowflake;
 		execute?: boolean;
 		preDango?: boolean;
+		scraddChat?: boolean;
 	} & { [key in keyof typeof SETTINGS]?: boolean }
 >("user_settings");
 await userSettingsDatabase.init();
