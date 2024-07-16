@@ -10,10 +10,7 @@ import {
 } from "./autos-data.js";
 import { client } from "strife.js";
 
-export default function dad(
-	name: string,
-	_: GuildMember,
-): string | readonly [string, ...(number | string)[]] {
+export default function dad(name: string, _: GuildMember): string | readonly (number | string)[] {
 	const split = name.split(/\b/);
 	// console.log(split);
 	const firstName =

@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { client, login } from "strife.js";
 import constants from "./common/constants.js";
 import pkg from "./package.json" assert { type: "json" };
+import features from "./common/features.js";
 
 dns.setDefaultResultOrder("ipv4first");
 
@@ -18,8 +19,8 @@ if (
 
 await mongoose.connect(process.env.MONGO_URI);
 
-if (process.env.CANVAS !== "false") {
-	let { GlobalFonts } = await import("@napi-rs/canvas");
+if (features._canvas) {
+	const { GlobalFonts } = await import("@napi-rs/canvas");
 	GlobalFonts.registerFromPath(
 		fileURLToPath(
 			import.meta.resolve("@fontsource-variable/sora/files/sora-latin-wght-normal.woff2"),

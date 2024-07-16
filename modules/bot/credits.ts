@@ -6,7 +6,6 @@ import {
 } from "discord.js";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
-import lockFile from "../../package-lock.json" assert { type: "json" };
 import pkg from "../../package.json" assert { type: "json" };
 import { columnize } from "../../util/discord.js";
 import { joinWithAnd } from "../../util/text.js";
@@ -17,40 +16,21 @@ const designers = "1021061241260740719",
 	contributer = "1195901524069601350",
 	testers = "1021061241260740718";
 
+const dependencies = await Promise.all(
+	Object.keys({ ...pkg.dependencies, ...pkg.optionalDependencies }).map(async (name) => {
+		const { default: dep } = (await import(`../../../node_modules/${name}/package.json`, {
+			assert: { type: "json" },
+		})) as { default: { name: string; version: `${bigint}.${bigint}.${string}` } };
+
+		return [
+			`${inlineCode(dep.name)}@${dep.version}`,
+			`${constants.domains.npm}/${dep.name}/v/${dep.version}`,
+		] as const;
+	}),
+);
+
 export default async function credits(interaction: ChatInputCommandInteraction): Promise<void> {
-	await interaction.deferReply();
-	const dependencies = Object.keys(pkg.dependencies)
-		.map((name) => {
-			const { version } = lockFile.dependencies[name];
-
-			if (version.startsWith("file:")) return [inlineCode(name)] as const;
-
-			if (/^https?:\/\//.test(version)) return [inlineCode(name), version] as const;
-
-			if (version.startsWith("git+")) {
-				const git = version.split("+")[1]?.split("#");
-				return git ?
-						([git[1] ? (`${name}@${git[1]}` as const) : name, git[0]] as const)
-					:	([inlineCode(name)] as const);
-			}
-			if (version.startsWith("npm:")) {
-				const npm = version.split("@");
-				const reference = `${npm.length > 2 ? "@" : ""}${npm.at(-2) ?? npm[0]}`;
-				const resolvedVersion = npm.at(-1) ?? npm[0];
-				return [
-					`${inlineCode(reference)}@${resolvedVersion}`,
-					`${constants.domains.npm}/${reference}/v/${resolvedVersion}`,
-				] as const;
-			}
-
-			return [
-				`${inlineCode(name)}@${version}`,
-				`${constants.domains.npm}/${name}/v/${version}`,
-			] as const;
-		})
-		.toSorted(([one], [two]) => one.localeCompare(two));
-
-	await interaction.editReply({
+	await interaction.reply({
 		embeds: [
 			{
 				title: "Credits",
@@ -71,9 +51,8 @@ export default async function credits(interaction: ChatInputCommandInteraction):
 						// inline: false,
 					},
 					...(await columnize(
-						dependencies.slice(0, dependencies.length / 2),
-						([specifier, link]) =>
-							"- " + (link ? `[${specifier}](${link})` : specifier),
+						dependencies.toSorted(([one], [two]) => one.localeCompare(two)),
+						([specifier, link]) => `- [${specifier}](${link})`,
 						"🗄️ Third-party code libraries",
 					)),
 					...(await columnize(
@@ -93,16 +72,11 @@ export default async function credits(interaction: ChatInputCommandInteraction):
 		const role = await config.guilds.testing.roles?.fetch(roleId);
 		const members: { user: User }[] = [...(role?.members.values() ?? [])];
 
-		return joinWithAnd(
-			await Promise.all(
-				members
-					.toSorted((one, two) =>
-						one.user.displayName.localeCompare(two.user.displayName),
-					)
-					.map(({ user }) =>
-						mentionUser(user, interaction.user, interaction.guild ?? config.guild),
-					),
-			),
-		);
+		const mentions = members
+			.toSorted((one, two) => one.user.displayName.localeCompare(two.user.displayName))
+			.map(({ user }) =>
+				mentionUser(user, interaction.user, interaction.guild ?? config.guild),
+			);
+		return joinWithAnd(await Promise.all(mentions));
 	}
 }
