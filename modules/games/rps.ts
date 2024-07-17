@@ -11,6 +11,9 @@ import {
 	type APIEmbed,
 } from "discord.js";
 import { GAME_COLLECTOR_TIME } from "./misc.js";
+import { findMatch, getParticipant, setMatchWinner } from "../tournament/api.js";
+import { compressId } from "../tournament/baseconvert.js";
+import { setTimeout } from "timers/promises";
 
 let games = {} as any;
 const letters = "rps";
@@ -44,33 +47,37 @@ export default async function rps(
 			content: `${constants.emojis.statuses.no} You can’t play against that user!`,
 		});
 	}
-
 	let message: Message<boolean>;
+	message = await interaction.deferReply({
+		fetchReply: true,
+	});
+	
+	const partOfTourny: boolean = (!!options.opponent) && (await findMatch(options.opponent.user.id, interaction.user.id)) && (options.rounds == 5)
+	let match = partOfTourny && options.opponent ? await findMatch((options.opponent as GuildMember).user.id, interaction.user.id) || null : null
+
 	if (options.opponent) {
-		message = await interaction.reply({
-			content: `<@${options.opponent?.id}> get challenged lmao (${
-				options.rounds || 2
-			} rounds)`,
+		await interaction.editReply({
+			content: `<@${options.opponent?.id}>, Youve been challenged by <@${interaction.user.id}>! (${options.rounds || 2
+				} rounds) ${partOfTourny ? "\n### This match will be part of the RPS Tournament!" : ""}`,
 			components: [
 				{
 					type: ComponentType.ActionRow,
 					components: [
 						{
 							type: ComponentType.Button,
-							label: "Hell yeah",
+							label: "Accept",
 							customId: `yes`,
-							style: ButtonStyle.Danger,
+							style: ButtonStyle.Primary,
 						},
 						{
 							type: ComponentType.Button,
-							label: "NO",
+							label: "Reject",
 							customId: `no`,
-							style: ButtonStyle.Primary,
+							style: ButtonStyle.Danger,
 						},
 					],
 				},
 			],
-			fetchReply: true,
 		});
 		const collectorFilter = (i: { deferUpdate: () => void; user: { id: string } }) => {
 			i.deferUpdate();
@@ -106,10 +113,9 @@ export default async function rps(
 			return message.edit({ content: "ran outta time", components: [] });
 		}
 	} else {
-		message = await interaction.reply({
+		await interaction.editReply({
 			content: "",
 			embeds: [{ title: "Playing against bot" }],
-			fetchReply: true,
 		});
 	}
 	message.edit({
@@ -189,14 +195,14 @@ export default async function rps(
 					emojis[letters.charAt(randomIndex)];
 			}
 
-			const player1Choices: Array<any> = games[interaction.id].choices.map(
+			let player1Choices: Array<any> = games[interaction.id].choices.map(
 				(arr: any[]) => arr[0],
 			);
-			const player2Choices: Array<any> = games[interaction.id].choices.map(
+			let player2Choices: Array<any> = games[interaction.id].choices.map(
 				(arr: any[]) => arr[1],
 			);
-			const player1Choice = player1Choices[currentRound];
-			const player2Choice = player2Choices[currentRound];
+			let player1Choice = player1Choices[currentRound];
+			let player2Choice = player2Choices[currentRound];
 
 			if (!(player1Choice == emojis["-"] || player2Choice == emojis["-"])) {
 				//both players chose
@@ -204,7 +210,46 @@ export default async function rps(
 					emojis[checkWinner(player1Choice, player2Choice)];
 
 				if (games[interaction.id].round >= games[interaction.id].totalRounds) {
-					collector.stop();
+					const arr = games[interaction.id].results;
+					let counter: any = {};
+					counter[emojis["p1"]] = 0;
+					counter[emojis["p2"]] = 0; 
+					arr.forEach((ele: string | number) => {
+						if (counter[ele] != undefined) {
+							counter[ele] += 1;
+						}
+					});
+					if (counter[emojis["p1"]] != counter[emojis["p2"]])
+						collector.stop();
+					else {
+						games[interaction.id].totalRounds += 5
+
+						for (let index = 0; index < 5; index++) {
+							games[interaction.id].choices.push(...(Array.from({ length: 1 }, () => [emojis["b"], emojis["b"]])))
+							games[interaction.id].results.push(...(Array.from({ length: 1 }, () => emojis["b"])))
+							player1Choices = games[interaction.id].choices.map(
+								(arr: any[]) => arr[0],
+							);
+							player2Choices = games[interaction.id].choices.map(
+								(arr: any[]) => arr[1],
+							);
+							await message.edit({
+								embeds: GenerateRound(
+									{ name: games[interaction.id].players[0].displayName, choices: player1Choices },
+									{
+										name: games[interaction.id].players[1]?.displayName || "Scrub",
+										choices: player2Choices,
+									},
+									games[interaction.id].results,
+									"TIEBREAKER",
+									"",
+									partOfTourny,
+								), components: []
+							});
+							await setTimeout(300)
+						}
+
+					}
 				}
 				games[interaction.id].round += 1;
 			} else {
@@ -219,7 +264,34 @@ export default async function rps(
 						choices: player2Choices,
 					},
 					games[interaction.id].results,
-				),
+					"",
+					"",
+					partOfTourny
+				), components: [
+					{
+						type: ComponentType.ActionRow,
+						components: [
+							{
+								type: ComponentType.Button,
+								label: "R",
+								style: ButtonStyle.Success,
+								customId: `r-${interaction.id}`,
+							},
+							{
+								type: ComponentType.Button,
+								label: "P",
+								customId: `p-${interaction.id}`,
+								style: ButtonStyle.Danger,
+							},
+							{
+								type: ComponentType.Button,
+								label: "S",
+								customId: `s-${interaction.id}`,
+								style: ButtonStyle.Primary,
+							},
+						],
+					},
+				],
 			});
 		})
 		.on("end", async (_, endReason) => {
@@ -257,6 +329,8 @@ export default async function rps(
 				},
 				arr,
 				result,
+				"",
+				partOfTourny
 			);
 			const scoreDiff: number = Math.abs(counter[emojis["p1"]] - counter[emojis["p2"]]);
 			const resultsEmbed: APIEmbed = {
@@ -282,6 +356,27 @@ export default async function rps(
 				components: [],
 				embeds: finalEmbed,
 			});
+
+			if (endReason !== "idle" && partOfTourny && options.opponent) {
+
+
+				match = await findMatch((options.opponent as GuildMember).user.id, interaction.user.id) || null
+				if (match && match.match.state === "open") {
+					const apiPlayer1 = await getParticipant(match.match.player1_id)
+					const apiPlayer2 = await getParticipant(match.match.player2_id)
+					const fMatch = apiPlayer1.discordId === compressId(games[interaction.id].ids[0])
+
+					const player1points: number = fMatch ? counter[emojis["p1"]] : counter[emojis["p2"]]
+
+					const player2points: number = !fMatch ? counter[emojis["p1"]] : counter[emojis["p2"]]
+
+					console.log(apiPlayer1.display_name, player1points)
+					console.log(apiPlayer2.display_name, player2points)
+					const winnerId = player2points > player1points ? apiPlayer2.id : apiPlayer1.id
+					await setMatchWinner(match.match.id, winnerId, [player1points, player2points])
+
+				}
+			}
 
 			collector.stop();
 			return (games[interaction.id] = null);
@@ -309,6 +404,7 @@ function GenerateRound(
 	results: Array<any>,
 	title: string = "",
 	footer: string = "",
+	partOfTourny = false,
 ): APIEmbed[] {
 	const result = p1.choices.map((element, index) => {
 		return `${element} ${results[index]} ${p2.choices[index]}`;
@@ -316,17 +412,16 @@ function GenerateRound(
 	return [
 		{
 			description: `
-			${emojis["p1"]}${p1.name}\n${emojis["p2"]}${p2.name}\n\n${
-				emojis["p1"] + " " + emojis["draw"] + " " + emojis["p2"]
-			}\n${result.join("\n")}
+			${emojis["p1"]}${p1.name}\n${emojis["p2"]}${p2.name}\n\n${emojis["p1"] + " " + emojis["draw"] + " " + emojis["p2"]
+				}\n${result.join("\n")}
 			`,
 			author: {
 				name: "RPS",
 			},
 			footer: {
-				text: footer,
+				text: footer + (partOfTourny ? "This Game Is Part Of The Tournament!" : ""),
 			},
-			title: title,
+			title: title + partOfTourny,
 		},
 	];
 }

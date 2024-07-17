@@ -29,6 +29,7 @@
 		"@napi-rs/canvas": "0.1.52",
 		"@sa-community/addons-data": "1.37.1",
 		"@twemoji/parser": "<=15.0.3",
+		"axios": "^1.7.2",
 		"canvas": "^2.11.2",
 		"chart.js": "4.4.2",
 		"didyoumean2": "6.0.1",
