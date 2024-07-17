@@ -1,5 +1,5 @@
 import { defineChatCommand } from "strife.js";
-import { addParticipant, findMatch, formatUser, getParticipant, removeParticipant } from "./api.js";
+import { addParticipant, findMatch, findOpponent, formatUser, getParticipant, removeParticipant } from "./api.js";
 import { compressId, decompressId } from "./baseconvert.js";
 addParticipant;
 removeParticipant;
@@ -28,18 +28,20 @@ defineChatCommand({
 })
 
 defineChatCommand({
-    name:"tournament-opponent",
+    name: "tournament-opponent",
     description: "Find your opponent that youre supposed to be playing against"
 }, async (i) => {
     await i.deferReply()
-    const match = await findMatch(compressId(i.user.id))
+    const match = await findOpponent(compressId(i.user.id))
     if (!match) return await i.editReply("Match not found")
     const apiPlayer1 = await getParticipant(match.match.player1_id)
     const apiPlayer2 = await getParticipant(match.match.player2_id)
-    await i.editReply({content:"",embeds:[
-        {
-            title: "Match Found",
-            description:`<@${decompressId(apiPlayer1.discordId)}> **VS.** <@${decompressId(apiPlayer2.discordId)}>`
-        }
-    ]})
-})
+    await i.editReply({
+        content: "", embeds: [
+            {
+                title: "Match Found",
+                description: `<@${decompressId(apiPlayer1.discordId)}> **VS.** <@${decompressId(apiPlayer2.discordId)}>`
+            }
+        ]
+    })
+})                          

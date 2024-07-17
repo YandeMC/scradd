@@ -98,7 +98,7 @@ export async function removeParticipant(name: string): Promise<boolean> {
 	}
 }
 
-export async function findMatch(player1Name: string, player2Name?: string ): Promise<Match | false> {
+export async function findMatch(player1Name: string, player2Name: string ): Promise<Match | false> {
 	try {
 		const participantsResponse = await axios.get(
 			`https://api.challonge.com/v1/tournaments/${TOURNAMENT_URL}/participants.json`,
@@ -111,9 +111,9 @@ export async function findMatch(player1Name: string, player2Name?: string ): Pro
 		const player1 = participants.find(
 			(p) => regex.exec(p.participant.display_name)?.[1] === compressId(player1Name),
 		);
-		const player2 = player2Name ? participants.find(
+		const player2 = participants.find(
 			(p) => regex.exec(p.participant.display_name)?.[1] === compressId(player2Name),
-		) : true
+		) 
 
 		if (!player1 || !player2) {
 			console.error("One or both participants not found");
@@ -136,14 +136,62 @@ export async function findMatch(player1Name: string, player2Name?: string ): Pro
 					(
 						m.match.player1_id === player1.participant.id &&
 						(
-							player2 === true || m.match.player2_id === player2.participant.id
+							 m.match.player2_id === player2.participant.id
 						)
 					)
 					||
 					(
 						(
-							player2 === true || m.match.player2_id === player2.participant.id
+							 m.match.player2_id === player2.participant.id
 						) &&
+						m.match.player2_id === player1.participant.id
+					),
+			);
+
+		return match || false;
+	} catch (error) {
+		console.error("Error finding match:", error);
+		return false;
+	}
+}export async function findOpponent(player1Name: string): Promise<Match | false> {
+	try {
+		const participantsResponse = await axios.get(
+			`https://api.challonge.com/v1/tournaments/${TOURNAMENT_URL}/participants.json`,
+			{
+				params: { api_key: API_KEY },
+			},
+		);
+		const regex = /^.*\((.+)\)$/;
+		const participants: Participant[] = participantsResponse.data;
+		const player1 = participants.find(
+			(p) => regex.exec(p.participant.display_name)?.[1] === compressId(player1Name),
+		);
+	
+
+		if (!player1) {
+			console.error("One or both participants not found");
+			return false;
+		}
+
+		const matchesResponse = await axios.get(
+			`https://api.challonge.com/v1/tournaments/${TOURNAMENT_URL}/matches.json`,
+			{
+				params: { api_key: API_KEY },
+			},
+		);
+
+		const matches: Match[] = matchesResponse.data;
+
+		const match = matches
+			.filter((m) => m.match.state == "open")
+			.find(
+				(m) =>
+					(
+						m.match.player1_id === player1.participant.id
+					)
+					||
+					(
+						
 						m.match.player2_id === player1.participant.id
 					),
 			);
