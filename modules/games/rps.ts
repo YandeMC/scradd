@@ -51,14 +51,22 @@ export default async function rps(
 	message = await interaction.deferReply({
 		fetchReply: true,
 	});
-	
-	const partOfTourny: boolean = (!!options.opponent) && (await findMatch(options.opponent.user.id, interaction.user.id)) && (options.rounds == 5)
-	let match = partOfTourny && options.opponent ? await findMatch((options.opponent as GuildMember).user.id, interaction.user.id) || null : null
+
+	const partOfTourny: boolean =
+		!!options.opponent &&
+		(await findMatch(options.opponent.user.id, interaction.user.id)) &&
+		options.rounds == 5;
+	let match =
+		partOfTourny && options.opponent ?
+			(await findMatch((options.opponent as GuildMember).user.id, interaction.user.id)) ||
+			null
+		:	null;
 
 	if (options.opponent) {
 		await interaction.editReply({
-			content: `<@${options.opponent?.id}>, Youve been challenged by <@${interaction.user.id}>! (${options.rounds || 2
-				} rounds) ${partOfTourny ? "\n### This match will be part of the RPS Tournament!" : ""}`,
+			content: `<@${options.opponent?.id}>, Youve been challenged by <@${interaction.user.id}>! (${
+				options.rounds || 2
+			} rounds) ${partOfTourny ? "\n### This match will be part of the RPS Tournament!" : ""}`,
 			components: [
 				{
 					type: ComponentType.ActionRow,
@@ -213,20 +221,23 @@ export default async function rps(
 					const arr = games[interaction.id].results;
 					let counter: any = {};
 					counter[emojis["p1"]] = 0;
-					counter[emojis["p2"]] = 0; 
+					counter[emojis["p2"]] = 0;
 					arr.forEach((ele: string | number) => {
 						if (counter[ele] != undefined) {
 							counter[ele] += 1;
 						}
 					});
-					if (counter[emojis["p1"]] != counter[emojis["p2"]])
-						collector.stop();
+					if (counter[emojis["p1"]] != counter[emojis["p2"]]) collector.stop();
 					else {
-						games[interaction.id].totalRounds += 5
+						games[interaction.id].totalRounds += 5;
 
 						for (let index = 0; index < 5; index++) {
-							games[interaction.id].choices.push(...(Array.from({ length: 1 }, () => [emojis["b"], emojis["b"]])))
-							games[interaction.id].results.push(...(Array.from({ length: 1 }, () => emojis["b"])))
+							games[interaction.id].choices.push(
+								...Array.from({ length: 1 }, () => [emojis["b"], emojis["b"]]),
+							);
+							games[interaction.id].results.push(
+								...Array.from({ length: 1 }, () => emojis["b"]),
+							);
 							player1Choices = games[interaction.id].choices.map(
 								(arr: any[]) => arr[0],
 							);
@@ -235,20 +246,25 @@ export default async function rps(
 							);
 							await message.edit({
 								embeds: GenerateRound(
-									{ name: games[interaction.id].players[0].displayName, choices: player1Choices },
 									{
-										name: games[interaction.id].players[1]?.displayName || "Scrub",
+										name: games[interaction.id].players[0].displayName,
+										choices: player1Choices,
+									},
+									{
+										name:
+											games[interaction.id].players[1]?.displayName ||
+											"Scrub",
 										choices: player2Choices,
 									},
 									games[interaction.id].results,
 									"TIEBREAKER",
 									"",
 									partOfTourny,
-								), components: []
+								),
+								components: [],
 							});
-							await setTimeout(300)
+							await setTimeout(300);
 						}
-
 					}
 				}
 				games[interaction.id].round += 1;
@@ -266,8 +282,9 @@ export default async function rps(
 					games[interaction.id].results,
 					"",
 					"",
-					partOfTourny
-				), components: [
+					partOfTourny,
+				),
+				components: [
 					{
 						type: ComponentType.ActionRow,
 						components: [
@@ -330,7 +347,7 @@ export default async function rps(
 				arr,
 				result,
 				"",
-				partOfTourny
+				partOfTourny,
 			);
 			const scoreDiff: number = Math.abs(counter[emojis["p1"]] - counter[emojis["p2"]]);
 			const resultsEmbed: APIEmbed = {
@@ -358,23 +375,27 @@ export default async function rps(
 			});
 
 			if (endReason !== "idle" && partOfTourny && options.opponent) {
-
-
-				match = await findMatch((options.opponent as GuildMember).user.id, interaction.user.id) || null
+				match =
+					(await findMatch(
+						(options.opponent as GuildMember).user.id,
+						interaction.user.id,
+					)) || null;
 				if (match && match.match.state === "open") {
-					const apiPlayer1 = await getParticipant(match.match.player1_id)
-					const apiPlayer2 = await getParticipant(match.match.player2_id)
-					const fMatch = apiPlayer1.discordId === compressId(games[interaction.id].ids[0])
+					const apiPlayer1 = await getParticipant(match.match.player1_id);
+					const apiPlayer2 = await getParticipant(match.match.player2_id);
+					const fMatch =
+						apiPlayer1.discordId === compressId(games[interaction.id].ids[0]);
 
-					const player1points: number = fMatch ? counter[emojis["p1"]] : counter[emojis["p2"]]
+					const player1points: number =
+						fMatch ? counter[emojis["p1"]] : counter[emojis["p2"]];
 
-					const player2points: number = !fMatch ? counter[emojis["p1"]] : counter[emojis["p2"]]
+					const player2points: number =
+						!fMatch ? counter[emojis["p1"]] : counter[emojis["p2"]];
 
-					console.log(apiPlayer1.display_name, player1points)
-					console.log(apiPlayer2.display_name, player2points)
-					const winnerId = player2points > player1points ? apiPlayer2.id : apiPlayer1.id
-					await setMatchWinner(match.match.id, winnerId, [player1points, player2points])
-
+					console.log(apiPlayer1.display_name, player1points);
+					console.log(apiPlayer2.display_name, player2points);
+					const winnerId = player2points > player1points ? apiPlayer2.id : apiPlayer1.id;
+					await setMatchWinner(match.match.id, winnerId, [player1points, player2points]);
 				}
 			}
 
@@ -412,8 +433,9 @@ function GenerateRound(
 	return [
 		{
 			description: `
-			${emojis["p1"]}${p1.name}\n${emojis["p2"]}${p2.name}\n\n${emojis["p1"] + " " + emojis["draw"] + " " + emojis["p2"]
-				}\n${result.join("\n")}
+			${emojis["p1"]}${p1.name}\n${emojis["p2"]}${p2.name}\n\n${
+				emojis["p1"] + " " + emojis["draw"] + " " + emojis["p2"]
+			}\n${result.join("\n")}
 			`,
 			author: {
 				name: "RPS",
