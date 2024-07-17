@@ -21,7 +21,7 @@ import autoreactions from "./autos-data.js";
 import github from "./github.js";
 
 import dad from "./dad.js";
-import { getMatches, handleMatch } from "./scratch.js";	
+import { getMatches, handleMatch } from "./scratch.js";
 const REACTION_CAP = 3;
 
 const ignoreTriggers = [
