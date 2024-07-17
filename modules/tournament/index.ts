@@ -4,13 +4,6 @@ addParticipant;
 removeParticipant;
 findMatch;
 
-defineChatCommand(
-	{
-		name: "tournament-join",
-		description: "Join the RPS Tournament",
-	},
-	async (i) => {
-		const result = await addParticipant(formatUser(i.user));
 
 defineChatCommand({
     name:"tournament-join",
