@@ -18,7 +18,7 @@ defineChatCommand({
 
 defineChatCommand({
     name: "tournament-leave",
-    description: "Leave the RPS         Tournament"
+    description: "Leave the RPS Tournament"
 }, async (i) => {
     await i.deferReply()
     const result = await removeParticipant(i.user.id)
