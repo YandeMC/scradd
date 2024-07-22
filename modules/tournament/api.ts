@@ -74,9 +74,10 @@ export async function getAllParticipants() {
 	);
 	const regex = /^.*\((.+)\)$/;
 
-	
-		return (response.data as Participant[]).map((p) => ({...p.participant,discordId: regex.exec(p.participant.display_name)?.[1] as string}))
-	
+	return (response.data as Participant[]).map((p) => ({
+		...p.participant,
+		discordId: regex.exec(p.participant.display_name)?.[1] as string,
+	}));
 }
 
 export async function removeParticipant(name: string): Promise<boolean> {
@@ -114,7 +115,6 @@ export async function removeParticipant(name: string): Promise<boolean> {
 }
 
 export async function getMatches() {
-
 	const matchesResponse = await axios.get(
 		`https://api.challonge.com/v1/tournaments/${TOURNAMENT_URL}/matches.json`,
 		{
@@ -123,7 +123,7 @@ export async function getMatches() {
 	);
 
 	const matches: Match[] = matchesResponse.data;
-	return matches
+	return matches;
 }
 
 export async function findMatch(player1Name: string, player2Name: string): Promise<Match | false> {
