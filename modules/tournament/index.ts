@@ -97,7 +97,7 @@ defineEvent("presenceUpdate", async (_, presence) => {
 			.find((c) => c.p1 == presence.user?.id || c.p2 == presence.user?.id)
 	) {
 		await config.channels.rps?.send(
-			`<@${decompressId(opponent.discordId)}> and ${presence.user?.toString()}, looks like both of you are online! you should\n # FIGHT`,
+			`<@${decompressId(opponent.discordId)}> and ${presence.user?.toString()}, looks like both of you are online! you should\n# FIGHT`,
 		);
 		cooldowns.push({
 			time: Date.now(),
