@@ -102,6 +102,7 @@ async function getConfig() {
 			oldSuggestions: getChannel("suggestions", ChannelType.GuildText, "partial"),
 			help: getChannel("help", ChannelType.GuildForum, "partial"),
 			radio: getChannel("radio", ChannelType.GuildVoice, "partial"),
+			rps: getChannel("rps-chat", ChannelType.GuildText, "partial"),
 		},
 
 		roles: {

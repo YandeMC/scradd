@@ -64,6 +64,21 @@ export async function getParticipant(id: number) {
 		discordId: regex.exec(response.data.participant.display_name)?.[1] as string,
 	};
 }
+
+export async function getAllParticipants() {
+	const response = await axios.delete(
+		`https://api.challonge.com/v1/tournaments/${TOURNAMENT_URL}/participants.json`,
+		{
+			params: { api_key: API_KEY },
+		},
+	);
+	const regex = /^.*\((.+)\)$/;
+
+	
+		return (response.data as Participant[]).map((p) => ({...p.participant,discordId: regex.exec(p.participant.display_name)?.[1] as string}))
+	
+}
+
 export async function removeParticipant(name: string): Promise<boolean> {
 	try {
 		const participantsResponse = await axios.get(
@@ -96,6 +111,19 @@ export async function removeParticipant(name: string): Promise<boolean> {
 		console.error("Error removing participant:", error);
 		return false;
 	}
+}
+
+export async function getMatches() {
+
+	const matchesResponse = await axios.get(
+		`https://api.challonge.com/v1/tournaments/${TOURNAMENT_URL}/matches.json`,
+		{
+			params: { api_key: API_KEY },
+		},
+	);
+
+	const matches: Match[] = matchesResponse.data;
+	return matches
 }
 
 export async function findMatch(player1Name: string, player2Name: string): Promise<Match | false> {
@@ -135,8 +163,8 @@ export async function findMatch(player1Name: string, player2Name: string): Promi
 				(m) =>
 					(m.match.player1_id === player1.participant.id &&
 						m.match.player2_id === player2.participant.id) ||
-					(m.match.player2_id === player2.participant.id &&
-						m.match.player2_id === player1.participant.id),
+					(m.match.player2_id === player1.participant.id &&
+						m.match.player2_id === player2.participant.id),
 			);
 
 		return match || false;
