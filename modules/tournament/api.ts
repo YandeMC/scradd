@@ -51,7 +51,7 @@ export async function getTournamentData(): Promise<Tournament> {
 	});
 }
 export async function getParticipant(id: number) {
-	const response = await axios.delete(
+	const response = await axios.get(
 		`https://api.challonge.com/v1/tournaments/${TOURNAMENT_URL}/participants/${id}.json`,
 		{
 			params: { api_key: API_KEY },
@@ -66,7 +66,7 @@ export async function getParticipant(id: number) {
 }
 
 export async function getAllParticipants() {
-	const response = await axios.delete(
+	const response = await axios.get(
 		`https://api.challonge.com/v1/tournaments/${TOURNAMENT_URL}/participants.json`,
 		{
 			params: { api_key: API_KEY },
