@@ -93,7 +93,7 @@ defineEvent("presenceUpdate", async (_, presence) => {
 	if (
 		opponentOnline &&
 		!cooldowns
-			.filter((c) => Date.now() - c.time < 1800000)
+			.filter((c) => Date.now() - c.time < 7200000)
 			.find((c) => c.p1 == presence.user?.id || c.p2 == presence.user?.id)
 	) {
 		await config.channels.rps?.send(

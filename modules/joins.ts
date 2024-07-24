@@ -134,6 +134,7 @@ const introTemplate = {
 			title: "Introduction Template",
 			color: constants.themeColor,
 			description: `\`\`\`md\n- Name/Nickname: \n- Pronouns: \n- Age: \n- Scratch profile: ${constants.domains.scratch}/users/\n- Country/Location: \n- Hobbies: \n- Extra: \nNote: this is completely optional\`\`\``,
+
 		},
 	],
 };
