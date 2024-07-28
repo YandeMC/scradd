@@ -168,7 +168,7 @@ if (config.roles.verified) {
 		async (i) => {
 			const member = await i.guild?.members.fetch(i.user);
 			if (!member) throw "what the heck";
-			const message = await i.reply({
+			const message = await i.reply({		
 				content: "Starting",
 				components: [],
 				fetchReply: true,
