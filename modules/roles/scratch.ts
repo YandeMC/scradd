@@ -17,7 +17,7 @@ import config from "../../common/config.js";
 import constants from "../../common/constants.js";
 import { fetchUser } from "../../util/scratch.js";
 import { getRequestUrl } from "../../util/text.js";
-import { handleUser } from "../auto/scratch.js";
+import { handleUser } from "../autos/scratch.js";
 import log, { LogSeverity, LoggingEmojis } from "../logging/misc.js";
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
@@ -108,11 +108,7 @@ export default async function linkScratchRole(
 		body: JSON.stringify({
 			platform_name: "Scratch",
 			platform_username: username,
-			metadata: {
-				joined: ("joined" in scratch ? scratch.joined : scratch.history.joined).split(
-					"T",
-				)[0],
-			},
+			metadata: { joined: scratch.history.joined.split("T")[0] },
 		} satisfies RESTPutAPICurrentUserApplicationRoleConnectionJSONBody),
 		passThroughBody: true,
 		headers: {

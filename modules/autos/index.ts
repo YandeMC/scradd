@@ -13,7 +13,7 @@ import { setTimeout as wait } from "node:timers/promises";
 import { client, defineButton, defineEvent, defineMenuCommand } from "strife.js";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
-import { getBaseChannel, reactAll } from "../../util/discord.js";
+import { GlobalMentionsPattern, getBaseChannel, reactAll } from "../../util/discord.js";
 import { stripMarkdown } from "../../util/markdown.js";
 import { normalize } from "../../util/text.js";
 import { BOARD_EMOJI } from "../board/misc.js";
@@ -28,15 +28,16 @@ import features from "../../common/features.js";
 const REACTION_CAP = 3;
 
 const ignoreTriggers = [
-	/\bkill/i,
-	/\bsuicid/i,
-	/\bdepress/i,
-	/\bpain/i,
-	/\bsick/i,
 	/\babus/i,
+	/\bbleed/i,
+	/\bdepress/i,
+	/\bkill/i,
 	/\bkms/i,
 	/\bkys/i,
-	/\bbleed/i,
+	/\bpain/i,
+	/\bsick/i,
+	/\bsuicid/i,
+	/\bunaliv/i,
 ];
 
 const ignoredChannels = new Set<Snowflake>();
@@ -226,13 +227,15 @@ async function handleMutatable(
 		];
 
 	if (!canDoSecrets(message, true)) return;
-	const cleanContent = stripMarkdown(normalize(message.cleanContent.toLowerCase()));
-	if (/^i[\S\W]?m\b/u.test(cleanContent)) {
-		const name = cleanContent
+	const content = stripMarkdown(normalize(message.content).replaceAll(GlobalMentionsPattern, ""))
+		.toLowerCase()
+		.trim();
+	if (/^i(?:[\S\W]| a)?m\b/u.test(content)) {
+		const name = content
 			.split(
-				/[\p{Ps}\p{Pe}\p{Pi}\p{Pf}𞥞𞥟𑜽،܀۔؛⁌᭟＂‽՜؟𑜼՝𑿿։꛴⁍፨"⸘‼՞᨟꛵꛳꛶•⸐!꛷𑅀,𖫵:⁃჻⁉𑅃፠⹉᙮𒑲‣⸏！⳺𐡗፣⳾𒑴⹍¡⳻𑂿，⳹𒑳〽᥄⁇𑂾､𛲟𒑱⸑𖺚፧𑽆、።፥𑇈⹓？𑽅꓾.፦𑗅߹;𑈼𖺗．፤𑗄︕¿𑈻⹌｡：𝪋⁈᥅𑅵᠂。；⵰﹗⹔𑻸᠈꓿᠄︖𑊩𑑍𖺘︓?၊𑑚᠃︔⸮။߸᠉⁏﹖𐮙︐︒;꘏𐮚︑𝪈𝪊꥟⸴﹒𝪉§⹁⸼﹕𑇞𝪇܂﹔𑇟﹐܁܆𑗏﹑꘎܇𑗐⸲܅𑗗꘍܄𑗕܉𑗖܃𑗑܈𑗓⁝𑗌⸵𑗍𑗎𑗔𑗋𑗊𑗒⸹؝𑥆𑗉…᠁︙․‥\n]+/gmu,
+				/[\p{Ps}\p{Pe}\p{Pi}\p{Pf}𞥞𞥟𑜽،܀۔؛⁌᭟＂‽՜؟𑜼՝𑿿։꛴⁍፨"⸘‼՞᨟꛵꛳꛶•⸐!꛷𑅀,𖫵:⁃჻⁉𑅃፠⹉᙮𒑲‣⸏！⳺𐡗፣⳾𒑴⹍¡⳻𑂿，⳹𒑳᥄⁇𑂾､𛲟𒑱⸑𖺚፧𑽆、።፥𑇈⹓？𑽅꓾.፦𑗅߹;𑈼𖺗．፤𑗄︕¿𑈻⹌｡：𝪋⁈᥅𑅵᠂。；⵰﹗⹔𑻸᠈꓿᠄︖𑊩𑑍𖺘︓?၊𑑚᠃︔⸮။߸᠉⁏﹖𐮙︐︒;꘏𐮚︑𝪈𝪊꥟⸴﹒𝪉§⹁⸼﹕𑇞𝪇܂﹔𑇟﹐܁܆𑗏﹑꘎܇𑗐⸲܅𑗗꘍܄𑗕܉𑗖܃𑗑܈𑗓⁝𑗌⸵𑗍𑗎𑗔𑗋𑗊𑗒⸹؝𑥆𑗉…᠁︙․‥\n]+/gmu,
 			)[0]
-			.split(/\s/g)
+			.split(/\s+/g)
 			.slice(1)
 			.map((word) => (word[0] ?? "").toUpperCase() + word.slice(1).toLowerCase())
 			.join(" ");
@@ -254,7 +257,7 @@ async function handleMutatable(
 
 defineEvent("messageDelete", async (message) => {
 	const found = autoResponses.get(message.id);
-	if (found) await found.delete();
+	if (found?.deletable) await found.delete();
 
 	const reference =
 		found?.id ?? [...autoResponses.entries()].find(([, { id }]) => id === message.id)?.[0];

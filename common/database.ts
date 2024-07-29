@@ -8,7 +8,7 @@ import {
 } from "discord.js";
 import papaparse from "papaparse";
 import { client } from "strife.js";
-import { extractMessageExtremities, getAllMessages } from "../util/discord.js";
+import { getAllMessages, getFilesFromMessage } from "../util/discord.js";
 import config from "./config.js";
 let timeouts: Record<
 	Snowflake,
@@ -32,80 +32,67 @@ const databases: Record<string, Message<true> | undefined> = {};
 export const allDatabaseMessages = await getAllMessages(databaseThread);
 for (const message of allDatabaseMessages) {
 	const name = message.content.split(" ")[1]?.toLowerCase();
-	if (name) {
+	if (name && message.attachments.size) {
 		databases[name] =
-			message.author.id === client.user.id ? message
-			: message.attachments.size ?
-				await databaseThread.send({
-					...extractMessageExtremities(message),
+			message.author.id === client.user.id ?
+				message
+			:	await databaseThread.send({
+					files: [...(await getFilesFromMessage(message)).values()],
 					content: message.content,
-				})
-			:	undefined;
+				});
 	}
 }
 
-const contructed: string[] = [];
+const contructed = new Set<string>();
 
 export default class Database<Data extends Record<string, boolean | number | string | null>> {
 	message: Message<true> | undefined;
-	#data: readonly Data[] | undefined;
-	#extra: string | undefined;
+	#data: readonly Data[] = [];
 
 	constructor(public name: string) {
-		if (contructed.includes(name)) {
+		this.name = name.replaceAll(" ", "_");
+		if (contructed.has(this.name)) {
 			throw new RangeError(
-				`Cannot create a second database for ${name}, they will have conflicting data`,
+				`Cannot create a second database for ${this.name}, they may have conflicting data`,
 			);
 		}
-		contructed.push(name);
+		contructed.add(this.name);
 	}
 
 	async init(): Promise<void> {
 		if (this.message) return;
-		this.message = databases[this.name] ||= await databaseThread.send(
-			`__**SCRADD ${this.name.toUpperCase()} DATABASE**__\n\n*Please don’t delete this message. If you do, all ${this.name.replaceAll(
-				"_",
-				" ",
-			)} information may be reset.*`,
-		);
 
-		const attachment = this.message.attachments.first()?.url;
+		const content =
+			`__**${client.user.displayName.replaceAll(" ", "-").toUpperCase()} ${this.name.toUpperCase()} DATABASE**__\n` +
+			`\n*Please don’t delete this message. If you do, all ${this.name.replaceAll("_", " ")} information may be reset.*`;
+		if (databases[this.name]) await databases[this.name]?.edit(content);
+		this.message = databases[this.name] ||= await databaseThread.send(content);
 
-		this.#data =
-			attachment ?
-				await fetch(attachment)
-					.then(async (res) => await res.text())
-					.then(
-						(csv) =>
-							papaparse.parse<Data>(csv.trim(), {
-								dynamicTyping: true,
-								header: true,
-								delimiter: ",",
-							}).data,
-					)
-			:	[];
+		const attachment = (await getFilesFromMessage(this.message)).first();
+		if (!attachment) {
+			this.#queueWrite();
+			return;
+		}
 
-		// eslint-disable-next-line @typescript-eslint/prefer-destructuring
-		this.#extra = this.message.content.split("\n")[5];
+		this.#data = await fetch(attachment.url)
+			.then(async (res) => await res.text())
+			.then(
+				(csv) =>
+					papaparse.parse<Data>(csv.trim(), {
+						dynamicTyping: true,
+						header: true,
+						delimiter: ",",
+					}).data,
+			);
 	}
 
 	get data(): readonly Data[] {
-		if (!this.#data) throw new ReferenceError("Must call `.init()` before reading `.data`");
+		if (!this.message) throw new ReferenceError("Must call `.init()` before reading `.data`");
 		return this.#data;
 	}
 	set data(content: readonly Data[]) {
 		if (!this.message) throw new ReferenceError("Must call `.init()` before setting `.data`");
 		this.#data = content;
-		this.#queueWrite();
-	}
-
-	get extra(): string | undefined {
-		if (!this.#data) throw new ReferenceError("Must call `.init()` before reading `.extra`");
-		return this.#extra;
-	}
-	set extra(content: string | undefined) {
-		if (!this.message) throw new ReferenceError("Must call `.init()` before setting `.extra`");
-		this.#extra = content;
 		this.#queueWrite();
 	}
 
@@ -133,36 +120,24 @@ export default class Database<Data extends Record<string, boolean | number | str
 	}
 
 	#queueWrite(): void {
-		if (!this.message) {
-			throw new ReferenceError(
-				"Must call `.init()` before reading or setting `.data` or `.extra`",
-			);
-		}
+		if (!this.message)
+			throw new ReferenceError("Must call `.init()` before reading or setting `.data`");
 
 		const timeoutId = timeouts[this.message.id];
 
 		const callback = async (): Promise<Message<true>> => {
-			if (!this.message) {
-				throw new ReferenceError(
-					"Must call `.init()` before reading or setting `.data` or `.extra`",
-				);
-			}
+			if (!this.message)
+				throw new ReferenceError("Must call `.init()` before reading or setting `.data`");
+
 			const { message } = this;
 
-			const data = this.#data?.length && papaparse.unparse([...this.#data]).trim();
+			const data = papaparse.unparse([...this.#data]).trim();
+			const files = [
+				{ attachment: Buffer.from(data, "utf8"), name: `${this.name}.scradddb` },
+			];
 
-			const files =
-				data ?
-					[{ attachment: Buffer.from(data, "utf8"), name: `${this.name}.scradddb` }]
-				:	[];
-			const messageContent = message.content.split("\n");
-			messageContent[3] = "";
-			messageContent[4] = this.#extra ? "Extra misc info:" : "";
-			messageContent[5] = this.#extra || "";
-
-			const content = messageContent.join("\n").trim();
 			const promise = message
-				.edit({ content, files })
+				.edit({ files })
 				.catch(async (error: unknown) => {
 					if (
 						error &&
@@ -176,7 +151,7 @@ export default class Database<Data extends Record<string, boolean | number | str
 						return await callback();
 					}
 
-					return await message.edit({ content, files }).catch((retryError: unknown) => {
+					return await message.edit({ files }).catch((retryError: unknown) => {
 						throw new AggregateError(
 							[error, retryError],
 							"Failed to write to database!",
@@ -185,6 +160,8 @@ export default class Database<Data extends Record<string, boolean | number | str
 					});
 				})
 				.then(async (edited) => {
+					databases[this.name] = edited;
+
 					const attachment = edited.attachments.first()?.url;
 
 					const written =
@@ -221,11 +198,10 @@ export async function cleanListeners(): Promise<void> {
 export async function prepareExit(): Promise<void> {
 	await cleanListeners();
 	client.user.setStatus("dnd");
+	process.emitWarning("prepare-exit called");
 	await client.destroy();
 }
 
-let called = false,
-	exited = false;
 for (const [event, code] of Object.entries({
 	exit: undefined,
 	beforeExit: 0,
@@ -236,25 +212,18 @@ for (const [event, code] of Object.entries({
 	message: 0,
 } as const)) {
 	// eslint-disable-next-line @typescript-eslint/no-loop-func
-	process.on(event, (message) => {
-		if (called || (event === "message" && message !== "shutdown")) return;
-		called = true;
-
-		function doExit(): void {
-			if (exited) return;
-			exited = true;
-
-			if (event !== "exit") process.nextTick(() => process.exit(code));
-		}
+	process.once(event, (message) => {
+		if (event === "message" && message !== "shutdown") return;
 
 		if (event !== "exit" && Object.values(timeouts).length) {
 			void prepareExit().then(() => {
-				process.nextTick(doExit);
+				process.nextTick(() => process.exit(code));
 			});
-			setTimeout(doExit, 30_000);
+			setTimeout(() => {
+				process.nextTick(() => process.exit(code));
+			}, 30_000);
 		} else {
 			void prepareExit();
-			doExit();
 		}
 	});
 }
@@ -262,9 +231,13 @@ for (const [event, code] of Object.entries({
 export async function backupDatabases(channel: TextBasedChannel): Promise<void> {
 	if (process.env.NODE_ENV !== "production") return;
 
-	const attachments = Object.values(databases)
-		.map((database) => database?.attachments.first())
-		.filter(Boolean);
+	const attachments = (
+		await Promise.all(
+			Object.values(databases).map(
+				async (database) => database && (await getFilesFromMessage(database)).first(),
+			),
+		)
+	).filter(Boolean);
 
 	await channel.send("# Daily Scradd Database Backup");
 	while (attachments.length) {

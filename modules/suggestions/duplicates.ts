@@ -22,10 +22,8 @@ export async function sendDuplicates(message: Message): Promise<void> {
 	>(
 		(suggestions, { title, ...suggestion }) =>
 			(
-				(suggestion.category === "Other" ||
-					newSuggestion.category === "Other" ||
-					suggestion.category === newSuggestion.category) &&
-				suggestion.id !== newSuggestion.id
+				suggestion.id !== newSuggestion.id &&
+				new Set([newSuggestion.category, suggestion.category, "Other"]).size < 3
 			) ?
 				[
 					...suggestions,
@@ -52,9 +50,7 @@ export async function sendDuplicates(message: Message): Promise<void> {
 			answer: suggestion.answer,
 
 			markdown: `**${suggestion.count} ${
-				config.channels.suggestions?.defaultReactionEmoji?.id ?
-					formatAnyEmoji(config.channels.suggestions.defaultReactionEmoji)
-				:	config.channels.suggestions?.defaultReactionEmoji?.name || "👍"
+				formatAnyEmoji(config.channels.suggestions?.defaultReactionEmoji) || "👍"
 			}** ${hyperlink(
 				suggestion.originalTitle,
 				channelLink(suggestion.id, config.guild.id),
@@ -91,7 +87,7 @@ export async function sendDuplicates(message: Message): Promise<void> {
 }
 
 function shortenTitle(title: number | string): string {
-	const stringified = `${title}`;
+	const stringified = `${title}`.toLowerCase();
 	if (stringified.length < 15) return stringified;
 	const shortened = stringified.replaceAll(/\s*\b\S{1,3}\b\s*/g, " ").trim();
 	return shortened.split(/[\s\b]+/g).length < 2 ? stringified : shortened;

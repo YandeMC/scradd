@@ -16,14 +16,8 @@ import { convertBase } from "../../util/numbers.js";
 import { gracefulFetch } from "../../util/promises.js";
 import { syncRandomBoard } from "../board/update.js";
 import getWeekly, { getChatters } from "../xp/weekly.js";
-import {
-	BUMPING_THREAD,
-	BUMP_COMMAND_ID,
-	SpecialReminders,
-	remindersDatabase,
-	type Reminder,
-} from "./misc.js";
-import sendQuestion from "../qotd/send.js";
+import { BUMP_COMMAND_ID, SpecialReminders, remindersDatabase, type Reminder } from "./misc.js";
+import sendQuestion from "../qotds/send.js";
 
 let nextReminder: NodeJS.Timeout | undefined;
 export default async function queueReminders(): Promise<NodeJS.Timeout | undefined> {
@@ -48,7 +42,11 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 		toPostpone: Reminder[];
 	}>(
 		(accumulator, reminder) => {
-			accumulator[reminder.date - Date.now() < 500 ? "toSend" : "toPostpone"].push(reminder);
+			accumulator[
+				reminder.date === "NaN" || reminder.date - Date.now() < 500 ?
+					"toSend"
+				:	"toPostpone"
+			].push(reminder);
 			return accumulator;
 		},
 		{ toSend: [], toPostpone: [] },
@@ -62,20 +60,24 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 				case SpecialReminders.Weekly: {
 					if (!channel?.isTextBased()) continue;
 
-					const nextWeeklyDate = new Date(reminder.date);
-					nextWeeklyDate.setUTCDate(nextWeeklyDate.getUTCDate() + 7);
+					const weekOfDate = new Date(reminder.date);
+					weekOfDate.setUTCDate(weekOfDate.getUTCDate() - 7);
+					const title = `🏆 Weekly Winners week of ${weekOfDate.toLocaleString([], {
+						month: "long",
+						day: "numeric",
+					})}`;
+
+					const message = await channel.send(await getWeekly(weekOfDate));
 
 					const chatters = await getChatters();
-					const message = await channel.send(await getWeekly(nextWeeklyDate));
 					if (!chatters) continue;
+
 					const thread = await message.startThread({
-						name: `🏆 Weekly Winners week of ${new Date().toLocaleString([], {
-							month: "long",
-							day: "numeric",
-						})}`,
+						name: title,
 						reason: "To send all chatters",
 					});
 					await thread.send(chatters);
+
 					continue;
 				}
 				case SpecialReminders.UpdateSACategory: {
@@ -114,7 +116,7 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					remindersDatabase.data = [
 						...remindersDatabase.data,
 						{
-							channel: BUMPING_THREAD,
+							channel: reminder.channel,
 							date: Date.now() + 1_800_000,
 							reminder: undefined,
 							id: SpecialReminders.Bump,
@@ -132,8 +134,8 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					continue;
 				}
 				case SpecialReminders.RebootBot: {
-					await prepareExit();
 					process.emitWarning(`${client.user.tag} is killing the bot`);
+					await prepareExit();
 					process.exit(1);
 					// Fake “fall-through” since ESLint doesn’t realize this is unreacahble
 				}
@@ -189,7 +191,7 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					remindersDatabase.data = [
 						...remindersDatabase.data,
 						{
-							channel: "0",
+							channel: reminder.channel,
 							date: Date.now() + (Math.random() * 3 + 3) * 3_600_000,
 							reminder: next,
 							id: SpecialReminders.ChangeStatus,
@@ -209,8 +211,8 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 					remindersDatabase.data = [
 						...remindersDatabase.data,
 						{
-							channel: channel.id,
-							date: reminder.date + 86_400_000,
+							channel: reminder.channel,
+							date: (reminder.date === "NaN" ? 0 : reminder.date) + 86_400_000,
 							reminder: undefined,
 							id: SpecialReminders.QOTD,
 							user: client.user.id,
@@ -242,9 +244,11 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 }
 
 function getNextInterval(): number | undefined {
-	const [reminder] = remindersDatabase.data.toSorted((one, two) => one.date - two.date);
+	const [reminder] = remindersDatabase.data.toSorted(
+		(one, two) => (one.date === "NaN" ? 0 : one.date) - (two.date === "NaN" ? 0 : two.date),
+	);
 	if (!reminder) return;
-	return reminder.date - Date.now();
+	return (reminder.date !== "NaN" && reminder.date - Date.now()) || 0;
 }
 
 await queueReminders();

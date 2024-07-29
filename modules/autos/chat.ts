@@ -14,7 +14,7 @@ import {
 } from "discord.js";
 import mongoose from "mongoose";
 import { client } from "strife.js";
-import config, { getInitialChannelThreads } from "../../common/config.js";
+import config, { getInitialThreads } from "../../common/config.js";
 import constants from "../../common/constants.js";
 import {
 	GlobalBotInvitesPattern,
@@ -88,6 +88,7 @@ export async function learn(message: Message): Promise<void> {
 	previousMessages[message.channel.id] = message;
 
 	if (
+		message.interaction ||
 		[message.author.id, previous?.author.id].includes(client.user.id) ||
 		!(await getSettings(message.author)).scraddChat
 	)
@@ -130,21 +131,11 @@ export async function learn(message: Message): Promise<void> {
 	await new Chat({ prompt, response }).save();
 }
 
-export const chatThread = await getThread();
-async function getThread(): Promise<ThreadChannel | undefined> {
-	if (!config.channels.bots) return;
-
-	const intitialThread = getInitialChannelThreads(config.channels.bots).find(({ name }) =>
-		name.startsWith(chatName),
-	);
-	if (intitialThread) return intitialThread;
-
-	const createdThread = await config.channels.bots.threads.create({
-		name: `${chatName} (Check pins!)`,
-		reason: `For ${chatName}`,
-	});
-	const message = await createdThread.send({
-		content: `## ${chatName}\n### Basic regurgitating chatbot\n${chatName} learns by tracking messages across all channels. Your messages will only be stored if you give explicit permission by selecting a button below. You will be able to change your decision at any time, however any past messages can’t be deleted, as message authors are not stored. By default, your messages are not saved. If you consent to these terms, you may select the appropriate button below.`,
+const consent = {
+		content:
+			`## ${chatName}\n` +
+			`### Basic regurgitating chatbot\n` +
+			`${chatName} learns by tracking messages across all channels. Your messages will only be stored if you give explicit permission by selecting a button below. You will be able to change your decision at any time, however any past messages can’t be deleted, as message authors are not stored. By default, your messages are not saved. If you consent to these terms, you may select the appropriate button below.`,
 		components: [
 			{
 				type: ComponentType.ActionRow,
@@ -164,9 +155,33 @@ async function getThread(): Promise<ThreadChannel | undefined> {
 				],
 			},
 		],
+	} as const,
+	threadName = `${chatName} (Check pins!)` as const;
+export const chatThread = await getThread();
+async function getThread(): Promise<ThreadChannel | undefined> {
+	if (!config.channels.bots) return;
+
+	const thread = getInitialThreads(config.channels.bots, chatName).first();
+	if (thread) {
+		await thread.setName(threadName);
+		await thread.messages
+			.fetchPinned()
+			.then((messages) => messages.find((message) => message.editable))
+			.then(
+				(oldMessage) =>
+					oldMessage?.edit(consent) ??
+					thread.send(consent).then((newMessage) => newMessage.pin()),
+			);
+		return thread;
+	}
+
+	const newThread = await config.channels.bots.threads.create({
+		name: threadName,
+		reason: `For ${chatName}`,
 	});
+	const message = await newThread.send(consent);
 	await message.pin(`Pinned ${chatName} consent message for ease of access`);
-	return createdThread;
+	return newThread;
 }
 export async function allowChat(
 	interaction: ButtonInteraction,
@@ -184,7 +199,7 @@ export async function allowChat(
 	await interaction.reply(
 		`${
 			constants.emojis.statuses.yes
-		} ${interaction.user.toString()}, your messages will be saved in all public channels. If you ever reverse this decision, messages can’t be retroactively removed. If you disagree with these terms, please select the appropriate button on [this message](<${
+		} ${interaction.user.toString()}, your messages may be saved in all public channels. If you ever reverse this decision, messages can’t be retroactively removed. If you disagree with these terms, please select the appropriate button on [this message](<${
 			interaction.message.url
 		}>).`,
 	);
@@ -265,7 +280,7 @@ export async function removeResponse(
 		LogSeverity.ImportantUpdate,
 		{ files: [{ content: response, extension: "md" }] },
 	);
-	await interaction.targetMessage.delete();
+	if (interaction.targetMessage.deletable) await interaction.targetMessage.delete();
 	await modalInteraction.editReply(
 		`${
 			constants.emojis.statuses.yes

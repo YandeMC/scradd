@@ -21,21 +21,23 @@ async function userInfo(
 	interaction: RepliableInteraction,
 	{ member, user }: { member?: GuildMember; user: User },
 ): Promise<void> {
+	const isHelper =
+		interaction.member instanceof GuildMember ?
+			interaction.member.roles.resolve(config.roles.helper.id)
+		:	interaction.member?.roles.includes(config.roles.helper.id);
 	const isMod =
 		interaction.member instanceof GuildMember ?
 			interaction.member.roles.resolve(config.roles.mod.id)
 		:	interaction.member?.roles.includes(config.roles.mod.id);
 
 	const fields = [
-		{ name: "🏷️ ID", value: user.id, inline: true },
+		{ name: "🏷️️ ID", value: user.id, inline: true },
 		{
 			name: "🆕 Created Account",
 			value: time(user.createdAt, TimestampStyles.RelativeTime),
 			inline: true,
 		},
-		user.tag === user.displayName ?
-			{ name: constants.zws, value: constants.zws, inline: true }
-		:	{ name: "🪪 Username", value: user.tag, inline: true },
+		{ name: "🪪 Username", value: `\`${user.tag}\``, inline: true },
 	];
 
 	if (member?.joinedAt)
@@ -78,7 +80,7 @@ async function userInfo(
 		(await config.guild.bans.fetch(user.id).catch(() => void 0));
 	if (banned)
 		fields.push(
-			isMod ?
+			isHelper ?
 				{
 					name: "🔨 Ban Reason",
 					value: banned.reason ?? constants.defaultPunishment,

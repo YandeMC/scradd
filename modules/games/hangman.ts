@@ -6,6 +6,7 @@ import {
 	inlineCode,
 	type ChatInputCommandInteraction,
 	type GuildMember,
+	type MessageEditOptions,
 	type User,
 } from "discord.js";
 import fileSystem from "node:fs/promises";
@@ -17,6 +18,7 @@ import tryCensor from "../automod/misc.js";
 import warn from "../punishments/warn.js";
 import { CURRENTLY_PLAYING, GAME_COLLECTOR_TIME, checkIfUserPlaying } from "./misc.js";
 import features from "../../common/features.js";
+import { mentionUser } from "../settings.js";
 
 const MAX_WRONGS = 7,
 	HINT_PENALTY = 2;
@@ -74,7 +76,7 @@ export default async function hangman(
 
 	const guesses: ((typeof CHARACTERS)[number] | Lowercase<string>)[] = [];
 	const message = await interaction.deferReply({ fetchReply: true });
-	await tick();
+	await tick((options) => interaction.editReply(options));
 
 	const collector = message
 		.createMessageComponentCollector({
@@ -177,13 +179,10 @@ export default async function hangman(
 			}
 		})
 		.on("end", async (_, reason) => {
-			const image = await makeCanvasFiles(
-				user.displayAvatarURL({ forceStatic: true, size: 64 }),
-				reason === "win",
-			);
+			CURRENTLY_PLAYING.delete(interaction.user.id);
 
 			await message.reply({
-				content: `# You ${reason === "win" ? "saved" : "killed"} ${user.toString()}!\n${
+				content: `# You ${reason === "win" ? "saved" : "killed"} ${await mentionUser(user, interaction.user)}!\n${
 					{
 						idle: "You didn’t save them in time, so they died \\:(",
 						end: "You gave up saving them, so they died \\:(\nWhat kind of person *are* you?⁉",
@@ -191,11 +190,18 @@ export default async function hangman(
 						win: "Great job!",
 					}[reason] ?? "R.I.P."
 				}`,
-				files: image,
+				files: [
+					{
+						attachment: await makeCanvasFiles(
+							reason === "win",
+							user.displayAvatarURL({ forceStatic: true, size: 64 }),
+						),
+						name: "hangman.png",
+					},
+				],
 				allowedMentions: { users: [] },
 			});
 			await message.edit({ components: disableComponents(message.components) });
-			CURRENTLY_PLAYING.delete(interaction.user.id);
 		});
 
 	CURRENTLY_PLAYING.set(interaction.user.id, {
@@ -205,7 +211,9 @@ export default async function hangman(
 		},
 	});
 
-	async function tick(): Promise<void> {
+	async function tick(
+		reply = (options: MessageEditOptions) => message.edit(options),
+	): Promise<void> {
 		const word = Array.from(user.username.toUpperCase(), (letter) =>
 			CHARACTERS.includes(letter) && guesses.includes(letter) ? letter : "-",
 		).join("");
@@ -221,7 +229,7 @@ export default async function hangman(
 
 		const wrongCount = (color === undefined ? 0 : HINT_PENALTY) + wrongs.length;
 
-		await message.edit({
+		await reply({
 			embeds: [
 				{
 					color,
@@ -297,9 +305,7 @@ export default async function hangman(
 			],
 			files: [
 				{
-					attachment: await fileSystem.readFile(
-						`./modules/games/hangman-photos/${Math.min(wrongCount, MAX_WRONGS - 1)}.png`,
-					),
+					attachment: await makeCanvasFiles(Math.min(wrongCount, MAX_WRONGS - 1)),
 					name: "hangman.png",
 				},
 			],
@@ -339,28 +345,35 @@ async function getMember(player: User): Promise<GuildMember> {
 	return member;
 }
 
-async function makeCanvasFiles(
-	url: string,
-	win: boolean,
-): Promise<{ attachment: Buffer; name: string }[]> {
-	if (!features._canvas) return [];
+async function makeCanvasFiles(wrongCount: number): Promise<Buffer>;
+async function makeCanvasFiles(wrongCount: boolean, url: string): Promise<Buffer>;
+async function makeCanvasFiles(wrongCount: boolean | number, url?: string): Promise<Buffer> {
+	const fileUrl = `./modules/games/hangman-photos/${
+		typeof wrongCount === "number" ? wrongCount
+		: wrongCount ? "win"
+		: MAX_WRONGS - 1
+	}.png`;
+	if (!features._canvas || wrongCount === 0) return await fileSystem.readFile(fileUrl);
 
 	const { createCanvas, loadImage } = await import("@napi-rs/canvas");
 	const canvas = createCanvas(200, 181);
 	const context = canvas.getContext("2d");
-	context.drawImage(
-		await loadImage(`./modules/games/hangman-photos/${win ? "win" : MAX_WRONGS - 1}.png`),
-		0,
-		0,
-		canvas.width,
-		canvas.height,
-	);
-	const x = 136.5,
-		y = win ? 38 : 20,
-		size = 40;
-	context.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
-	context.clip();
-	context.drawImage(await loadImage(url), x, y, size, size);
 
-	return [{ attachment: canvas.toBuffer("image/png"), name: "hangman.png" }];
+	context.drawImage(await loadImage(fileUrl), 0, 0, canvas.width, canvas.height);
+
+	const x = 136.5,
+		y = wrongCount === true ? 38 : 20,
+		size = 40;
+
+	if (typeof wrongCount === "number") context.beginPath();
+	context.arc(x + size / 2, y + size / 2, size / 2, 0, Math.PI * 2);
+	if (typeof wrongCount === "number") {
+		context.fillStyle = "black";
+		context.fill();
+	} else if (url) {
+		context.clip();
+		context.drawImage(await loadImage(url), x, y, size, size);
+	}
+
+	return canvas.toBuffer("image/png");
 }

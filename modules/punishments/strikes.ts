@@ -46,17 +46,17 @@ export async function getStrikeById(
 	interaction: RepliableInteraction,
 	filter: string,
 ): Promise<Message> {
-	if (!(interaction.member instanceof GuildMember))
-		throw new TypeError("interaction.member is not a GuildMember");
-
 	await interaction.deferReply({ ephemeral: true });
 
 	const strike = await filterToStrike(filter);
 	if (!strike)
 		return await interaction.editReply(`${constants.emojis.statuses.no} Invalid strike ID!`);
 
-	const isModerator = interaction.member.roles.resolve(config.roles.mod.id);
-	if (strike.user !== interaction.member.id && !isModerator) {
+	const isModerator =
+		interaction.member instanceof GuildMember ?
+			interaction.member.roles.resolve(config.roles.mod.id)
+		:	interaction.member?.roles.includes(config.roles.mod.id);
+	if (strike.user !== interaction.user.id && !isModerator) {
 		return await interaction.editReply(
 			`${constants.emojis.statuses.no} You don’t have permission to view this member’s strikes!`,
 		);
@@ -66,10 +66,9 @@ export async function getStrikeById(
 	const user = member?.user ?? (await client.users.fetch(strike.user).catch(() => void 0));
 
 	const moderator =
-		isModerator && strike.mod === "AutoMod" ?
-			strike.mod
-		:	strike.mod &&
-			(await mentionUser(strike.mod, interaction.member, interaction.guild ?? config.guild));
+		isModerator &&
+		strike.mod &&
+		(strike.mod === "AutoMod" ? strike.mod : await mentionUser(strike.mod, interaction.user));
 	const nick = (member ?? user)?.displayName;
 	return await interaction.editReply({
 		components:
@@ -121,7 +120,7 @@ export async function getStrikeById(
 
 				fields: [
 					{
-						name: "⚠️ Count",
+						name: "⚠️️ Count",
 						value: strike.count < 1 ? "verbal" : Math.floor(strike.count).toString(),
 						inline: true,
 					},
@@ -132,11 +131,7 @@ export async function getStrikeById(
 						[
 							{
 								name: "👤 Target user",
-								value: await mentionUser(
-									user,
-									interaction.member,
-									interaction.guild ?? config.guild,
-								),
+								value: await mentionUser(user, interaction.user),
 								inline: true,
 							},
 						]

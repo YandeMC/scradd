@@ -7,6 +7,7 @@ import {
 	GuildMember,
 	TextInputStyle,
 	channelLink,
+	userMention,
 } from "discord.js";
 import {
 	client,
@@ -149,11 +150,11 @@ defineButton("appealStrike", async (interaction, id) => {
 			ephemeral: true,
 		});
 	}
-	appealedStrikes.add(id);
 	return await showTicketModal(interaction, "appeal", id);
 });
-defineModal("contactMods", async (interaction, id) => {
-	if (!TICKET_CATEGORIES.includes(id)) throw new TypeError(`Unknown ticket category: ${id}`);
+defineModal("contactMods", async (interaction, category) => {
+	if (!TICKET_CATEGORIES.includes(category))
+		throw new TypeError(`Unknown ticket category: ${category}`);
 
 	if (!interaction.inGuild()) {
 		const reply =
@@ -162,12 +163,14 @@ defineModal("contactMods", async (interaction, id) => {
 	}
 
 	await interaction.deferReply({ ephemeral: true });
-	const thread = await contactMods(interaction, id);
+	const thread = await contactMods(interaction, category);
 	await interaction.editReply(
 		`${
 			constants.emojis.statuses.yes
 		} **Ticket opened!** Send the mods messages in ${thread.toString()}.`,
 	);
+
+	if (category === "appeal") appealedStrikes.add(interaction.fields.getTextInputValue("strike"));
 });
 defineMenuCommand(
 	{ name: "Report Message", type: ApplicationCommandType.Message },
@@ -219,6 +222,7 @@ defineModal("report", async (interaction, messageId) => {
 		})}`,
 		LogSeverity.Alert,
 		{
+			pingHere: true,
 			buttons: [
 				{
 					label: "Contact Reporter",
@@ -317,23 +321,33 @@ defineEvent("threadUpdate", async (oldThread, newThread) => {
 	if (
 		newThread.parent?.id !== config.channels.tickets?.id ||
 		newThread.type !== ChannelType.PrivateThread ||
-		oldThread.archived === newThread.archived
+		oldThread.archived === newThread.archived ||
+		!newThread.editable
 	)
 		return;
 	const memberId = getIdFromName(newThread.name);
 	if (!memberId) return;
 
+	const existing = TICKETS_BY_MEMBER[memberId];
 	if (newThread.archived) {
 		TICKETS_BY_MEMBER[memberId] = undefined;
-		if (!newThread.locked) {
+		if (newThread.sendable && !newThread.locked) {
 			await newThread.setArchived(false, "To lock it");
-			await newThread.setLocked(true, "Was closed");
+			await newThread.edit({ archived: true, locked: true, reason: "Was closed" });
 		}
 	} else if (newThread.locked) {
 		TICKETS_BY_MEMBER[memberId] = undefined;
-	} else if (TICKETS_BY_MEMBER[memberId]) {
-		await newThread.setArchived(true, "Reopened while another ticket is already open");
-		await newThread.setLocked(true, "Reopened while another ticket is already open");
+	} else if (existing) {
+		await newThread.send(
+			`${constants.emojis.statuses.no} ${userMention(
+				memberId,
+			)} already has another ticket open! Please use ${existing.toString()}.`,
+		);
+		await newThread.edit({
+			archived: true,
+			locked: true,
+			reason: "Reopened while another ticket is already open",
+		});
 	} else {
 		TICKETS_BY_MEMBER[memberId] = newThread;
 	}

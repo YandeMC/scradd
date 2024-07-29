@@ -20,12 +20,19 @@ const CSS_FILE = (await fileSystem.readFile("./web/style.css", "utf8")).replaceA
 const CLIENT_JS_FILE = await fileSystem.readFile("./dist/web/client.js", "utf8");
 const DISCORD_CSS_FILE = await fileSystem.readFile("./web/discord.css", "utf8");
 const DIRECTORIES = {
-	images: path.resolve("./scripts/images"),
+	images: path.resolve("./.private/images"),
 	sora: path.dirname(fileURLToPath(import.meta.resolve("@fontsource-variable/sora"))),
 };
 const server = http.createServer(async (request, response) => {
 	try {
-		const requestUrl = getRequestUrl(request);
+		const requestUrl = await new Promise<URL>((resolve) => {
+			resolve(getRequestUrl(request));
+		}).catch(() => void 0);
+		if (!requestUrl)
+			return response
+				.writeHead(422, { "content-type": "text/plain" })
+				.end("422 Unprocessable Content");
+
 		const pathname = (
 			requestUrl.pathname.endsWith("/") ?
 				requestUrl.pathname.slice(0, -1)
@@ -38,7 +45,6 @@ const server = http.createServer(async (request, response) => {
 						.end("403 Forbidden");
 
 				await prepareExit();
-				process.emitWarning("prepare-exit called");
 				response.writeHead(200, { "content-type": "text/plain" }).end("200 OK");
 
 				return;

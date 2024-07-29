@@ -138,7 +138,11 @@ export default async function warn(
 			(process.env.NODE_ENV === "production" || member.roles.highest.name === "@everyone")
 		) ?
 			member.ban({ reason: "Too many strikes" })
-		:	log(`${LoggingErrorEmoji} Unable to ban ${user.toString()}`, LogSeverity.Alert));
+		:	log(
+				`${LoggingErrorEmoji} Unable to ban ${user.toString()} (Too many strikes)`,
+				LogSeverity.Alert,
+				{ pingHere: true },
+			));
 		return true;
 	}
 
@@ -162,6 +166,7 @@ export default async function warn(
 					process.env.NODE_ENV === "production" ? "hour" : "minute"
 				}${addedMuteLength === 1 ? "" : "s"}`,
 				LogSeverity.Alert,
+				{ pingHere: true },
 			));
 	}
 
@@ -171,7 +176,7 @@ export default async function warn(
 				`## This is your last chance. If you get another strike before ${time(
 					new Date((allUserStrikes[0]?.date ?? Date.now()) + EXPIRY_LENGTH),
 					TimestampStyles.LongDate,
-				)}, you will be banned.`,
+				)}, you may be banned.`,
 			)
 			.catch(() => void 0);
 	}
@@ -210,7 +215,8 @@ export async function removeStrike(
 		content: `${constants.emojis.statuses.yes} Removed ${user.toString()}’s strike \`${id}\`!`,
 	});
 	if (
-		member?.communicationDisabledUntil &&
+		member?.moderatable &&
+		member.communicationDisabledUntil &&
 		Number(member.communicationDisabledUntil) > Date.now()
 	)
 		await member.disableCommunicationUntil(Date.now(), "Strike removed");

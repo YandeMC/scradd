@@ -195,7 +195,7 @@ export async function channelUpdate(
 			LogSeverity.ImportantUpdate,
 		);
 
-	if (oldChannel.rateLimitPerUser !== newChannel.rateLimitPerUser)
+	if ((oldChannel.rateLimitPerUser ?? 0) !== (newChannel.rateLimitPerUser ?? 0))
 		await log(
 			`${LoggingEmojis.Channel} ${newChannel.toString()}’s ${
 				newChannel.isThreadOnly() ? "post " : ""
@@ -276,7 +276,10 @@ export async function channelUpdate(
 		);
 	}
 
-	if (oldChannel.defaultThreadRateLimitPerUser !== newChannel.defaultThreadRateLimitPerUser)
+	if (
+		(oldChannel.defaultThreadRateLimitPerUser ?? 0) !==
+		(newChannel.defaultThreadRateLimitPerUser ?? 0)
+	)
 		await log(
 			`${LoggingEmojis.Channel} ${newChannel.toString()}’s message slowmode set to ${
 				newChannel.defaultThreadRateLimitPerUser ?? 0
@@ -288,13 +291,13 @@ export async function channelUpdate(
 
 	if (
 		oldChannel.defaultReactionEmoji?.id !== newChannel.defaultReactionEmoji?.id ||
-		oldChannel.defaultReactionEmoji?.name !== newChannel.defaultReactionEmoji?.name
+		(oldChannel.defaultReactionEmoji?.name !== newChannel.defaultReactionEmoji?.name &&
+			!newChannel.defaultReactionEmoji?.id)
 	) {
+		const emoji = formatAnyEmoji(newChannel.defaultReactionEmoji);
 		await log(
 			`${LoggingEmojis.Channel} ${newChannel.toString()}’s default reaction was ${
-				newChannel.defaultReactionEmoji ?
-					`set to ${formatAnyEmoji(newChannel.defaultReactionEmoji)}`
-				:	"removed"
+				emoji ? `set to ${emoji}` : "removed"
 			}`,
 			LogSeverity.ServerChange,
 		);

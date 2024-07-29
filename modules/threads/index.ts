@@ -4,6 +4,9 @@ import { paginate } from "../../util/discord.js";
 import { autoClose, cancelThreadChange, setUpAutoClose } from "./auto-close.js";
 import { getThreadConfig, threadsDatabase } from "./misc.js";
 import { syncMembers, updateMemberThreads, updateThreadMembers } from "./sync-members.js";
+import { mentionUser } from "../settings.js";
+import config from "../../common/config.js";
+import features from "../../common/features.js";
 
 defineEvent("threadCreate", async (thread) => {
 	if (thread.type === ChannelType.PrivateThread) return;
@@ -25,6 +28,10 @@ defineSubcommands(
 		name: "thread",
 		description: "Manage threads",
 		restricted: true,
+		access:
+			features.threadsTestingServer && process.env.NODE_ENV === "production" ?
+				["@defaults", config.guilds.testing.id]
+			:	undefined,
 		subcommands: {
 			"close-in": {
 				description: "Close this thread after a specified amount of time",
@@ -59,7 +66,7 @@ defineSubcommands(
 				},
 			},
 			"list-unjoined": {
-				description: "List public open threads that you are not in",
+				description: "List open threads that you can access but are not in",
 				options: {},
 			},
 		},
@@ -99,14 +106,20 @@ defineSubcommands(
 				);
 				await paginate(
 					unjoined,
-					(thread) => thread.parent?.toString() + " > " + thread.toString(),
+					async (thread) =>
+						(thread.parent ? `${thread.parent.toString()} > ` : "") +
+						thread.toString() +
+						(thread.ownerId ?
+							` - by ${await mentionUser(thread.ownerId, interaction.user)}`
+						:	""),
 					(data) => interaction.editReply(data),
 					{
 						title: "Unjoined Threads",
 						singular: "thread",
-						failMessage: "You’ve joined all public open threads here!",
+						failMessage: "You’ve joined all open threads that you can access here!",
 						user: interaction.user,
 						totalCount: unjoined.length,
+						timeout: 0,
 					},
 				);
 				return;

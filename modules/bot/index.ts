@@ -7,6 +7,8 @@ import editMessage, { submitEdit } from "./edit.js";
 import getCode, { run } from "./run.js";
 import sayCommand, { say } from "./say.js";
 import status from "./status.js";
+import config from "../../common/config.js";
+import features from "../../common/features.js";
 
 defineMenuCommand(
 	{ name: "Edit Message", restricted: true, type: ApplicationCommandType.Message, access: false },
@@ -14,7 +16,18 @@ defineMenuCommand(
 );
 defineModal("edit", submitEdit);
 
-defineChatCommand({ name: "run", description: "Run code on the bot", restricted: true }, getCode);
+defineChatCommand(
+	{
+		name: "run",
+		description: "Run code on the bot",
+		restricted: true,
+		access:
+			features.botRunTestingServer && process.env.NODE_ENV === "production" ?
+				["@defaults", config.guilds.testing.id]
+			:	undefined,
+	},
+	getCode,
+);
 defineModal("run", run);
 
 if (process.env.NODE_ENV === "production") {

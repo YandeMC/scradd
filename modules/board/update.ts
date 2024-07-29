@@ -1,9 +1,11 @@
-import { ChannelType, type Message, type Snowflake } from "discord.js";
+import type { Message, Snowflake } from "discord.js";
 import { client } from "strife.js";
 import config from "../../common/config.js";
 import { getSettings } from "../settings.js";
 import giveXp from "../xp/give-xp.js";
-import { BOARD_EMOJI, boardDatabase, boardReactionCount, generateBoardMessage } from "./misc.js";
+import boardReactionCount from "./counts.js";
+import generateBoardMessage from "./generate.js";
+import { BOARD_EMOJI, boardDatabase } from "./misc.js";
 
 const processing = new Set<Snowflake>();
 
@@ -21,15 +23,14 @@ export default async function updateBoard({
 }): Promise<void> {
 	if (processing.has(message.id)) return;
 	processing.add(message.id);
-	if (!config.channels.board) throw new ReferenceError("Could not find board channel");
-	const reactionThreshold = boardReactionCount(message.channel, message.createdTimestamp);
+	const reactionThreshold = boardReactionCount(message.channel);
 	const minReactions = Math.floor(boardReactionCount(message.channel) * 0.9);
 
 	const boardMessageId = boardDatabase.data.find(({ source }) => source === message.id)?.onBoard;
 
 	const boardMessage =
 		boardMessageId &&
-		(await config.channels.board.messages.fetch(boardMessageId).catch(() => void 0));
+		(await config.channels.board?.messages.fetch(boardMessageId).catch(() => void 0));
 
 	if (boardMessage) {
 		if (count < minReactions) {
@@ -40,7 +41,7 @@ export default async function updateBoard({
 			await boardMessage.edit(content);
 			updateById({ source: message.id, reactions: count });
 		}
-	} else if (count >= reactionThreshold) {
+	} else if (count >= reactionThreshold && config.channels.board) {
 		const sentMessage = await config.channels.board.send({
 			...(await generateBoardMessage(message)),
 			allowedMentions:
@@ -49,8 +50,7 @@ export default async function updateBoard({
 
 		await giveXp(message.author, sentMessage.url);
 
-		if (config.channels.board.type === ChannelType.GuildAnnouncement)
-			await sentMessage.crosspost();
+		if (sentMessage.crosspostable) await sentMessage.crosspost();
 
 		updateById(
 			{ source: message.id, onBoard: sentMessage.id, reactions: count },
@@ -75,13 +75,13 @@ export default async function updateBoard({
 				onBoard &&
 				(await config.channels.board?.messages.fetch(onBoard).catch(() => void 0));
 
-			if (toPin) await toPin.pin("Is a top-reacted message");
+			if (toPin && toPin.pinnable) await toPin.pin("Is a top-reacted message");
 
 			return onBoard;
 		}),
 	);
-	const pins = await config.channels.board.messages.fetchPinned();
-	if (pins.size > topIds.length) {
+	const pins = await config.channels.board?.messages.fetchPinned();
+	if (pins && pins.size > topIds.length) {
 		for (const [, pin] of pins.filter((pin) => !topIds.includes(pin.id)))
 			await pin.unpin("No longer a top-reacted message");
 	}
@@ -109,16 +109,13 @@ export async function syncRandomBoard(): Promise<void> {
 	for (const info of boardDatabase.data.toSorted(() => Math.random() - 0.5)) {
 		if (info.onBoard) continue;
 
-		const date = Number(BigInt(info.source) >> 22n) + 1_420_070_400_000;
-
-		const reactionsNeeded = boardReactionCount({ id: info.channel }, date);
+		const reactionsNeeded = boardReactionCount({ id: info.channel });
 		if (reactionsNeeded !== undefined && info.reactions < reactionsNeeded) continue;
 
 		const channel = await client.channels.fetch(info.channel).catch(() => void 0);
 		if (!channel?.isTextBased()) continue;
 
-		if (reactionsNeeded === undefined && info.reactions < boardReactionCount(channel, date))
-			continue;
+		if (reactionsNeeded === undefined && info.reactions < boardReactionCount(channel)) continue;
 
 		const message = await channel.messages.fetch(info.source).catch(() => void 0);
 		const reaction = message?.reactions.resolve(BOARD_EMOJI);

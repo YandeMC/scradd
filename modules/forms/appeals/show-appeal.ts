@@ -29,6 +29,7 @@ import giveXp from "../../xp/give-xp.js";
 import appeals, { appealThread } from "./appeals.js";
 import { getAppealComponents } from "./generate-appeal.js";
 import { banDates } from "../index.js";
+import features from "../../../common/features.js";
 
 const APPEAL_FRAME = await fileSystem.readFile("./modules/forms/appeals/frame.html", "utf8");
 const ANSWER_PAGE = Mustache.render(APPEAL_FRAME, {
@@ -88,14 +89,6 @@ export default async function appealRequest(
 			auth: false,
 		})) as RESTGetAPICurrentUserResult;
 
-		if (!(await config.guild.bans.fetch(user.id).catch(() => void 0)))
-			return response.writeHead(403, { "content-type": "text/html" }).end(
-				Mustache.render(NOT_BANNED_PAGE, {
-					username: user.global_name ?? user.username,
-					invite: pkg.homepage,
-					id: user.id,
-				}),
-			);
 		const appeal = appeals[userMention(user.id)];
 		if (appeal)
 			return response.writeHead(200, { "content-type": "text/html" }).end(
@@ -106,6 +99,14 @@ export default async function appealRequest(
 					username: user.global_name ?? user.username,
 					invite: pkg.homepage,
 					date: appeal.date,
+				}),
+			);
+		if (!(await config.guild.bans.fetch(user.id).catch(() => void 0)))
+			return response.writeHead(403, { "content-type": "text/html" }).end(
+				Mustache.render(NOT_BANNED_PAGE, {
+					username: user.global_name ?? user.username,
+					invite: pkg.homepage,
+					id: user.id,
 				}),
 			);
 		const banDate = banDates[user.id];
@@ -187,7 +188,13 @@ export default async function appealRequest(
 		unban: body.get("unban")?.trim(),
 		misc: body.get("misc")?.trim(),
 	};
-	if (!fields.ban || !fields.unban)
+	if (
+		!fields.ban ||
+		!fields.unban ||
+		fields.ban.length > 1024 ||
+		fields.unban.length > 1024 ||
+		(fields.misc?.length ?? 0) > 1024
+	)
 		return response.writeHead(400, { "content-type": "text/html" }).end(
 			Mustache.render(APPEAL_PAGE, {
 				username: user.displayName,
@@ -197,6 +204,7 @@ export default async function appealRequest(
 		);
 
 	const message = await appealThread.send({
+		content: features.formsPingForAppeals ? config.roles.mod.toString() : undefined,
 		embeds: [
 			{
 				title: "Ban Appeal",
@@ -231,7 +239,7 @@ export default async function appealRequest(
 					},
 					{ name: "User’s Perspective", value: fields.ban, inline: true },
 					{ name: "Appeal", value: fields.unban, inline: true },
-					...(fields.misc ? [{ name: "Misc", value: fields.misc, inline: true }] : []),
+					...(fields.misc ? [{ name: "Misc", value: fields.misc, inline: false }] : []),
 				],
 			},
 		],

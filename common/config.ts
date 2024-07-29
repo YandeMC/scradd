@@ -3,23 +3,25 @@ import {
 	ChannelType,
 	Collection,
 	type AnyThreadChannel,
-	type Channel,
+	type ForumChannel,
 	type Guild,
+	type MediaChannel,
+	type NewsChannel,
 	type NonThreadGuildBasedChannel,
-	type Snowflake,
-	type ThreadManager,
+	type PublicThreadChannel,
+	type TextChannel,
 } from "discord.js";
 import { client } from "strife.js";
 import { CUSTOM_ROLE_PREFIX } from "../modules/roles/misc.js";
 import type { NonFalsy } from "./misc.js";
+import constants from "./constants.js";
 
-const IS_TESTING = process.argv.some((file) => file.endsWith(".test.js"));
-
-const guild = IS_TESTING ? undefined : await client.guilds.fetch(process.env.GUILD_ID);
-if (guild && !guild.available) throw new ReferenceError("Main guild is unavailable!");
+const guild = constants.isTesting ? undefined : await client.guilds.fetch(process.env.GUILD_ID);
+if (guild && !guild.available) throw new ReferenceError("Main server is unavailable!");
+const threads = (await guild?.channels.fetchActiveThreads())?.threads ?? new Collection();
 
 function assertOutsideTests<T>(value: T): NonFalsy<T> {
-	if (!IS_TESTING) assert(value);
+	if (!constants.isTesting) assert(value);
 	return value as NonFalsy<T>;
 }
 
@@ -49,13 +51,14 @@ async function getConfig() {
 	);
 	const execRole = roles.find((role) => role.name.toLowerCase().includes("exec")) ?? staffRole;
 
+	const tickets = getChannel("contact", ChannelType.GuildText, "start");
 	return {
 		guild: assertOutsideTests(guild),
 		otherGuildIds: otherGuilds ? [...otherGuilds.keys()] : [],
 		guilds: Object.fromEntries(
 			await Promise.all(
 				Object.entries(guildIds).map(async ([key, id]) => {
-					const basic: Partial<Guild> & { id: Snowflake } = { id, valueOf: () => id };
+					const basic: Partial<Guild> & { id: typeof id } = { id, valueOf: () => id };
 					return [
 						key,
 						guild ? await client.guilds.fetch(id).catch(() => basic) : basic,
@@ -74,8 +77,8 @@ async function getConfig() {
 				"end",
 			),
 			servers: getChannel("servers", ChannelType.GuildText, "end"),
-			tickets: getChannel("contact", ChannelType.GuildText, "start"),
-			server: "1138116320249000077",
+			tickets,
+			server: tickets && getInitialThreads(tickets, "Server ").first(),
 			welcome: getChannel("welcome", ChannelType.GuildText),
 			intros: getChannel("intro", ChannelType.GuildText, "partial"),
 
@@ -94,9 +97,6 @@ async function getConfig() {
 
 			qotd: getChannel("question", ChannelType.GuildForum, "partial"),
 			share: getChannel("share", ChannelType.GuildForum),
-			advertise:
-				getChannel("advertise", ChannelType.GuildText, "partial") ??
-				getChannel("promo", ChannelType.GuildText, "partial"),
 			bots: getChannel("bots", ChannelType.GuildText, "partial"),
 
 			oldSuggestions: getChannel("suggestions", ChannelType.GuildText, "partial"),
@@ -105,6 +105,10 @@ async function getConfig() {
 		roles: {
 			mod: modRole ?? staffRole,
 			exec: execRole,
+			helper:
+				roles.find((role) => role.name.toLowerCase().startsWith("helper")) ??
+				modRole ??
+				staffRole,
 			staff: staffRole,
 			weeklyWinner: roles.find((role) => role.name.toLowerCase().includes("weekly")),
 			dev: roles.find((role) => role.name.toLowerCase().startsWith("dev")),
@@ -144,9 +148,34 @@ export async function syncConfig(): Promise<void> {
 }
 export default config;
 
-const threads = (await guild?.channels.fetchActiveThreads())?.threads ?? new Collection();
-export function getInitialChannelThreads(
-	channel: Extract<Channel, { threads: ThreadManager }>,
+export function getInitialThreads(
+	channel: ForumChannel | MediaChannel,
+	filter?: string,
+): Collection<string, PublicThreadChannel<true>>;
+export function getInitialThreads(
+	channel: NewsChannel | TextChannel,
+	filter: string,
+): Collection<string, PublicThreadChannel<false>>;
+export function getInitialThreads(
+	channel: NewsChannel | TextChannel,
+	filter?: undefined,
+): Collection<string, AnyThreadChannel<false>>;
+export function getInitialThreads(
+	channel?: ForumChannel | MediaChannel | NewsChannel | TextChannel,
+	filter?: undefined,
+): Collection<string, AnyThreadChannel>;
+export function getInitialThreads(
+	channel: ForumChannel | MediaChannel | NewsChannel | TextChannel | undefined,
+	filter: string,
+): Collection<string, PublicThreadChannel>;
+export function getInitialThreads(
+	channel?: ForumChannel | MediaChannel | NewsChannel | TextChannel,
+	filter?: string,
 ): Collection<string, AnyThreadChannel> {
-	return threads.filter(({ parent }) => parent?.id === channel.id);
+	return threads.filter(
+		(thread) =>
+			(!channel || thread.parent?.id === channel.id) &&
+			(!filter ||
+				(thread.type !== ChannelType.PrivateThread && thread.name.includes(filter))),
+	);
 }

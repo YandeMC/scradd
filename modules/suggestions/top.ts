@@ -42,27 +42,12 @@ export default async function top(
 
 		async ({ answer, author, count, title, ...reference }) =>
 			`**${count}** ${
-				(
-					!("old" in reference) &&
-					(suggestions?.defaultReactionEmoji?.name ||
-						suggestions?.defaultReactionEmoji?.id)
-				) ?
-					formatAnyEmoji(suggestions.defaultReactionEmoji)
-				:	"👍"
+				(!("old" in reference) && formatAnyEmoji(suggestions?.defaultReactionEmoji)) || "👍"
 			} ${hyperlink(
 				padTitle(title),
 				"url" in reference ? reference.url : channelLink(reference.id, config.guild.id),
 				answer,
-			)}${
-				options.user ? "" : (
-					` by ${await mentionUser(
-						author,
-						interaction?.user,
-						interaction?.guild ?? config.guild,
-					)}`
-				)
-			}`,
-
+			)}${options.user ? "" : ` by ${await mentionUser(author, interaction?.user)}`}`,
 		(data) => interaction?.editReply(data),
 		{
 			title: `Top suggestions${displayName ? ` by ${displayName}` : ""}${

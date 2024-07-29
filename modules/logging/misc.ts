@@ -1,6 +1,5 @@
 import {
 	ButtonStyle,
-	ChannelType,
 	ComponentType,
 	ThreadAutoArchiveDuration,
 	type APIAuditLogChange,
@@ -10,6 +9,7 @@ import {
 	type AuditLogEvent,
 	type AutoModerationRule,
 	type Base,
+	type Channel,
 	type Embed,
 	type Guild,
 	type GuildAuditLogsEntry,
@@ -23,7 +23,6 @@ import {
 	type Snowflake,
 	type StageInstance,
 	type Sticker,
-	type TextBasedChannel,
 	type TextChannel,
 	type ThreadChannel,
 	type User,
@@ -33,15 +32,15 @@ import type { actualPrimitives } from "mongoose";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
 import { getBaseChannel } from "../../util/discord.js";
+import features from "../../common/features.js";
 
-export function shouldLog(channel: TextBasedChannel | null): boolean {
+export function shouldLog(channel: Channel | null): boolean {
 	const baseChannel = getBaseChannel(channel);
 
-	return Boolean(
-		baseChannel?.type !== ChannelType.DM &&
-			baseChannel?.guild.id === config.guild.id &&
-			baseChannel.permissionsFor(config.roles.staff).has("ViewChannel"),
-	);
+	if (!baseChannel) return true;
+	if (baseChannel.isDMBased()) return false;
+	if (baseChannel.guild.id !== config.guild.id) return false;
+	return baseChannel.permissionsFor(config.roles.staff).has("ViewChannel");
 }
 
 export enum LogSeverity {
@@ -106,6 +105,8 @@ export enum LogSeverity {
 	Resource,
 }
 
+let lastPing = 0;
+
 export default async function log(
 	content: `${LoggingEmojis | typeof LoggingErrorEmoji} ${string}`,
 	group: LogSeverity | TextChannel,
@@ -116,6 +117,7 @@ export default async function log(
 			| { customId: string; style: Exclude<ButtonStyle, ButtonStyle.Link> }
 			| { url: string }
 		))[];
+		pingHere?: boolean;
 	} = {},
 ): Promise<Message<true>> {
 	const thread = typeof group === "object" ? group : await getLoggingThread(group);
@@ -140,15 +142,20 @@ export default async function log(
 		{ external: [], embedded: [] },
 	) ?? { external: [], embedded: [] };
 
+	const shouldPing =
+		extra.pingHere && features.ticketsPingForReports && Date.now() - lastPing > 90_000;
+	if (shouldPing) lastPing = Date.now();
+
 	return await thread.send({
 		content:
 			content +
+			(shouldPing ? `${content.includes("\n") ? "\n" : " "}@here` : "") +
 			(embedded.length ?
 				embedded
 					.map((file) => `\n\`\`\`${file.extension || ""}\n${file.content}\n\`\`\``)
 					.join("")
 			:	""),
-		allowedMentions: { users: [] },
+		allowedMentions: { users: [], parse: shouldPing ? ["everyone"] : undefined },
 		embeds: extra.embeds?.filter(Boolean),
 		components: extra.buttons && [
 			{
@@ -200,9 +207,9 @@ export async function getLoggingThread(group: LogSeverity): Promise<TextChannel 
 
 export enum LoggingEmojis {
 	SettingChange = "📋",
-	Channel = "🗄",
+	Channel = "🗄️",
 	Punishment = "🔨",
-	Role = "🏷",
+	Role = "🏷️",
 	Integration = "🖇",
 	Thread = "📂",
 	ServerUpdate = "✨",

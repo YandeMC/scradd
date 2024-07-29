@@ -6,8 +6,12 @@ export const CUSTOM_ROLE_PREFIX = "✨ ";
 
 const validContentTypes = ["image/jpeg", "image/png", "image/apng", "image/gif", "image/webp"];
 /**
- * Valid strings: string matching twemojiRegexp, Snowflake of existing server emoji, data: URI, string starting with
- * https://
+ * Valid strings:
+ *
+ * - String matching `twemojiRegexp`.
+ * - Snowflake of existing server emoji.
+ * - `data:` URI.
+ * - String starting with `https://`
  */
 export async function resolveIcon(
 	icon: string,
@@ -18,9 +22,9 @@ export async function resolveIcon(
 	const twemoji = icon.match(twemojiRegexp.default);
 	if (twemoji?.[0] === icon) return { unicodeEmoji: icon, icon: null };
 
-	const serverEmoji = FormattingPatterns.Emoji.exec(icon);
+	const customEmoji = FormattingPatterns.Emoji.exec(icon);
 	const id =
-		(serverEmoji?.[0] === icon && serverEmoji.groups?.id) || (/^\d{17,20}$/.test(icon) && icon);
+		(customEmoji?.[0] === icon && customEmoji.groups?.id) || (/^\d{17,20}$/.test(icon) && icon);
 	const url = id && config.guild.emojis.resolve(id)?.url;
 	if (url) return { icon: url, unicodeEmoji: null };
 

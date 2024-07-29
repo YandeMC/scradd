@@ -84,7 +84,6 @@ export async function setUpAutoClose(
 			id: SpecialReminders[options.subcommand === "close-in" ? "CloseThread" : "LockThread"],
 		},
 	];
-	await queueReminders();
 
 	const [type] = options.subcommand.split("-");
 	await interaction.reply({
@@ -106,6 +105,8 @@ export async function setUpAutoClose(
 			},
 		],
 	});
+
+	await queueReminders();
 }
 
 export async function cancelThreadChange(
@@ -146,9 +147,10 @@ export async function cancelThreadChange(
 					reminder.channel === interaction.channel?.id
 				),
 		);
-		await queueReminders();
 
 		await interaction.reply(`${constants.emojis.statuses.yes} Canceled ${type}!`);
+
+		await queueReminders();
 	}
 }
 
@@ -157,45 +159,51 @@ export async function autoClose(
 	thread: AnyThreadChannel,
 ): Promise<void> {
 	if (thread.guild.id !== config.guild.id) return;
-	const options = getThreadConfig(thread);
-	if (thread.archived && options.keepOpen) await thread.setArchived(false, "Keeping thread open");
+
+	if (thread.archived) {
+		const options = getThreadConfig(thread);
+		if (options.keepOpen) await thread.setArchived(false, "Keeping thread open");
+		return;
+	}
 
 	if (
-		!wasLocked &&
-		thread.locked &&
-		(thread.type === ChannelType.PrivateThread || thread.parent?.isThreadOnly())
-	) {
-		const date = Date.now() + 43_200_000;
-		remindersDatabase.data = [
-			...remindersDatabase.data,
-			{
-				channel: thread.id,
-				date: date,
-				reminder: undefined,
-				user: client.user.id,
-				id: SpecialReminders.CloseThread,
-			},
-		];
-		await queueReminders();
+		!thread.locked ||
+		wasLocked ||
+		(thread.type !== ChannelType.PrivateThread && !thread.parent?.isThreadOnly())
+	)
+		return;
 
-		await thread.send({
-			content: `${constants.emojis.statuses.yes} I’ll close this thread ${time(
-				Math.round(date / 1000),
-				TimestampStyles.RelativeTime,
-			)}!`,
-			components: [
-				{
-					type: ComponentType.ActionRow,
-					components: [
-						{
-							type: ComponentType.Button,
-							label: "Cancel",
-							customId: "close_cancelThreadChange",
-							style: ButtonStyle.Danger,
-						},
-					],
-				},
-			],
-		});
-	}
+	const date = Date.now() + 86_400_000;
+	remindersDatabase.data = [
+		...remindersDatabase.data,
+		{
+			channel: thread.id,
+			date: date,
+			reminder: undefined,
+			user: client.user.id,
+			id: SpecialReminders.CloseThread,
+		},
+	];
+
+	await thread.send({
+		content: `${constants.emojis.statuses.yes} I’ll close this thread ${time(
+			Math.round(date / 1000),
+			TimestampStyles.RelativeTime,
+		)}!`,
+		components: [
+			{
+				type: ComponentType.ActionRow,
+				components: [
+					{
+						type: ComponentType.Button,
+						label: "Cancel",
+						customId: "close_cancelThreadChange",
+						style: ButtonStyle.Danger,
+					},
+				],
+			},
+		],
+	});
+
+	await queueReminders();
 }

@@ -10,16 +10,16 @@ import config from "../../common/config.js";
 import constants from "../../common/constants.js";
 import { databaseThread } from "../../common/database.js";
 import { getBaseChannel, getMessageJSON } from "../../util/discord.js";
-import { generateError } from "../logging/errors.js";
+import { stringifyError } from "../logging/errors.js";
 import log, { LogSeverity, LoggingEmojis, shouldLog } from "../logging/misc.js";
-import { chatThread } from "../auto/chat.js";
+import { chatThread } from "../autos/chat.js";
 
 export default async function editMessage(
 	interaction: MessageContextMenuCommandInteraction,
 ): Promise<InteractionResponse | undefined> {
 	if (
 		!interaction.targetMessage.editable ||
-		!interaction.targetMessage.interaction ||
+		interaction.targetMessage.interaction ||
 		chatThread?.id === interaction.channel?.id ||
 		config.channels.board?.id === interaction.channel?.id ||
 		(config.channels.modlogs.id === getBaseChannel(interaction.channel)?.id &&
@@ -32,7 +32,7 @@ export default async function editMessage(
 	}
 
 	const pre =
-		JSON.stringify(getMessageJSON(interaction.targetMessage), undefined, "  ").match(
+		JSON.stringify(await getMessageJSON(interaction.targetMessage), undefined, "  ").match(
 			/.{1,4000}/gsy,
 		) ?? [];
 	await interaction.showModal({
@@ -83,14 +83,7 @@ export async function submitEdit(interaction: ModalSubmitInteraction, id: string
 			ephemeral: true,
 
 			files: [
-				{
-					attachment: Buffer.from(
-						JSON.stringify(generateError(error), undefined, "  "),
-						"utf8",
-					),
-
-					name: "error.json",
-				},
+				{ attachment: Buffer.from(stringifyError(error), "utf8"), name: "error.json" },
 				{ attachment: Buffer.from(text, "utf8"), name: "json.json" },
 			],
 		});
@@ -98,21 +91,14 @@ export async function submitEdit(interaction: ModalSubmitInteraction, id: string
 	if (!json) return;
 	const message = await interaction.channel?.messages.fetch(id);
 	if (!message) throw new TypeError("Used command in DM!");
-	const oldJSON = getMessageJSON(message);
+	const oldJSON = await getMessageJSON(message);
 	const edited = await message.edit(json).catch(async (error: unknown) => {
 		await interaction.reply({
 			ephemeral: true,
 			content: `${constants.emojis.statuses.no} An error occurred while editing the message.`,
 
 			files: [
-				{
-					attachment: Buffer.from(
-						JSON.stringify(generateError(error), undefined, "  "),
-						"utf8",
-					),
-
-					name: "error.json",
-				},
+				{ attachment: Buffer.from(stringifyError(error), "utf8"), name: "error.json" },
 				{ attachment: Buffer.from(text, "utf8"), name: "json.json" },
 			],
 		});
@@ -133,9 +119,11 @@ export async function submitEdit(interaction: ModalSubmitInteraction, id: string
 		.replace(/^-{3} \n\+{3} \n/, "");
 	const extraDiff = unifiedDiff(
 		JSON.stringify({ ...oldJSON, content: undefined }, undefined, "  ").split("\n"),
-		JSON.stringify({ ...getMessageJSON(edited), content: undefined }, undefined, "  ").split(
-			"\n",
-		),
+		JSON.stringify(
+			{ ...(await getMessageJSON(edited)), content: undefined },
+			undefined,
+			"  ",
+		).split("\n"),
 		{ lineterm: "" },
 	)
 		.join("\n")

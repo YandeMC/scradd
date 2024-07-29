@@ -1,7 +1,9 @@
 import {
+	ActivityType,
 	ApplicationCommandOptionType,
-	AutoModerationActionType,
+	AutoModerationRuleTriggerType,
 	GuildMember,
+	MessageMentions,
 	MessageType,
 	underline,
 	type CommandInteractionOption,
@@ -132,13 +134,16 @@ defineEvent.pre("userUpdate", async (_, user) => {
 defineEvent("presenceUpdate", async (_, newPresence) => {
 	if (newPresence.guild?.id !== config.guild.id) return;
 
-	const [presence] = newPresence.activities;
-	if (!presence) return;
+	const activity =
+		newPresence.activities.find((activity) => activity.type === ActivityType.Custom) ??
+		newPresence.activities[0];
+	if (!activity) return;
 
 	const status =
-		(presence.emoji?.toString() ?? "") +
+		(activity.emoji?.toString() ?? "") +
 		" " +
-		(presence.state ?? newPresence.activities.find((activity) => activity.name)?.name ?? "");
+		(activity.type === ActivityType.Custom ? activity.state : activity.name);
+	// TODO: Check `.details` for hang statuses
 	const censored = tryCensor(status, 1);
 	if (censored && newPresence.member?.roles.resolve(config.roles.staff.id)) {
 		await warn(
@@ -200,14 +205,14 @@ defineChatCommand(
 defineEvent("autoModerationActionExecution", async (action) => {
 	if (
 		action.guild.id === config.guild.id &&
-		action.action.type === AutoModerationActionType.SendAlertMessage &&
+		action.ruleTriggerType === AutoModerationRuleTriggerType.KeywordPreset &&
 		action.alertSystemMessageId &&
-		tryCensor(action.content)
+		action.action.metadata.channelId &&
+		tryCensor(action.content) &&
+		!MessageMentions.EveryonePattern.test(action.content)
 	) {
-		const channel =
-			action.action.metadata.channelId &&
-			(await config.guild.channels.fetch(action.action.metadata.channelId));
-		if (channel && channel.isTextBased()) {
+		const channel = await config.guild.channels.fetch(action.action.metadata.channelId);
+		if (channel?.isTextBased()) {
 			ignoredDeletions.add(action.alertSystemMessageId);
 			await channel.messages.delete(action.alertSystemMessageId);
 		}

@@ -31,7 +31,7 @@ import {
 } from "./messages.js";
 import log, { LogSeverity, LoggingEmojis, extraAuditLogsInfo, type AuditLog } from "./misc.js";
 import { memberRoleUpdate, roleCreate, roleDelete, roleUpdate } from "./roles.js";
-import { guildUpdate, inviteCreate, inviteDelete } from "./server.js";
+import { guildUpdate, inviteCreate, inviteDelete } from "./guild.js";
 import { threadCreate, threadDelete, threadUpdate } from "./threads.js";
 import {
 	guildMemberAdd,
@@ -120,7 +120,7 @@ const events: { [Event in AuditLogEvent]?: (entry: AuditLog<Event>) => Awaitable
 			`${LoggingEmojis.Integration} Permissions for ${userMention(
 				entry.extra.applicationId,
 			)}’s commands changed${extraAuditLogsInfo(entry)}`,
-			LogSeverity.ImportantUpdate,
+			LogSeverity.ServerChange,
 		);
 	},
 	async [AuditLogEvent.AutoModerationRuleCreate](entry) {

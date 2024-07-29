@@ -7,7 +7,7 @@ export const persistedRoles = {
 	designer: "916020774509375528",
 	scradd: "1008190416396484700",
 	admin: ["1069776422467555328", "806603332944134164"],
-	mod: ["881623848137682954", config.roles.staff.id, config.roles.mod.id, config.roles.exec.id],
+	mod: ["881623848137682954", config.roles.staff.id],
 	dev: config.roles.dev?.id,
 	translator: "841696608592330794",
 	contributor: "991413187427700786",
@@ -39,6 +39,8 @@ export async function persistedLeave(member: GuildMember | PartialGuildMember): 
 
 export async function persistedRejoin(member: GuildMember): Promise<void> {
 	if (member.guild.id !== config.guild.id) return;
+
+	if (member.user.bot) await member.roles.add("806609992597110825", "Is bot");
 
 	const memberRoles = await RoleList.findOneAndDelete({ id: member.id }).exec();
 	for (const roleName of Object.keys(persistedRoles)) {

@@ -52,6 +52,15 @@ export default async function memoryMatch(
 		});
 	}
 
+	if (await checkIfUserPlaying(interaction)) return;
+	if (CURRENTLY_PLAYING.get(interaction.user.id)) {
+		await interaction.reply({
+			content: `${constants.emojis.statuses.no} ${interaction.user.toString()} already has an ongoing game!`,
+			ephemeral: true,
+		});
+		return;
+	}
+
 	const { opponent, "easy-mode": easyMode = false, "bonus-turns": bonusTurns = true } = options;
 
 	const message = await interaction.reply({
@@ -165,13 +174,11 @@ async function playGame(
 	}
 
 	await interaction.deferUpdate();
-
 	let turn = 0;
-	let turnInfo = await setupNextTurn();
 	let totalTurns = 0;
+	const scores: [string[], string[]] = [[], ["22"]];
 	const shown = new Set<string>();
 
-	const scores: [string[], string[]] = [[], ["22"]];
 	const chunks = await setupGame(easyMode ? 4 : 2, interaction.guild ?? undefined);
 	const message = await interaction.message.edit(getBoard());
 	const thread =
@@ -186,6 +193,7 @@ async function playGame(
 				autoArchiveDuration: ThreadAutoArchiveDuration.OneHour,
 			})
 		:	undefined;
+	let turnInfo = await setupNextTurn();
 
 	const collector = message
 		.createMessageComponentCollector({
@@ -399,7 +407,7 @@ async function setupGame(difficulty: 2 | 4, guild = config.guild): Promise<strin
 	const guildEmojis = (await guild.emojis.fetch())
 		.filter((emoji) => emoji.available)
 		.map((emoji) =>
-			formatEmoji({ animated: emoji.animated ?? false, id: emoji.id, name: "_" }),
+			formatEmoji({ animated: emoji.animated ?? false, id: emoji.id, name: "emoji" }),
 		);
 	const allEmojis = [...new Set([...constantEmojis, ...guildEmojis])].sort(
 		() => Math.random() - 0.5,

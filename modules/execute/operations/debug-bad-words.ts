@@ -21,23 +21,34 @@ const data: CustomOperation = {
 	],
 	permissions: (user) =>
 		!(user instanceof User) &&
-		!!(user instanceof GuildMember ?
-			user.roles.resolve(config.roles.staff.id)
-		:	user.roles.includes(config.roles.staff.id)),
+		(user instanceof GuildMember ?
+			!!user.roles.resolve(config.roles.mod.id)
+		:	user.roles.includes(config.roles.mod.id)) &&
+		undefined,
 
 	async command(interaction, { string }) {
 		assert(typeof string === "string");
 
 		const matches = badWords
-			.flat(2)
-			.map((regex) => {
-				if (new RegExp(caesar(regex.source), regexpFlags).test(string))
-					return { regex: regex.source, raw: true };
-				if (new RegExp(decodeRegexp(regex), regexpFlags).test(string))
-					return { regex: regex.source, raw: false };
-			})
+			.flatMap((severityList: RegExp[][], severity: number) =>
+				severityList.flatMap((regexps: RegExp[]) =>
+					regexps.map((regexp) => {
+						const start = severity === 1 || severity === 2 ? "" : /\b/.source;
+						const end = severity === 1 ? "" : /\b/.source;
+						const actual = `${start}${caesar(regexp.source)}${end}`;
+						if (new RegExp(actual, regexpFlags).test(string))
+							return { regexp: regexp.source, raw: true, actual };
+						if (
+							new RegExp(`${start}${decodeRegexp(regexp)}${end}`, regexpFlags).test(
+								string,
+							)
+						)
+							return { regexp: regexp.source, raw: false, actual };
+					}),
+				),
+			)
 			.filter(Boolean)
-			.sort((a, b) => +b.raw - +a.raw || a.regex.localeCompare(b.regex));
+			.sort((a, b) => +b.raw - +a.raw || a.regexp.localeCompare(b.regexp));
 
 		if (!matches.length) {
 			await interaction.reply({
@@ -53,14 +64,14 @@ const data: CustomOperation = {
 			} \`${string}\` matches the following regular expressions:\n${matches
 				.map((match) =>
 					match.raw ?
-						`- [\`/${match.regex}/\`](<https://regex101.com/?${new URLSearchParams({
+						`- [\`/${match.regexp}/\`](<https://regex101.com/?${new URLSearchParams({
 							flavor: "javascript",
-							regex: match.regex,
+							regex: match.actual,
 							testString: string,
 							delimiter: "/",
 							flags: regexpFlags,
 						}).toString()}>)`
-					:	`- \`/${match.regex}/\`*`,
+					:	`- \`/${match.regexp}/\`*`,
 				)
 				.join("\n")}${
 				matches.some((match) => !match.raw) ?
