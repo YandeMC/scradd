@@ -1,5 +1,4 @@
 import {
-	Presence,
 	time,
 	type AuditLogEvent,
 	type GuildMember,
@@ -56,14 +55,7 @@ export async function guildMemberAdd(member: GuildMember): Promise<void> {
 		);
 	}
 }
-export async function presenceUpdate(oldPresence: Presence | null, newPresence: Presence | null) {
-	if (oldPresence?.status != newPresence?.status) {
-		await log(
-			`${LoggingEmojis.User} ${newPresence?.user?.toString()} Changed their presence from ${oldPresence?.status} to ${newPresence?.status}`,
-			LogSeverity.Lurk,
-		);
-	}
-}
+
 export async function guildMemberRemove(member: GuildMember | PartialGuildMember): Promise<void> {
 	if (member.guild.id !== config.guild.id) return;
 	await log(`${LoggingEmojis.Member} ${member.toString()} left`, LogSeverity.Resource);

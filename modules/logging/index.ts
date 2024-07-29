@@ -42,7 +42,6 @@ import {
 	memberKick,
 	memberPrune,
 	userUpdate,
-	presenceUpdate,
 } from "./users.js";
 import {
 	guildScheduledEventCreate,
@@ -169,4 +168,3 @@ defineEvent("roleDelete", roleDelete);
 defineEvent("threadUpdate", threadUpdate);
 defineEvent("userUpdate", userUpdate);
 defineEvent("voiceStateUpdate", voiceStateUpdate);
-defineEvent("presenceUpdate", presenceUpdate);
