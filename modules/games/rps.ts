@@ -50,7 +50,6 @@ export default async function rps(
 		fetchReply: true,
 	});
 
-
 	if (options.opponent) {
 		await interaction.editReply({
 			content: `<@${options.opponent?.id}>, Youve been challenged by <@${interaction.user.id}>! (${
@@ -359,7 +358,6 @@ export default async function rps(
 				components: [],
 				embeds: finalEmbed,
 			});
-
 
 			collector.stop();
 			return (games[interaction.id] = null);
