@@ -11,8 +11,6 @@ import {
 	type APIEmbed,
 } from "discord.js";
 import { GAME_COLLECTOR_TIME } from "./misc.js";
-import { findMatch, getParticipant, setMatchWinner } from "../tournament/api.js";
-import { compressId } from "../tournament/baseconvert.js";
 import { setTimeout } from "timers/promises";
 
 let games = {} as any;
@@ -52,21 +50,12 @@ export default async function rps(
 		fetchReply: true,
 	});
 
-	const partOfTourny: boolean =
-		!!options.opponent &&
-		(await findMatch(options.opponent.user.id, interaction.user.id)) &&
-		options.rounds == 5;
-	let match =
-		partOfTourny && options.opponent ?
-			(await findMatch((options.opponent as GuildMember).user.id, interaction.user.id)) ||
-			null
-		:	null;
 
 	if (options.opponent) {
 		await interaction.editReply({
 			content: `<@${options.opponent?.id}>, Youve been challenged by <@${interaction.user.id}>! (${
 				options.rounds || 2
-			} rounds) ${partOfTourny ? "\n### This match will be part of the RPS Tournament!" : ""}`,
+			} rounds)`,
 			components: [
 				{
 					type: ComponentType.ActionRow,
@@ -259,7 +248,6 @@ export default async function rps(
 									games[interaction.id].results,
 									"TIEBREAKER",
 									"",
-									partOfTourny,
 								),
 								components: [],
 							});
@@ -282,7 +270,6 @@ export default async function rps(
 					games[interaction.id].results,
 					"",
 					"",
-					partOfTourny,
 				),
 				components: [
 					{
@@ -347,7 +334,6 @@ export default async function rps(
 				arr,
 				result,
 				"",
-				partOfTourny,
 			);
 			const scoreDiff: number = Math.abs(counter[emojis["p1"]] - counter[emojis["p2"]]);
 			const resultsEmbed: APIEmbed = {
@@ -374,30 +360,6 @@ export default async function rps(
 				embeds: finalEmbed,
 			});
 
-			if (endReason !== "idle" && partOfTourny && options.opponent) {
-				match =
-					(await findMatch(
-						(options.opponent as GuildMember).user.id,
-						interaction.user.id,
-					)) || null;
-				if (match && match.match.state === "open") {
-					const apiPlayer1 = await getParticipant(match.match.player1_id);
-					const apiPlayer2 = await getParticipant(match.match.player2_id);
-					const fMatch =
-						apiPlayer1.discordId === compressId(games[interaction.id].ids[0]);
-
-					const player1points: number =
-						fMatch ? counter[emojis["p1"]] : counter[emojis["p2"]];
-
-					const player2points: number =
-						!fMatch ? counter[emojis["p1"]] : counter[emojis["p2"]];
-
-					console.log(apiPlayer1.display_name, player1points);
-					console.log(apiPlayer2.display_name, player2points);
-					const winnerId = player2points > player1points ? apiPlayer2.id : apiPlayer1.id;
-					await setMatchWinner(match.match.id, winnerId, [player1points, player2points]);
-				}
-			}
 
 			collector.stop();
 			return (games[interaction.id] = null);
@@ -425,7 +387,6 @@ function GenerateRound(
 	results: Array<any>,
 	title: string = "",
 	footer: string = "",
-	partOfTourny = false,
 ): APIEmbed[] {
 	const result = p1.choices.map((element, index) => {
 		return `${element} ${results[index]} ${p2.choices[index]}`;
@@ -441,9 +402,9 @@ function GenerateRound(
 				name: "RPS",
 			},
 			footer: {
-				text: footer + (partOfTourny ? "This Game Is Part Of The Tournament!" : ""),
+				text: footer,
 			},
-			title: title + partOfTourny,
+			title: title,
 		},
 	];
 }
