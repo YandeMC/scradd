@@ -46,7 +46,7 @@ if (process.env.SCRATCH_PASS) {
 				// await wait(2000)
 				const res2 = await fetch(
 					"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
-					json.privateCode,
+						json.privateCode,
 				);
 				const json2: { valid: boolean } = await res2.json();
 				return { valid: json2.valid, type: "project" };
@@ -60,7 +60,7 @@ if (process.env.SCRATCH_PASS) {
 				// await wait(2000)
 				const res2 = await fetch(
 					"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
-					json.privateCode,
+						json.privateCode,
 				);
 				const json2: { valid: boolean } = await res2.json();
 				return { valid: json2.valid, type: "comment" };
@@ -74,7 +74,7 @@ if (process.env.SCRATCH_PASS) {
 				// await wait(4000)
 				const res2 = await fetch(
 					"https://scratch-coders-auth-server.vercel.app/auth/verifytoken/" +
-					json.privateCode,
+						json.privateCode,
 				);
 				const json2: { valid: boolean } = await res2.json();
 				return { valid: json2.valid, type: "cloud" };
@@ -87,7 +87,7 @@ if (process.env.SCRATCH_PASS) {
 						comment: "queued",
 						cloud: "queued",
 					}
-					: {
+				:	{
 						project: "queued",
 						comment: "queued",
 						cloud: "error",
@@ -101,7 +101,7 @@ if (process.env.SCRATCH_PASS) {
 						{ type: "project", f: testProject },
 						{ type: "cloud", f: TestCloud },
 					]
-					: [
+				:	[
 						{ type: "comment", f: testComment },
 						{ type: "project", f: testProject },
 					];
@@ -152,10 +152,10 @@ if (process.env.SCRATCH_PASS) {
 		};
 		return (
 			status == "wait" ? `${statuses.wait} In Progress`
-				: status == "true" ? `${statuses.true} Success`
-					: status == "queued" ? `${statuses.queued} Queued`
-						: status == "error" ? `${statuses.error} Cloud Server Down `
-							: `${statuses.false} Failed`
+			: status == "true" ? `${statuses.true} Success`
+			: status == "queued" ? `${statuses.queued} Queued`
+			: status == "error" ? `${statuses.error} Cloud Server Down `
+			: `${statuses.false} Failed`
 		);
 	}
 }
@@ -168,13 +168,12 @@ if (config.roles.verified) {
 		async (i) => {
 			const member = await i.guild?.members.fetch(i.user);
 			if (!member) throw "what the heck";
-			const message = await i.reply({		
+			const message = await i.reply({
 				content: "Starting",
 				components: [],
 				fetchReply: true,
 			});
 			while (true) {
-				
 				try {
 					const roles = [...member.roles.valueOf().values()].map((r) => r.id);
 					if (config.roles.verified && roles.includes(config.roles.verified.id))
@@ -295,15 +294,17 @@ if (config.roles.verified) {
 						await log(
 							`${LoggingEmojis.Integration} ${userMention(
 								i.user.id,
-							)} linked their Scratch account [${username}](${constants.domains.scratch
+							)} linked their Scratch account [${username}](${
+								constants.domains.scratch
 							}/users/${username})`,
 							LogSeverity.ServerChange,
 							{ embeds: [await handleUser(["", "", username])] },
 						);
 						return await message.edit({ components: [], content: "Success" });
 					}
-
-				} catch (e) {console.log}
+				} catch (e) {
+					console.log;
+				}
 				await message.edit({
 					components: [
 						{
