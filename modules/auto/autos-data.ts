@@ -17,6 +17,8 @@ export const customResponses: Record<string, string> = {
 	Colon: "https://tenor.com/view/gd-colon-gd-cologne-i-love-gd-cologne-dash-spider-geometry-dash-gif-18229858069743252994",
 	Irs: "https://tenor.com/view/my-beloved-beloved-tax-fraud-gif-25476792",
 	Gay: "yeah like yan- why do i hear boss music",
+	Zuzu: "https://cdn.discordapp.com/attachments/1141222490597757025/1269535264037011478/zuzu.png",
+	Yande: "(    b    )"
 };
 export const customNames: Record<string, string> = {
 	Abaka: "YandeAI Banner",
@@ -60,7 +62,7 @@ const autoreactions: [
 ][] = [
 	[
 		["🇸", "🇭", "🇺", "🇹", "😠"],
-		[`<@${client.user.id}>`, "partial"],
+		[`<@${client.user.id}>`, "full"],
 	],
 	["🍪", "cookie"],
 	["<:haha:1237847801073897583>", "@everyone"],
