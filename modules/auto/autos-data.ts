@@ -18,7 +18,7 @@ export const customResponses: Record<string, string> = {
 	Irs: "https://tenor.com/view/my-beloved-beloved-tax-fraud-gif-25476792",
 	Gay: "yeah like yan- why do i hear boss music",
 	Zuzu: "https://cdn.discordapp.com/attachments/1141222490597757025/1269535264037011478/zuzu.png",
-	Yande: "(    b    )"
+	Yande: "(    b    )",
 };
 export const customNames: Record<string, string> = {
 	Abaka: "YandeAI Banner",
