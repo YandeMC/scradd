@@ -19,7 +19,7 @@ export const customResponses: Record<string, string> = {
 	Gay: "yeah like yan- why do i hear boss music",
 	Zuzu: "https://cdn.discordapp.com/attachments/1141222490597757025/1269535264037011478/zuzu.png",
 	Yande: "(    b    )",
-	Trans: "<:grableft:1241127094356803714><:Estrogen:1269538313233240137><:grabright:1241127108852449312>"
+	Trans: "<:grableft:1241127094356803714><:Estrogen:1269538313233240137><:grabright:1241127108852449312>",
 };
 export const customNames: Record<string, string> = {
 	Abaka: "YandeAI Banner",
