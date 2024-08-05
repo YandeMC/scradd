@@ -23,9 +23,8 @@ export const customResponses: Record<string, string> = {
 	"Trans":
 		"<:grableft:1241127094356803714><:Estrogen:1269538313233240137><:grabright:1241127108852449312>",
 	"Mailing You A Pipe Bomb": "e",
-	'Drunk' : "Meow meow meow :333 meow purrrr :3 purmrow meow :3 :3 meowwww :3 mewmew",
-	"Estrogen" : "😋",
-	
+	"Drunk": "Meow meow meow :333 meow purrrr :3 purmrow meow :3 :3 meowwww :3 mewmew",
+	"Estrogen": "😋",
 };
 export const customNames: Record<string, string> = {
 	Board: "🛹",
@@ -33,11 +32,10 @@ export const customNames: Record<string, string> = {
 	Hex: "The bestagon",
 	Hexa: "The bestagon",
 	Hexagon: "The bestagon",
-	Emacs : "Vi",
-	Vi : "Emacs"
+	Emacs: "Vi",
+	Vi: "Emacs",
 };
-export const customComments: Record<string, string> = {
-};
+export const customComments: Record<string, string> = {};
 export const customTriggers: readonly string[] = Object.keys({});
 export const dadEasterEggCount =
 	Object.keys(customResponses).length +
@@ -67,11 +65,11 @@ const autoreactions: [
 		| [Snowflake, "ping"]
 	)[],
 ][] = [
-		[
-			["🇸", "🇭", "🇺", "🇹", "😠"],
-			[`<@${client.user.id}>`, "full"],
-		],
-		["🍪", "cookie"],
-		["<:haha:1237847801073897583>", "@everyone"],
-	];
+	[
+		["🇸", "🇭", "🇺", "🇹", "😠"],
+		[`<@${client.user.id}>`, "full"],
+	],
+	["🍪", "cookie"],
+	["<:haha:1237847801073897583>", "@everyone"],
+];
 export default autoreactions;
