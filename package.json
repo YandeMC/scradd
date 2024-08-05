@@ -46,7 +46,8 @@
 		"posthtml-parser": "0.12.0",
 		"scratchlink": "^3.1.1",
 		"serialize-error": "11.0.3",
-		"strife.js": "4.0.1"
+		"strife.js": "4.0.1",
+		"tesseract.js": "^5.1.0"
 	},
 	"devDependencies": {
 		"@redguy12/prettier-config": "3.0.1",

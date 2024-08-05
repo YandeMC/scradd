@@ -18,13 +18,30 @@ import { xpDatabase } from "../xp/util.js";
 import tryCensor, { badWordRegexps, badWordsAllowed } from "./misc.js";
 import { ignoredDeletions } from "../logging/messages.js";
 import papa from "papaparse"
+import { createWorker } from "tesseract.js";
 
+
+const worker = await createWorker("eng");
+async function getMessageImageText(message: Message): Promise<string[]> {
+	const imageTextPromises = message.attachments
+		.filter((attachment) => attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i))
+		.map(async ({ url }) => {
+			if (url) {
+				const ret = await worker.recognize(url);
+				return ret.data.text;
+			}
+		})
+		.filter(Boolean);
+
+	const imageTextResults = await Promise.all(imageTextPromises);
+	return imageTextResults as string[];
+}
 const malwareDomains = papa.parse<{
 	Domain: string;
 	Malware: string;
 	"Date Added": string;
 	Source: string;
-}>(await (await fetch("https://raw.githubusercontent.com/stamparm/blackbook/master/blackbook.csv")).text()).data as unknown as [string,string,string,string][]
+}>(await (await fetch("https://raw.githubusercontent.com/stamparm/blackbook/master/blackbook.csv")).text()).data as unknown as [string, string, string, string][]
 console.log(malwareDomains)
 
 
@@ -190,10 +207,10 @@ export default async function automodMessage(message: Message): Promise<boolean>
 
 		}
 	}
-			// if (!message.author.bot) {
-			// 	message.reply(links.toString())
-			// 	message.reply(malwareDomains.length.toString())
-			// }
+	// if (!message.author.bot) {
+	// 	message.reply(links.toString())
+	// 	message.reply(malwareDomains.length.toString())
+	// }
 	const malware = malwareDomains.filter((m) => {
 		console.log()
 		if (links.find((l) => l.hostname.toLowerCase() == m[0].toLowerCase())) return true
@@ -217,6 +234,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 		tryCensor(stripMarkdown(message.content)),
 		...message.stickers.map(({ name }) => tryCensor(name)),
 		...invites.map(([, invite]) => !!invite?.guild && tryCensor(invite.guild.name)),
+		...(await getMessageImageText(message)).map((content) => tryCensor(content)),
 	].reduce(
 		(bad, censored) =>
 			typeof censored === "boolean" ? bad : (

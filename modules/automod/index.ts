@@ -66,7 +66,7 @@ defineEvent.pre("messageCreate", async (message) => {
 	if (a) {
 		const member = await config.guild.members.fetch(message.author.id);
 		await member.timeout(10000)
-		await message.reply("Slow down!");
+		await message.reply("Slow down!");			
 		await message.delete();
 		await warn(message.author, "Spamming");
 		return false
