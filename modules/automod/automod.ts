@@ -17,9 +17,8 @@ import { ESTABLISHED_THRESHOLD, getLevelForXp } from "../xp/misc.js";
 import { xpDatabase } from "../xp/util.js";
 import tryCensor, { badWordRegexps, badWordsAllowed } from "./misc.js";
 import { ignoredDeletions } from "../logging/messages.js";
-import papa from "papaparse"
+import papa from "papaparse";
 import { createWorker } from "tesseract.js";
-
 
 const worker = await createWorker("eng");
 async function getMessageImageText(message: Message): Promise<string[]> {
@@ -37,13 +36,16 @@ async function getMessageImageText(message: Message): Promise<string[]> {
 	return imageTextResults as string[];
 }
 const malwareDomains = papa.parse<{
-	Domain: string;
-	Malware: string;
+	"Domain": string;
+	"Malware": string;
 	"Date Added": string;
-	Source: string;
-}>(await (await fetch("https://raw.githubusercontent.com/stamparm/blackbook/master/blackbook.csv")).text()).data as unknown as [string, string, string, string][]
-console.log(malwareDomains)
-
+	"Source": string;
+}>(
+	await (
+		await fetch("https://raw.githubusercontent.com/stamparm/blackbook/master/blackbook.csv")
+	).text(),
+).data as unknown as [string, string, string, string][];
+console.log(malwareDomains);
 
 const AD_DOMAINS = [
 	"scratch.mit.edu",
@@ -106,12 +108,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 		!baseChannel.isDMBased() &&
 		baseChannel.permissionsFor(baseChannel.guild.id)?.has("SendMessages")
 	) {
-		const badInvites = [
-			...new Set(
-				invites
-					.map(([link]) => link),
-			),
-		];
+		const badInvites = [...new Set(invites.map(([link]) => link))];
 
 		if (badInvites.length) {
 			await warn(
@@ -154,10 +151,6 @@ export default async function automodMessage(message: Message): Promise<boolean>
 			const adsAllowed =
 				!baseChannel.name.includes("general") && !baseChannel.name.includes("chat");
 
-
-
-
-
 			const { shorteners, ads } = links.reduce<{ shorteners: URL[]; ads: URL[] }>(
 				({ shorteners, ads }, link) => {
 					if (
@@ -179,7 +172,8 @@ export default async function automodMessage(message: Message): Promise<boolean>
 			if (shorteners.length) {
 				await warn(
 					message.author,
-					`Used ${shorteners.length === 1 ? "a link shortener" : "link shorteners"
+					`Used ${
+						shorteners.length === 1 ? "a link shortener" : "link shorteners"
 					} in ${message.channel.toString()} while at level ${level}`,
 					shorteners.length * PARTIAL_STRIKE_COUNT,
 					shorteners.join(" "),
@@ -192,19 +186,19 @@ export default async function automodMessage(message: Message): Promise<boolean>
 			if (ads.length) {
 				await warn(
 					message.author,
-					`Posted blacklisted link${ads.length === 1 ? "" : "s"
+					`Posted blacklisted link${
+						ads.length === 1 ? "" : "s"
 					} in ${message.channel.toString()} while at level ${level}`,
 					ads.length * PARTIAL_STRIKE_COUNT,
 					ads.join(" "),
 				);
 				needsDelete = true;
 				deletionMessages.push(
-					`Sorry, but you need level ${ESTABLISHED_THRESHOLD} to post ${ads.length === 1 ? "that link" : "those links"
+					`Sorry, but you need level ${ESTABLISHED_THRESHOLD} to post ${
+						ads.length === 1 ? "that link" : "those links"
 					} outside a channel like ${config.channels.share.toString()}!`,
 				);
 			}
-
-
 		}
 	}
 	// if (!message.author.bot) {
@@ -212,23 +206,22 @@ export default async function automodMessage(message: Message): Promise<boolean>
 	// 	message.reply(malwareDomains.length.toString())
 	// }
 	const malware = malwareDomains.filter((m) => {
-		console.log()
-		if (links.find((l) => l.hostname.toLowerCase() == m[0].toLowerCase())) return true
-		return false
-	})
-	console.log(malware.length, malware)
+		console.log();
+		if (links.find((l) => l.hostname.toLowerCase() == m[0].toLowerCase())) return true;
+		return false;
+	});
+	console.log(malware.length, malware);
 	if (malware.length) {
 		await warn(
 			message.author,
-			`Posted malware link${malware.length === 1 ? "" : "s"
+			`Posted malware link${
+				malware.length === 1 ? "" : "s"
 			} in ${message.channel.toString()}`,
 			malware.length * 5,
 			malware.map((m) => `${m[0]} (${m[1]})`).join(", "),
 		);
 		needsDelete = true;
-		deletionMessages.push(
-			`You are not allowed to post malware on this server.`,
-		);
+		deletionMessages.push(`You are not allowed to post malware on this server.`);
 	}
 	const badWords = [
 		tryCensor(stripMarkdown(message.content)),
@@ -262,14 +255,14 @@ export default async function automodMessage(message: Message): Promise<boolean>
 			(bad, current) => {
 				const censored = tryCensor(current || "", 1);
 				return censored ?
-					{
-						strikes: bad.strikes + censored.strikes,
-						words: bad.words.map((words, index) => [
-							...words,
-							...(censored.words[index] ?? []),
-						]),
-					}
-					: bad;
+						{
+							strikes: bad.strikes + censored.strikes,
+							words: bad.words.map((words, index) => [
+								...words,
+								...(censored.words[index] ?? []),
+							]),
+						}
+					:	bad;
 			},
 			{ strikes: 0, words: Array.from<string[]>({ length: badWordRegexps.length }).fill([]) },
 		);
@@ -332,7 +325,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 		if (needsDelete) {
 			await (message.deletable ?
 				message.delete()
-				: log(
+			:	log(
 					`${LoggingErrorEmoji} Unable to delete ${message.url} (${deletionMessages.join(" ")})`,
 					LogSeverity.Alert,
 				));
