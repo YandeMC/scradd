@@ -23,7 +23,7 @@ const data: CustomOperation = {
 		!(user instanceof User) &&
 		!!(user instanceof GuildMember ?
 			user.roles.resolve(config.roles.staff.id)
-		:	user.roles.includes(config.roles.staff.id)),
+			: user.roles.includes(config.roles.staff.id)),
 
 	async command(interaction, { string }) {
 		assert(typeof string === "string");
@@ -31,10 +31,12 @@ const data: CustomOperation = {
 		const matches = badWords
 			.flat(2)
 			.map((regex) => {
-				if (new RegExp(caesar(regex.source), regexpFlags).test(string))
-					return { regex: regex.source, raw: true };
-				if (new RegExp(decodeRegexp(regex), regexpFlags).test(string))
-					return { regex: regex.source, raw: false };
+				if (regex)
+					if (new RegExp(caesar(regex.source), regexpFlags).test(string))
+						return { regex: regex.source, raw: true };
+				if (regex)
+					if (new RegExp(decodeRegexp(regex), regexpFlags).test(string))
+						return { regex: regex.source, raw: false };
 			})
 			.filter(Boolean)
 			.sort((a, b) => +b.raw - +a.raw || a.regex.localeCompare(b.regex));
@@ -48,25 +50,23 @@ const data: CustomOperation = {
 		}
 
 		await interaction.reply({
-			content: `${
-				constants.emojis.statuses.yes
-			} \`${string}\` matches the following regular expressions:\n${matches
-				.map((match) =>
-					match.raw ?
-						`- [\`/${match.regex}/\`](<https://regex101.com/?${new URLSearchParams({
-							flavor: "javascript",
-							regex: match.regex,
-							testString: string,
-							delimiter: "/",
-							flags: regexpFlags,
-						}).toString()}>)`
-					:	`- \`/${match.regex}/\`*`,
-				)
-				.join("\n")}${
-				matches.some((match) => !match.raw) ?
+			content: `${constants.emojis.statuses.yes
+				} \`${string}\` matches the following regular expressions:\n${matches
+					.map((match) =>
+						match.raw ?
+							`- [\`/${match.regex}/\`](<https://regex101.com/?${new URLSearchParams({
+								flavor: "javascript",
+								regex: match.regex,
+								testString: string,
+								delimiter: "/",
+								flags: regexpFlags,
+							}).toString()}>)`
+							: `- \`/${match.regex}/\`*`,
+					)
+					.join("\n")}${matches.some((match) => !match.raw) ?
 					"\n\n*\\*Only matches after evasion restrictions are applied*"
-				:	""
-			}`,
+					: ""
+				}`,
 			ephemeral: true,
 		});
 	},

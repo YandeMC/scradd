@@ -17,28 +17,35 @@ import { ESTABLISHED_THRESHOLD, getLevelForXp } from "../xp/misc.js";
 import { xpDatabase } from "../xp/util.js";
 import tryCensor, { badWordRegexps, badWordsAllowed } from "./misc.js";
 import { ignoredDeletions } from "../logging/messages.js";
+import papa from "papaparse"
 
-const BLACKLISTED_DOMAINS = [
-	"scratch.camp",
-	"scratch.love",
+const malwareDomains = papa.parse<{
+	Domain: string;
+	Malware: string;
+	"Date Added": string;
+	Source: string;
+}>(await (await fetch("https://raw.githubusercontent.com/stamparm/blackbook/master/blackbook.csv")).text()).data as unknown as [string,string,string,string][]
+console.log(malwareDomains)
+
+
+const AD_DOMAINS = [
 	"scratch.mit.edu",
-	"scratch.org",
-	"scratch.pizza",
-	"scratch.team",
-
 	"turbowarp.org",
 	"turbowarp.xyz",
 
 	"youtu.be",
 	"youtube.com",
 	"youtube-nocookie.com",
-
-	...(await fetch("https://raw.githubusercontent.com/timleland/url-shorteners/main/list.txt")
-		.then((response) => response.text())
-		.then((text) => text.split("\n"))),
 ];
 
+const SHORTENER_DOMAINS = await fetch(
+	"https://raw.githubusercontent.com/timleland/url-shorteners/main/list.txt",
+)
+	.then((response) => response.text())
+	.then((text) => text.split("\n"));
+
 export default async function automodMessage(message: Message): Promise<boolean> {
+	if (badWordsAllowed(message.channel)) return true;
 	const baseChannel = getBaseChannel(message.channel);
 
 	let needsDelete = false;
@@ -61,8 +68,6 @@ export default async function automodMessage(message: Message): Promise<boolean>
 		deletionMessages.push("Please don’t post that many animated emojis!");
 	}
 
-	if (badWordsAllowed(message.channel)) return !(needsDelete && (await deleteMessage()));
-
 	const invitePromises = message.content
 		.match(InvitesPattern)
 		?.map(
@@ -73,15 +78,23 @@ export default async function automodMessage(message: Message): Promise<boolean>
 				] as const,
 		);
 	const invites = await Promise.all(invitePromises ?? []);
-
+	const links = Array.from(
+		new Set(message.content.match(/(https?:\/\/[\w.:@]+(?=[^\w.:@]|$))/gis) ?? []),
+		(link) => new URL(link),
+	);
 	if (
 		config.channels.share &&
 		baseChannel &&
-		![config.channels.advertise?.id, config.channels.share.id].includes(baseChannel.id) &&
+		config.channels.share.id !== baseChannel.id &&
 		!baseChannel.isDMBased() &&
 		baseChannel.permissionsFor(baseChannel.guild.id)?.has("SendMessages")
 	) {
-		const badInvites = [...new Set(invites.map(([link]) => link))];
+		const badInvites = [
+			...new Set(
+				invites
+					.map(([link]) => link),
+			),
+		];
 
 		if (badInvites.length) {
 			await warn(
@@ -110,48 +123,96 @@ export default async function automodMessage(message: Message): Promise<boolean>
 			);
 		}
 
-		if (baseChannel.name.includes("general") || baseChannel.name.includes("chat")) {
-			const links = Array.from(
-				new Set(message.content.match(/(https?:\/\/[\w.:@]+(?=[^\w.:@]|$))/gis) ?? []),
-				(link) => new URL(link),
-			).filter(
-				(link) =>
-					BLACKLISTED_DOMAINS.includes(link.hostname) ||
-					BLACKLISTED_DOMAINS.some((domain) => link.hostname.endsWith(`.${domain}`)),
+		if (
+			![
+				config.roles.dev?.id,
+				config.roles.epic?.id,
+				config.roles.booster?.id,
+				config.roles.established?.id,
+			].some((role) => !message.member || (role && message.member.roles.resolve(role)))
+		) {
+			const level = getLevelForXp(
+				xpDatabase.data.find(({ user }) => user === message.author.id)?.xp ?? 0,
+			);
+			const adsAllowed =
+				!baseChannel.name.includes("general") && !baseChannel.name.includes("chat");
+
+
+
+
+
+			const { shorteners, ads } = links.reduce<{ shorteners: URL[]; ads: URL[] }>(
+				({ shorteners, ads }, link) => {
+					if (
+						SHORTENER_DOMAINS.includes(link.hostname) ||
+						SHORTENER_DOMAINS.some((domain) => link.hostname.endsWith(`.${domain}`))
+					)
+						shorteners.push(link);
+					if (
+						!adsAllowed &&
+						(AD_DOMAINS.includes(link.hostname) ||
+							AD_DOMAINS.some((domain) => link.hostname.endsWith(`.${domain}`)))
+					)
+						ads.push(link);
+					return { shorteners, ads };
+				},
+				{ shorteners: [], ads: [] },
 			);
 
-			const canPostLinks =
-				!links.length ||
-				[
-					config.roles.dev?.id,
-					config.roles.epic?.id,
-					config.roles.booster?.id,
-					config.roles.established?.id,
-				].some((role) => !message.member || (role && message.member.roles.resolve(role)));
-
-			if (!canPostLinks) {
-				const level = getLevelForXp(
-					xpDatabase.data.find(({ user }) => user === message.author.id)?.xp ?? 0,
-				);
-
+			if (shorteners.length) {
 				await warn(
 					message.author,
-					`Posted blacklisted link${
-						links.length === 1 ? "" : "s"
+					`Used ${shorteners.length === 1 ? "a link shortener" : "link shorteners"
 					} in ${message.channel.toString()} while at level ${level}`,
-					links.length * PARTIAL_STRIKE_COUNT,
-					links.join(" "),
+					shorteners.length * PARTIAL_STRIKE_COUNT,
+					shorteners.join(" "),
 				);
 				needsDelete = true;
 				deletionMessages.push(
-					`Sorry, but you need level ${ESTABLISHED_THRESHOLD} to post ${
-						links.length === 1 ? "that link" : "those links"
+					"For moderation purposes, please do not use link shorteners.",
+				);
+			}
+			if (ads.length) {
+				await warn(
+					message.author,
+					`Posted blacklisted link${ads.length === 1 ? "" : "s"
+					} in ${message.channel.toString()} while at level ${level}`,
+					ads.length * PARTIAL_STRIKE_COUNT,
+					ads.join(" "),
+				);
+				needsDelete = true;
+				deletionMessages.push(
+					`Sorry, but you need level ${ESTABLISHED_THRESHOLD} to post ${ads.length === 1 ? "that link" : "those links"
 					} outside a channel like ${config.channels.share.toString()}!`,
 				);
 			}
+
+
 		}
 	}
-
+			// if (!message.author.bot) {
+			// 	message.reply(links.toString())
+			// 	message.reply(malwareDomains.length.toString())
+			// }
+	const malware = malwareDomains.filter((m) => {
+		console.log()
+		if (links.find((l) => l.hostname.toLowerCase() == m[0].toLowerCase())) return true
+		return false
+	})
+	console.log(malware.length, malware)
+	if (malware.length) {
+		await warn(
+			message.author,
+			`Posted malware link${malware.length === 1 ? "" : "s"
+			} in ${message.channel.toString()}`,
+			malware.length * 5,
+			malware.map((m) => `${m[0]} (${m[1]})`).join(", "),
+		);
+		needsDelete = true;
+		deletionMessages.push(
+			`You are not allowed to post malware on this server.`,
+		);
+	}
 	const badWords = [
 		tryCensor(stripMarkdown(message.content)),
 		...message.stickers.map(({ name }) => tryCensor(name)),
@@ -183,14 +244,14 @@ export default async function automodMessage(message: Message): Promise<boolean>
 			(bad, current) => {
 				const censored = tryCensor(current || "", 1);
 				return censored ?
-						{
-							strikes: bad.strikes + censored.strikes,
-							words: bad.words.map((words, index) => [
-								...words,
-								...(censored.words[index] ?? []),
-							]),
-						}
-					:	bad;
+					{
+						strikes: bad.strikes + censored.strikes,
+						words: bad.words.map((words, index) => [
+							...words,
+							...(censored.words[index] ?? []),
+						]),
+					}
+					: bad;
 			},
 			{ strikes: 0, words: Array.from<string[]>({ length: badWordRegexps.length }).fill([]) },
 		);
@@ -253,7 +314,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 		if (needsDelete) {
 			await (message.deletable ?
 				message.delete()
-			:	log(
+				: log(
 					`${LoggingErrorEmoji} Unable to delete ${message.url} (${deletionMessages.join(" ")})`,
 					LogSeverity.Alert,
 				));

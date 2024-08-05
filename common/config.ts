@@ -2,10 +2,15 @@ import assert from "node:assert";
 import {
 	ChannelType,
 	Collection,
+	ForumChannel,
+	MediaChannel,
+	NewsChannel,
+	TextChannel,
 	type AnyThreadChannel,
 	type Channel,
 	type Guild,
 	type NonThreadGuildBasedChannel,
+	type PublicThreadChannel,
 	type Snowflake,
 	type ThreadManager,
 } from "discord.js";
@@ -253,4 +258,35 @@ export async function findRole(roleName: string) {
 			(role) => role.editable && !role.name.startsWith(CUSTOM_ROLE_PREFIX),
 		) ?? new Collection();
 	return roles.find((role) => role.name.toLowerCase().includes(roleName));
+}
+export function getInitialThreads(
+	channel: ForumChannel | MediaChannel,
+	filter?: string,
+): Collection<string, PublicThreadChannel<true>>;
+export function getInitialThreads(
+	channel: NewsChannel | TextChannel,
+	filter: string,
+): Collection<string, PublicThreadChannel<false>>;
+export function getInitialThreads(
+	channel: NewsChannel | TextChannel,
+	filter?: undefined,
+): Collection<string, AnyThreadChannel<false>>;
+export function getInitialThreads(
+	channel?: ForumChannel | MediaChannel | NewsChannel | TextChannel,
+	filter?: undefined,
+): Collection<string, AnyThreadChannel>;
+export function getInitialThreads(
+	channel: ForumChannel | MediaChannel | NewsChannel | TextChannel | undefined,
+	filter: string,
+): Collection<string, PublicThreadChannel>;
+export function getInitialThreads(
+	channel?: ForumChannel | MediaChannel | NewsChannel | TextChannel,
+	filter?: string,
+): Collection<string, AnyThreadChannel> {
+	return threads.filter(
+		(thread) =>
+			(!channel || thread.parent?.id === channel.id) &&
+			(!filter ||
+				(thread.type !== ChannelType.PrivateThread && thread.name.includes(filter))),
+	);
 }
