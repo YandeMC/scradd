@@ -19,21 +19,24 @@ export const customResponses: Record<string, string> = {
 	"Irs": "https://tenor.com/view/my-beloved-beloved-tax-fraud-gif-25476792",
 	"Gay": "yeah like yan- why do i hear boss music",
 	"Zuzu": "https://cdn.discordapp.com/attachments/1141222490597757025/1269535264037011478/zuzu.png",
-	"Yande": "(    b    )",
+	"Yande": "<:Estrogen:1269538313233240137> addict fr",
 	"Trans":
 		"<:grableft:1241127094356803714><:Estrogen:1269538313233240137><:grabright:1241127108852449312>",
 	"Mailing You A Pipe Bomb": "e",
+	'Drunk' : "Meow meow meow :333 meow purrrr :3 purmrow meow :3 :3 meowwww :3 mewmew",
+	"Estrogen" : "😋",
+	
 };
 export const customNames: Record<string, string> = {
-	Abaka: "YandeAI Banner",
 	Board: "🛹",
 	Elon: "X enjoyer",
 	Hex: "The bestagon",
 	Hexa: "The bestagon",
 	Hexagon: "The bestagon",
+	Emacs : "Vi",
+	Vi : "Emacs"
 };
 export const customComments: Record<string, string> = {
-	Abaka: "Do it again and I ban you 😄",
 };
 export const customTriggers: readonly string[] = Object.keys({});
 export const dadEasterEggCount =
@@ -64,11 +67,11 @@ const autoreactions: [
 		| [Snowflake, "ping"]
 	)[],
 ][] = [
-	[
-		["🇸", "🇭", "🇺", "🇹", "😠"],
-		[`<@${client.user.id}>`, "full"],
-	],
-	["🍪", "cookie"],
-	["<:haha:1237847801073897583>", "@everyone"],
-];
+		[
+			["🇸", "🇭", "🇺", "🇹", "😠"],
+			[`<@${client.user.id}>`, "full"],
+		],
+		["🍪", "cookie"],
+		["<:haha:1237847801073897583>", "@everyone"],
+	];
 export default autoreactions;
