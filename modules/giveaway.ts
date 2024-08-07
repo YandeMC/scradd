@@ -13,46 +13,45 @@ defineChatCommand(
 		description: "start a giveaway",
 		access: false,
 		options: {
-			title: {
+			"title": {
 				type: ApplicationCommandOptionType.String,
 				description: "The title of the giveaway",
 				required: true,
 			},
-			description: {
+			"description": {
 				type: ApplicationCommandOptionType.String,
 				description: "The description of the giveaway",
 				// required:false
 			},
-			image: {
+			"image": {
 				type: ApplicationCommandOptionType.Attachment,
 				description: "Image attatched to the giveaway",
 				// required:false
 			},
-			emoji: {
+			"emoji": {
 				type: ApplicationCommandOptionType.String,
 				description: "Emoji as an id or a unicode emoji",
 				// required:false
 			},
-			time: {
+			"time": {
 				type: ApplicationCommandOptionType.String,
 				description: "how long the giveaway lasts",
 				required: true,
 			},
-			prizes: {
+			"prizes": {
 				type: ApplicationCommandOptionType.String,
-				description: "The items youre giving away, seperated by comma. one winner per prize.",
+				description:
+					"The items youre giving away, seperated by comma. one winner per prize.",
 				required: true,
 			},
 			"role-required": {
 				type: ApplicationCommandOptionType.Role,
-				description: "A role required to join the giveaway."
-			}
+				description: "A role required to join the giveaway.",
+			},
 		},
 	},
 
 	async (int, options) => {
-
-
 		const date = parseTime(options.time);
 		if (+date < Date.now() + 60_000 || +date > Date.now() + 31_536_000_000) {
 			return await int.reply({
@@ -75,7 +74,7 @@ defineChatCommand(
 				return await message.edit({ content: "Unknown Emoji", embeds: [] });
 			else return await message.edit({ content: "an error occured", embeds: [] });
 		}
-		const prizes = options.prizes.split(",").map(p => p.trim())
+		const prizes = options.prizes.split(",").map((p) => p.trim());
 		await message.edit({
 			content: "",
 			embeds: [
@@ -93,13 +92,16 @@ defineChatCommand(
 								url: options.image.url,
 							},
 						}
-						: {}),
-					fields: options["role-required"] ? [
-						{
-							name: "Role Required:",
-							value: options["role-required"].toString()
-						}
-					] : []
+					:	{}),
+					fields:
+						options["role-required"] ?
+							[
+								{
+									name: "Role Required:",
+									value: options["role-required"].toString(),
+								},
+							]
+						:	[],
 				},
 			],
 		});
@@ -120,17 +122,20 @@ defineChatCommand(
 );
 
 defineEvent("messageReactionAdd", async (e, rawUser) => {
-	if (rawUser.bot) return
-	const guild = await e.message.guild?.fetch()
-	const user = await guild?.members.fetch(rawUser.id)
-	if (!e.message.author?.bot || !user) return
-	const message = await e.message.fetch()
-	if (!([...e.message.reactions.valueOf().values()].at(0)?.emoji.name == e.emoji.name)) return
-	const requiredRole = e.message.embeds.at(0)?.fields.at(0)?.value.match(/<@&(\d+)>/)?.at(1)
+	if (rawUser.bot) return;
+	const guild = await e.message.guild?.fetch();
+	const user = await guild?.members.fetch(rawUser.id);
+	if (!e.message.author?.bot || !user) return;
+	const message = await e.message.fetch();
+	if (!([...e.message.reactions.valueOf().values()].at(0)?.emoji.name == e.emoji.name)) return;
+	const requiredRole = e.message.embeds
+		.at(0)
+		?.fields.at(0)
+		?.value.match(/<@&(\d+)>/)
+		?.at(1);
 
-	if (!requiredRole) return
+	if (!requiredRole) return;
 	if (![...user.roles.valueOf().values()].find((r) => r.id == requiredRole)) {
-		message.reactions.cache.find((m) => m.emoji.name == e.emoji.name)?.users.remove(user.id)
+		message.reactions.cache.find((m) => m.emoji.name == e.emoji.name)?.users.remove(user.id);
 	}
-
-})
+});
