@@ -86,7 +86,7 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 				case SpecialReminders.Giveaway: {
 					(async () => {
 						const [channelid, messageid, rawPrizes] = reminder.channel.split("_");
-						const prizes = [...rawPrizes?.split(",") || []]
+						const prizes = [...(rawPrizes?.split(",") || [])];
 						const channel = await client.channels.fetch(channelid).catch(() => void 0);
 						if (!channel || !messageid) return;
 						if (!channel?.isTextBased()) return;
@@ -97,30 +97,40 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 						if (!rawReactions) return;
 						let reactions = [...rawReactions.values()];
 						if (prizes.length) {
-
 							const reply = await msg.reply(`.${reactions.map((u) => u.toString())}`);
 							await reply.edit({
 								content: `# Drawing Winners ${time(Math.floor(Date.now() / 1000) + 60, TimestampStyles.RelativeTime)}`,
 							});
 							await wait(60_000);
 							const rawRe = (
-								await (await msg.fetch(true)).reactions.valueOf().at(0)?.users.fetch()
-							)?.filter((u) => u.id != client.user.id)
+								await (await msg.fetch(true)).reactions
+									.valueOf()
+									.at(0)
+									?.users.fetch()
+							)?.filter((u) => u.id != client.user.id);
 							if (!rawRe) return;
 							let re = [...rawRe.values()];
-							let rows: string[] = []
+							let rows: string[] = [];
 							for (let prize of prizes) {
-								const winner = re.sort(() => Math.random() - 0.5).pop()
+								const winner = re.sort(() => Math.random() - 0.5).pop();
 								if (winner) {
-									await reply.edit({ content: rows.join("\n") + `\n# The Winner for ${prize} is...` });
+									await reply.edit({
+										content:
+											rows.join("\n") + `\n# The Winner for ${prize} is...`,
+									});
 									await wait(4_000);
-									await reply.edit({ content: rows.join("\n") + `\n# The Winner for ${prize} is ${winner?.toString()}!` });
+									await reply.edit({
+										content:
+											rows.join("\n") +
+											`\n# The Winner for ${prize} is ${winner?.toString()}!`,
+									});
 									await wait(2_000);
-									rows.push(`# The Winner for ${prize} is ${winner?.toString()}!`)
+									rows.push(
+										`# The Winner for ${prize} is ${winner?.toString()}!`,
+									);
 								} else {
-									rows.push(`-# Nobody won "${prize}".`)
+									rows.push(`-# Nobody won "${prize}".`);
 								}
-
 							}
 							await reply.edit({ content: rows.join("\n") });
 						} else {
@@ -130,8 +140,11 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 							});
 							await wait(60_000);
 							const rawRe = (
-								await (await msg.fetch(true)).reactions.valueOf().at(0)?.users.fetch()
-							)?.filter((u) => u.id != client.user.id)
+								await (await msg.fetch(true)).reactions
+									.valueOf()
+									.at(0)
+									?.users.fetch()
+							)?.filter((u) => u.id != client.user.id);
 							if (!rawRe) return;
 							let re = [...rawRe.values()];
 							const winner = re[Math.floor(Math.random() * re.length)];
@@ -139,7 +152,7 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 							await wait(4_000);
 							await reply.edit({ content: `# The Winner is ${winner?.toString()}!` });
 						}
-					})()
+					})();
 				}
 				case SpecialReminders.Weekly: {
 					if (!channel?.isTextBased()) continue;
@@ -184,14 +197,14 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 						const statusEmoji =
 							re.monitor.statusClass == "success" ?
 								"<:green:1196987578881150976>"
-								: "<:icons_outage:1199113890584342628>";
+							:	"<:icons_outage:1199113890584342628>";
 						fields.push({
 							name: `${statusEmoji} ${re.monitor.name}`,
 							value:
 								re.monitor.statusClass == "success" ? constants.zws
-									: re.monitor.logs[0] ?
-										`Down for ${re.monitor.logs[0]?.duration}(${re.monitor.logs[0]?.reason?.code})`
-										: `No logs.`,
+								: re.monitor.logs[0] ?
+									`Down for ${re.monitor.logs[0]?.duration}(${re.monitor.logs[0]?.reason?.code})`
+								:	`No logs.`,
 						});
 					}
 					if (!config.channels.verify) return;
@@ -221,9 +234,10 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 								},
 								title:
 									downCount != 0 ?
-										`Uh oh! ${downCount} service${downCount == 1 ? " is" : "s are"
+										`Uh oh! ${downCount} service${
+											downCount == 1 ? " is" : "s are"
 										} down! `
-										: "All good!",
+									:	"All good!",
 								color: 16754688,
 							},
 						],
@@ -353,11 +367,12 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 		const content = silent ? reminder.reminder.replace("@silent", "") : reminder.reminder;
 		await channel
 			.send({
-				content: `🔔 ${channel.isDMBased() ? "" : userMention(reminder.user) + " "
-					}${content.trim()} (from ${time(
-						new Date(+convertBase(reminder.id + "", convertBase.MAX_BASE, 10)),
-						TimestampStyles.RelativeTime,
-					)})`,
+				content: `🔔 ${
+					channel.isDMBased() ? "" : userMention(reminder.user) + " "
+				}${content.trim()} (from ${time(
+					new Date(+convertBase(reminder.id + "", convertBase.MAX_BASE, 10)),
+					TimestampStyles.RelativeTime,
+				)})`,
 				allowedMentions: { users: [reminder.user] },
 				flags: silent ? MessageFlags.SuppressNotifications : undefined,
 			})
