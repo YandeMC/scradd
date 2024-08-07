@@ -46,7 +46,6 @@ const malwareDomains = papa.parse<{
 	).text(),
 ).data as unknown as [string, string, string, string][];
 
-
 const AD_DOMAINS = [
 	"scratch.mit.edu",
 	"turbowarp.org",
@@ -206,7 +205,6 @@ export default async function automodMessage(message: Message): Promise<boolean>
 	// 	message.reply(malwareDomains.length.toString())
 	// }
 	const malware = malwareDomains.filter((m) => {
-		
 		if (links.find((l) => l.hostname.toLowerCase() == m[0].toLowerCase())) return true;
 		return false;
 	});
