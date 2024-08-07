@@ -103,9 +103,14 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 								content: `# Drawing Winners ${time(Math.floor(Date.now() / 1000) + 60, TimestampStyles.RelativeTime)}`,
 							});
 							await wait(60_000);
+							const rawRe = (
+								await (await msg.fetch(true)).reactions.valueOf().at(0)?.users.fetch()
+							)?.filter((u) => u.id != client.user.id)
+							if (!rawRe) return;
+							let re = [...rawRe.values()];
 							let rows: string[] = []
 							for (let prize of prizes) {
-								const winner = reactions.sort(() => Math.random() - 0.5).pop()
+								const winner = re.sort(() => Math.random() - 0.5).pop()
 								if (winner) {
 									await reply.edit({ content: rows.join("\n") + `\n# The Winner for ${prize} is...` });
 									await wait(4_000);
@@ -119,12 +124,17 @@ async function sendReminders(): Promise<NodeJS.Timeout | undefined> {
 							}
 							await reply.edit({ content: rows.join("\n") });
 						} else {
-							const winner = reactions[Math.floor(Math.random() * reactions.length)];
 							const reply = await msg.reply(`${reactions.map((u) => u.toString())}`);
 							await reply.edit({
 								content: `# Drawing A Winner ${time(Math.floor(Date.now() / 1000) + 60, TimestampStyles.RelativeTime)}`,
 							});
 							await wait(60_000);
+							const rawRe = (
+								await (await msg.fetch(true)).reactions.valueOf().at(0)?.users.fetch()
+							)?.filter((u) => u.id != client.user.id)
+							if (!rawRe) return;
+							let re = [...rawRe.values()];
+							const winner = re[Math.floor(Math.random() * re.length)];
 							await reply.edit({ content: `# The Winner is...` });
 							await wait(4_000);
 							await reply.edit({ content: `# The Winner is ${winner?.toString()}!` });
