@@ -52,6 +52,9 @@ defineChatCommand(
 	},
 
 	async (int, options) => {
+		if (options.prizes.includes("_")) return await int.reply({ ephemeral: true, content: "Due to the way giveaways are stored, underscores are not allowed in the prize input." })
+		const prizes = options.prizes.split(",").map((p) => p.trim()).filter(p => !!p);
+		if (prizes.length > 8) return int.reply({ephemeral:true, content:"The maximum number of prizes is 8."})
 		const date = parseTime(options.time);
 		if (+date < Date.now() + 60_000 || +date > Date.now() + 31_536_000_000) {
 			return await int.reply({
@@ -74,7 +77,7 @@ defineChatCommand(
 				return await message.edit({ content: "Unknown Emoji", embeds: [] });
 			else return await message.edit({ content: "an error occured", embeds: [] });
 		}
-		const prizes = options.prizes.split(",").map((p) => p.trim());
+
 		await message.edit({
 			content: "",
 			embeds: [
@@ -92,7 +95,7 @@ defineChatCommand(
 								url: options.image.url,
 							},
 						}
-					:	{}),
+						: {}),
 					fields:
 						options["role-required"] ?
 							[
@@ -101,7 +104,7 @@ defineChatCommand(
 									value: options["role-required"].toString(),
 								},
 							]
-						:	[],
+							: [],
 				},
 			],
 		});
