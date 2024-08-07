@@ -1,4 +1,4 @@
-import { client, defineChatCommand } from "strife.js";
+import { client, defineChatCommand, defineEvent } from "strife.js";
 // import Database from "../common/database.js";
 import { ApplicationCommandOptionType, TimestampStyles, time } from "discord.js";
 import constants from "../common/constants.js";
@@ -13,19 +13,19 @@ defineChatCommand(
 		description: "start a giveaway",
 		access: false,
 		options: {
-			item: {
+			title: {
 				type: ApplicationCommandOptionType.String,
-				description: "the name of the thing youre giving away",
+				description: "The title of the giveaway",
 				required: true,
 			},
 			description: {
 				type: ApplicationCommandOptionType.String,
-				description: "description of the thing",
+				description: "The description of the giveaway",
 				// required:false
 			},
 			image: {
 				type: ApplicationCommandOptionType.Attachment,
-				description: "image",
+				description: "Image attatched to the giveaway",
 				// required:false
 			},
 			emoji: {
@@ -38,15 +38,26 @@ defineChatCommand(
 				description: "how long the giveaway lasts",
 				required: true,
 			},
+			prizes: {
+				type: ApplicationCommandOptionType.String,
+				description: "The items youre giving away, seperated by comma. one winner per prize.",
+				required: true,
+			},
+			"role-required": {
+				type: ApplicationCommandOptionType.Role,
+				description: "A role required to join the giveaway."
+			}
 		},
 	},
 
 	async (int, options) => {
+
+
 		const date = parseTime(options.time);
 		if (+date < Date.now() + 60_000 || +date > Date.now() + 31_536_000_000) {
 			return await int.reply({
 				ephemeral: true,
-				content: `${constants.emojis.statuses.no} Could not parse the time! Make sure to pass in the value as so: \`1h30m\`, for example. Note that I can’t remind you sooner than 1 minute or later than 365 days.`,
+				content: `${constants.emojis.statuses.no} Could not parse the time! Make sure to pass in the value as so: \`1h30m\`, for example. Note that I can’t make a giveaway shorter than 1 minute or longer than 365 days.`,
 			});
 		}
 		if (options.emoji === BOARD_EMOJI)
@@ -64,24 +75,31 @@ defineChatCommand(
 				return await message.edit({ content: "Unknown Emoji", embeds: [] });
 			else return await message.edit({ content: "an error occured", embeds: [] });
 		}
+		const prizes = options.prizes.split(",").map(p => p.trim())
 		await message.edit({
 			content: "",
 			embeds: [
 				{
-					title: `GIVEAWAY: ${options.item}`,
+					title: `${options.title}`,
 					description:
 						(options.description ?? "") +
 						`\nGiveaway ends ${time(
-							Math.floor(+date / 1000) + 60,
+							Math.floor(+date / 1000),
 							TimestampStyles.RelativeTime,
-						)}`,
+						)}\nPrizes: ${prizes.join(", ")}`,
 					...(options.image ?
 						{
 							image: {
 								url: options.image.url,
 							},
 						}
-					:	{}),
+						: {}),
+					fields: options["role-required"] ? [
+						{
+							name: "Role Required:",
+							value: options["role-required"].toString()
+						}
+					] : []
 				},
 			],
 		});
@@ -90,8 +108,8 @@ defineChatCommand(
 		remindersDatabase.data = [
 			...remindersDatabase.data,
 			{
-				channel: `${int.channelId}_${message.id}`,
-				date: +date,
+				channel: `${int.channelId}_${message.id}_${prizes.join(",")}`,
+				date: +date - 60_000,
 				id: SpecialReminders.Giveaway,
 				user: client.user.id,
 			},
@@ -100,4 +118,19 @@ defineChatCommand(
 		// console.log("Message ID after editing:", message.id, "FETCHED", (await message.fetch()).id);
 	},
 );
-// a;a;
+
+defineEvent("messageReactionAdd", async (e, rawUser) => {
+	if (rawUser.bot) return
+	const guild = await e.message.guild?.fetch()
+	const user = await guild?.members.fetch(rawUser.id)
+	if (!e.message.author?.bot || !user) return
+	const message = await e.message.fetch()
+	if (!([...e.message.reactions.valueOf().values()].at(0)?.emoji.name == e.emoji.name)) return
+	const requiredRole = e.message.embeds.at(0)?.fields.at(0)?.value.match(/<@&(\d+)>/)?.at(1)
+
+	if (!requiredRole) return
+	if (![...user.roles.valueOf().values()].find((r) => r.id == requiredRole)) {
+		message.reactions.cache.find((m) => m.emoji.name == e.emoji.name)?.users.remove(user.id)
+	}
+
+})

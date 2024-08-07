@@ -45,7 +45,7 @@ const malwareDomains = papa.parse<{
 		await fetch("https://raw.githubusercontent.com/stamparm/blackbook/master/blackbook.csv")
 	).text(),
 ).data as unknown as [string, string, string, string][];
-console.log(malwareDomains);
+
 
 const AD_DOMAINS = [
 	"scratch.mit.edu",
@@ -206,11 +206,10 @@ export default async function automodMessage(message: Message): Promise<boolean>
 	// 	message.reply(malwareDomains.length.toString())
 	// }
 	const malware = malwareDomains.filter((m) => {
-		console.log();
+		
 		if (links.find((l) => l.hostname.toLowerCase() == m[0].toLowerCase())) return true;
 		return false;
 	});
-	console.log(malware.length, malware);
 	if (malware.length) {
 		await warn(
 			message.author,

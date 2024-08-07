@@ -21,6 +21,8 @@ async function purge(
 	interaction: RepliableInteraction<"cached" | "raw">,
 	options: { count: string; user?: GuildMember | User; message?: string },
 ): Promise<InteractionResponse | undefined> {
+
+
 	const before = options.message?.match(/^(?:\d+-)?(?<id>\d+)$/)?.groups?.id ?? undefined;
 	const numberCount = Number(options.count);
 	const useId = Number.isNaN(numberCount) || numberCount > MAX_FETCH_COUNT;
