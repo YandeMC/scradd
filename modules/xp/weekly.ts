@@ -48,11 +48,10 @@ export async function getChatters(): Promise<MessageCreateOptions | undefined> {
 					ending ?
 						{
 							icon_url: config.guild.iconURL() ?? undefined,
-							text: `${
-								weeklyWinners.length - filtered.length
-							} more users with <=${ending}`,
+							text: `${weeklyWinners.length - filtered.length
+								} more users with <=${ending}`,
 						}
-					:	undefined,
+						: undefined,
 				color: constants.themeColor,
 				thumbnail: winner ? { url: winner.displayAvatarURL() } : undefined,
 			},
@@ -60,7 +59,7 @@ export async function getChatters(): Promise<MessageCreateOptions | undefined> {
 	};
 }
 
-export default async function getWeekly(nextWeeklyDate: Date): Promise<string> {
+export default async function getWeekly(nextWeeklyDate: Date) {
 	if (config.channels.announcements) {
 		remindersDatabase.data = [
 			...remindersDatabase.data,
@@ -134,12 +133,102 @@ export default async function getWeekly(nextWeeklyDate: Date): Promise<string> {
 		const member = await config.guild.members.fetch(winner.user).catch(() => void 0);
 		if (member) await recheckMemberRole(member, member);
 	}
+	const { createCanvas } = await import("@napi-rs/canvas");
+	const { Chart } = await import("chart.js/auto");
 
-	return `## 🏆 Weekly Winners week of ${new Date().toLocaleString([], {
-		month: "long",
-		day: "numeric",
-	})}\n${
-		weeklyWinners
+	const recentXp = recentXpDatabase.data.toSorted((one, two) => one.time - two.time);
+	const maxDate = (recentXp[0]?.time ?? 0) + 604_800_000;
+
+	// Function to convert HSV to hex
+	function hsvToHex(h: number, s: number, v: number) {
+		let r, g, b;
+		let i = Math.floor(h * 6);
+		let f = h * 6 - i;
+		let p = v * (1 - s);
+		let q = v * (1 - f * s);
+		let t = v * (1 - (1 - f) * s);
+
+		switch (i % 6) {
+			case 0: r = v; g = t; b = p; break;
+			case 1: r = q; g = v; b = p; break;
+			case 2: r = p; g = v; b = t; break;
+			case 3: r = p; g = q; b = v; break;
+			case 4: r = t; g = p; b = v; break;
+			case 5: r = v; g = p; b = q; break;
+		}
+
+		return `#${Math.round(r ?? 0 * 255).toString(16).padStart(2, '0')}${Math.round(g ?? 0 * 255).toString(16).padStart(2, '0')}${Math.round(b ?? 0 * 255).toString(16).padStart(2, '0')}`;
+	}
+
+	const datasets = config.guild.members.cache
+		.map((user: { id: string; displayName: any; }) => {
+			const data = recentXp
+				.filter((gain) => gain.time < maxDate && gain.user === user.id)
+				.reduce((accumulator, xp) => {
+					const previous = accumulator.at(-1) ?? { y: 0, x: recentXp[0]?.time ?? 0 };
+					return [
+						...accumulator,
+						...Array.from(
+							{ length: Math.floor((xp.time - previous.x) / 3_600_000) },
+							(_, index) => ({ y: previous.y, x: previous.x + 3_600_000 * index }),
+						),
+						{ x: xp.time, y: xp.xp + previous.y },
+					];
+				}, [] as any);
+
+			return {
+				label: user.displayName,
+				data: [
+					...(data.length ? data : [{ y: 0, x: recentXp[0]?.time ?? 0 }]),
+					{ x: maxDate, y: data.at(-1)?.y ?? 0 },
+				],
+			};
+		})
+		.toSorted((one: { data: { (): any; new(): any; y: any; }[]; }, two: { data: { (): any; new(): any; y: any; }[]; }) => (two.data.at(-1)?.y ?? 0) - (one.data.at(-1)?.y ?? 0))
+		.slice(0, 10)
+		.map((dataset: any, index: number, array: string | any[]) => {
+			const hue = index / array.length; // Distribute hues evenly
+			const color = hsvToHex(hue, 1, 1); // Full saturation and value (S=1, V=1)
+			return {
+				...dataset,
+				borderColor: color, // Assign the generated color to the border
+				backgroundColor: color, // Assign the generated color to the background
+			};
+		});
+
+	const canvas = createCanvas(1000, 750);
+	const context = canvas.getContext("2d");
+
+	Chart.defaults.color = "#fff";
+	new Chart(context as any, {
+		options: {
+			parsing: false,
+			scales: { x: { type: "time", grid: { display: false } }, y: { min: 0 } },
+			elements: { point: { radius: 0 } },
+		},
+		plugins: [
+			{
+				id: "customCanvasBackgroundColor",
+				beforeDraw(chart) {
+					chart.ctx.save();
+					chart.ctx.globalCompositeOperation = "destination-over";
+					chart.ctx.fillStyle = "#444";
+					chart.ctx.fillRect(0, 0, chart.width, chart.height);
+					chart.ctx.restore();
+				},
+			},
+		],
+		type: "line",
+		data: { datasets },
+	});
+
+
+
+	return ({
+		content: `## 🏆 Weekly Winners week of ${new Date().toLocaleString([], {
+			month: "long",
+			day: "numeric",
+		})}\n${weeklyWinners
 			.map(
 				(gain, index) =>
 					`${["🥇", "🥈", "🥉"][index] || "🏅"} ${userMention(gain.user)} - ${Math.floor(
@@ -147,8 +236,10 @@ export default async function getWeekly(nextWeeklyDate: Date): Promise<string> {
 					).toLocaleString()} XP`,
 			)
 			.join("\n") || "*Nobody got any XP this week!*"
-	}\n\n*This week, ${chatters.toLocaleString()} people chatted, and ${latestActiveMembers.length.toLocaleString()} people were active. Altogether, people gained ${allXp.toLocaleString()} XP this week.*\n### Next week’s weekly winners will be posted ${time(
-		nextWeeklyDate,
-		TimestampStyles.RelativeTime,
-	)}.`;
+			}\n\n*This week, ${chatters.toLocaleString()} people chatted, and ${latestActiveMembers.length.toLocaleString()} people were active. Altogether, people gained ${allXp.toLocaleString()} XP this week.*\n### Next week’s weekly winners will be posted ${time(
+				nextWeeklyDate,
+				TimestampStyles.RelativeTime,
+			)}.`,
+		files: [{ attachment: canvas.toBuffer("image/png"), name: "graph.png" }],
+	});
 }
