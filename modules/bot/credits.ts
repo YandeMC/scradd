@@ -49,18 +49,18 @@ export default async function credits(interaction: ChatInputCommandInteraction):
 						name: "❤️ Special Credits",
 						value: `<@462098932571308033> - Scratch Blocks Images`,
 						// inline: false,
-					},
-					// ...(await columnize(
-					// 	dependencies.toSorted(([one], [two]) => one.localeCompare(two)),
-					// 	([specifier, link]) => `- [${specifier}](${link})`,
-					// 	"🗄️ Third-party code libraries",
-					// )),
-					// ...(await columnize(
-					// 	dependencies.slice(dependencies.length / 2),
-					// 	([specifier, link]) =>
-					// 		"- " + (link ? `[${specifier}](${link})` : specifier),
-					// 	constants.zws,
-					// )),
+								},
+								// ...(await columnize(
+								// 	dependencies.toSorted(([one], [two]) => one.localeCompare(two)),
+								// 	([specifier, link]) => `- [${specifier}](${link})`,
+								// 	"🗄️ Third-party code libraries",
+								// )),
+								// ...(await columnize(
+								// 	dependencies.slice(dependencies.length / 2),
+								// 	([specifier, link]) =>
+								// 		"- " + (link ? `[${specifier}](${link})` : specifier),
+								// 	constants.zws,
+								// )),
 				],
 
 				color: constants.themeColor,
