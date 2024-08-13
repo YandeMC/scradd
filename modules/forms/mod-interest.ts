@@ -572,7 +572,6 @@ export async function submitAcceptApp(
 		);
 		const embed = interaction.message?.embeds ?? [];
 		await user.send({
-			content: `Your moderator application has been rejected for the reason:\n${embed[1]?.fields.find((field) => field.name == "Accepted Note")?.value} `,
 			embeds: [
 				{
 					title: "Mod Application Status",
