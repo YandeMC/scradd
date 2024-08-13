@@ -36,6 +36,32 @@ export default async function graph(interaction: AnySelectMenuInteraction): Prom
 		})
 		.toSorted((one, two) => (two.data.at(-1)?.y ?? 0) - (one.data.at(-1)?.y ?? 0));
 
+	const changeDatasets = interaction.users
+		.map((user) => {
+			const data = recentXp
+				.filter((gain) => gain.time < maxDate && gain.user === user.id)
+				.reduce<{ x: number; y: number }[]>((accumulator, xp) => {
+					const previous = accumulator.at(-1) ?? { y: 0, x: recentXp[0]?.time ?? 0 };
+					const xpChange = accumulator.length > 0 ? xp.xp - (recentXp.find((prevXp) => prevXp.user === user.id && prevXp.time === previous.x)?.xp ?? 0) : 0;
+					return [
+						...accumulator,
+						...Array.from(
+							{ length: Math.floor((xp.time - previous.x) / 3_600_000) },
+							(_, index) => ({ y: previous.y, x: previous.x + 3_600_000 * index }),
+						),
+						{ x: xp.time, y: xpChange },
+					];
+				}, []);
+			return {
+				label: user.displayName,
+				data: [
+					...(data.length ? data : [{ y: 0, x: recentXp[0]?.time ?? 0 }]),
+					{ x: maxDate, y: data.at(-1)?.y ?? 0 },
+				],
+			};
+		})
+		.toSorted((one, two) => (two.data.at(-1)?.y ?? 0) - (one.data.at(-1)?.y ?? 0));
+
 	const canvas = createCanvas(1000, 750);
 	const context = canvas.getContext("2d");
 
@@ -63,9 +89,36 @@ export default async function graph(interaction: AnySelectMenuInteraction): Prom
 		data: { datasets },
 	});
 
+	const ccanvas = createCanvas(1000, 750);	
+	const ccontext = ccanvas.getContext("2d");
+	new Chart(ccontext as CanvasRenderingContext2D & SKRSContext2D, {
+		
+		options: {
+			parsing: false,
+			scales: { x: { type: "time", grid: { display: false } }, y: { min: 0 } },
+			elements: { point: { radius: 0 } },
+			
+		},
+		plugins: [
+			{
+				id: "customCanvasBackgroundColor",
+				beforeDraw(chart) {
+					chart.ctx.save();
+					chart.ctx.globalCompositeOperation = "destination-over";
+					chart.ctx.fillStyle = "#444";
+					chart.ctx.fillRect(0, 0, chart.width, chart.height);
+					chart.ctx.restore();
+				},
+			},
+		],
+		type: "line",
+		data: { datasets: changeDatasets },
+	});
+
+
 	await interaction.deferUpdate();
 	await interaction.message.edit({
-		files: [{ attachment: canvas.toBuffer("image/png"), name: "graph.png" }],
+		files: [{ attachment: canvas.toBuffer("image/png"), name: "graph.png" },{ attachment: ccanvas.toBuffer("image/png"), name: "change.png" }],
 	});
 
 	Chart.defaults.color = defaultColor;
