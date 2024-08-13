@@ -1,13 +1,13 @@
 import {
-	inlineCode,
+	// inlineCode,
 	type ChatInputCommandInteraction,
 	type Snowflake,
 	type User,
 } from "discord.js";
 import config from "../../common/config.js";
 import constants from "../../common/constants.js";
-import pkg from "../../package.json" assert { type: "json" };
-import { columnize } from "../../util/discord.js";
+// import pkg from "../../package.json" assert { type: "json" };
+// import { columnize } from "../../util/discord.js";
 import { joinWithAnd } from "../../util/text.js";
 import { mentionUser } from "../settings.js";
 
@@ -16,18 +16,18 @@ const designers = "1021061241260740719",
 	contributer = "1195901524069601350",
 	testers = "1021061241260740718";
 
-const dependencies = await Promise.all(
-	Object.keys({ ...pkg.dependencies, ...pkg.optionalDependencies }).map(async (name) => {
-		const { default: dep } = (await import(`../../../node_modules/${name}/package.json`, {
-			assert: { type: "json" },
-		})) as { default: { name: string; version: `${bigint}.${bigint}.${string}` } };
+// const dependencies = await Promise.all(
+// 	Object.keys({ ...pkg.dependencies, ...pkg.optionalDependencies }).map(async (name) => {
+// 		const { default: dep } = (await import(`../../../node_modules/${name}/package.json`, {
+// 			assert: { type: "json" },
+// 		})) as { default: { name: string; version: `${bigint}.${bigint}.${string}` } };
 
-		return [
-			`${inlineCode(dep.name)}@${dep.version}`,
-			`${constants.domains.npm}/${dep.name}/v/${dep.version}`,
-		] as const;
-	}),
-);
+// 		return [
+// 			`${inlineCode(dep.name)}@${dep.version}`,
+// 			`${constants.domains.npm}/${dep.name}/v/${dep.version}`,
+// 		] as const;
+// 	}),
+// );
 
 export default async function credits(interaction: ChatInputCommandInteraction): Promise<void> {
 	await interaction.reply({
@@ -49,18 +49,18 @@ export default async function credits(interaction: ChatInputCommandInteraction):
 						name: "❤️ Special Credits",
 						value: `<@462098932571308033> - Scratch Blocks Images`,
 						// inline: false,
-					},
-					...(await columnize(
-						dependencies.toSorted(([one], [two]) => one.localeCompare(two)),
-						([specifier, link]) => `- [${specifier}](${link})`,
-						"🗄️ Third-party code libraries",
-					)),
-					...(await columnize(
-						dependencies.slice(dependencies.length / 2),
-						([specifier, link]) =>
-							"- " + (link ? `[${specifier}](${link})` : specifier),
-						constants.zws,
-					)),
+								},
+								// ...(await columnize(
+								// 	dependencies.toSorted(([one], [two]) => one.localeCompare(two)),
+								// 	([specifier, link]) => `- [${specifier}](${link})`,
+								// 	"🗄️ Third-party code libraries",
+								// )),
+								// ...(await columnize(
+								// 	dependencies.slice(dependencies.length / 2),
+								// 	([specifier, link]) =>
+								// 		"- " + (link ? `[${specifier}](${link})` : specifier),
+								// 	constants.zws,
+								// )),
 				],
 
 				color: constants.themeColor,
