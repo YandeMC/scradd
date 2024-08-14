@@ -571,7 +571,7 @@ export async function submitAcceptApp(
 			}`,
 		);
 		const embed = interaction.message?.embeds ?? [];
-		await user.send({	
+		await user.send({
 			embeds: [
 				{
 					title: "Mod Application Status",
