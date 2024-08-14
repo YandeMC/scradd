@@ -571,11 +571,11 @@ export async function submitAcceptApp(
 			}`,
 		);
 		const embed = interaction.message?.embeds ?? [];
-		await user.send({
+		await user.send({	
 			embeds: [
 				{
 					title: "Mod Application Status",
-					description: `**Urgent News From Our Staff Team:**\n\nHi yande.dev,\n\nWe have news regarding your recent **mod application** in Scratch Coders. After reviewing your application, the admin teams have come to a decision.\n\n**Status:**\n\n||Your trial mod application has been **accepted**! Congratulations! Our staff members will reach out and acquaint you with the staff rules and procedures soon! We look forward to working with you! \n accepted reason:\n${embed[1]?.fields.find((field) => field.name == "Accepted Note")?.value} ||`,
+					description: `**Urgent News From Our Staff Team:**\n\nHi ${user.displayName},\n\nWe have news regarding your recent **mod application** in Scratch Coders. After reviewing your application, the admin teams have come to a decision.\n\n**Status:**\n\n||Your trial mod application has been **accepted**! Congratulations! Our staff members will reach out and acquaint you with the staff rules and procedures soon! We look forward to working with you! \n accepted reason:\n${embed[1]?.fields.find((field) => field.name == "Accepted Note")?.value} ||`,
 					color: 0xffffff,
 					fields: [],
 				},
