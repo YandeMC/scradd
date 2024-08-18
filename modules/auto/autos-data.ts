@@ -25,7 +25,7 @@ export const customResponses: Record<string, string> = {
 	"Mailing": "https://discord.com/channels/@me/1249499584259035186/1269551464720760874",
 	"Drunk": "Meow meow meow :333 meow purrrr :3 purmrow meow :3 :3 meowwww :3 mewmew",
 	"Estrogen": "😋",
-	":3":":3"
+	":3": ":3",
 };
 export const customNames: Record<string, string> = {
 	Board: "🛹",
