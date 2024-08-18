@@ -22,10 +22,10 @@ export const customResponses: Record<string, string> = {
 	"Yande": "<:Estrogen:1269538313233240137> addict fr",
 	"Trans":
 		"<:grableft:1241127094356803714><:Estrogen:1269538313233240137><:grabright:1241127108852449312>",
-	"Mailing": "https://discord.com/channels/@me/1249499584259035186/1269551464720760874",
+	"Mailing": "https://cdn.discordapp.com/attachments/1249499584259035186/1269551464620228629/GIF_20240804_020339_204.gif?ex=66c245b0&is=66c0f430&hm=a2324826d33cf2e8f159286b7f1357fa8849f9b2bed365ef848cad312ef035b2&",
 	"Drunk": "Meow meow meow :333 meow purrrr :3 purmrow meow :3 :3 meowwww :3 mewmew",
 	"Estrogen": "😋",
-	":3":":3"
+	":3":":3					"
 };
 export const customNames: Record<string, string> = {
 	Board: "🛹",
