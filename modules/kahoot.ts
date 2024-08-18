@@ -224,6 +224,7 @@ defineChatCommand(
 										interaction: button,
 										responseTime: Date.now() - now,
 									};
+									//@ts-ignore
 									count[kahootEmojis.names.indexOf(button.customId)] += 1;
 									await message.edit({
 										embeds: [
