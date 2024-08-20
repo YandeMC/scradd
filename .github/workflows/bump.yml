@@ -35,14 +35,13 @@ jobs:
 
             - name: Bump
               id: sync_types
-              uses: RedGuy12/sync-types@v2.1.1
+              uses: cobaltt7/sync-types@v2.1.1
 
             - name: Commit
               id: commit
               uses: peter-evans/create-pull-request@v6.1.0
               with:
                   token: ${{ secrets.TOKEN }}
-                  push-to-fork: RedGuy13/scradd
                   author:
                       github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
                   commit-message: Bump dependencies
