@@ -1,246 +1,186 @@
-import {
-	ChannelType,
-	RESTJSONErrorCodes,
-	ThreadAutoArchiveDuration,
-	type Message,
-	type Snowflake,
-	type TextBasedChannel,
-} from "discord.js";
-import papaparse from "papaparse";
-import { client } from "strife.js";
-import { getAllMessages, getFilesFromMessage } from "../util/discord.js";
-import config from "./config.js";
-let timeouts: Record<
-	Snowflake,
-	{ callback(): Promise<Message<true>>; timeout: NodeJS.Timeout } | undefined
-> = {};
+import mongoose, { Document, Schema } from 'mongoose';
+import { client } from 'strife.js';
+import { ChannelType, ThreadAutoArchiveDuration, type Snowflake, type TextBasedChannel } from 'discord.js';
+import config from './config.js';
 
-const threadName = "databases";
+let timeouts: Record<Snowflake, { callback(): Promise<void>; timeout: NodeJS.Timeout } | undefined> = {};
+
+const threadName = 'databases';
 export const databaseThread =
-	(await config.channels.modlogs.threads.fetch()).threads.find(
-		(thread) => thread.name === threadName,
-	) ??
-	(await config.channels.modlogs.threads.create({
-		name: threadName,
-		reason: "For databases",
-		type: ChannelType.PrivateThread,
-		invitable: false,
-		autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
-	}));
+  (await config.channels.modlogs.threads.fetch()).threads.find(thread => thread.name === threadName) ??
+  (await config.channels.modlogs.threads.create({
+    name: threadName,
+    reason: 'For databases',
+    type: ChannelType.PrivateThread,
+    invitable: false,
+    autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
+  }));
 
-const databases: Record<string, Message<true> | undefined> = {};
-export const allDatabaseMessages = await getAllMessages(databaseThread);
-for (const message of allDatabaseMessages) {
-	const name = message.content.split(" ")[1]?.toLowerCase();
-	if (name && message.attachments.size) {
-		databases[name] =
-			message.author.id === client.user.id ?
-				message
-			:	await databaseThread.send({
-					files: [...(await getFilesFromMessage(message)).values()],
-					content: message.content,
-				});
-	}
+// Define Mongoose schema and model for storing databases
+interface DatabaseDoc extends Document {
+  name: string;
+  data: Record<string, any>[];
+  extra: string;
 }
 
-const contructed = new Set<string>();
+const databaseSchema = new Schema<DatabaseDoc>({
+  name: { type: String, required: true, unique: true },
+  //@ts-ignore will fix later					
+  data: { type: Array, default: [] },
+  extra: { type: String, default: '' },
+});
+
+const DatabaseModel = mongoose.model<DatabaseDoc>('Database', databaseSchema);
+
+const constructed: string[] = [];
 
 export default class Database<Data extends Record<string, boolean | number | string | null>> {
-	message: Message<true> | undefined;
-	#data: readonly Data[] = [];
+  #model: mongoose.Model<DatabaseDoc>;
+  #doc: DatabaseDoc | undefined;
 
-	constructor(public name: string) {
-		this.name = name.replaceAll(" ", "_");
-		if (contructed.has(this.name)) {
-			throw new RangeError(
-				`Cannot create a second database for ${this.name}, they may have conflicting data`,
-			);
-		}
-		contructed.add(this.name);
-	}
+  constructor(public name: string) {
+    if (constructed.includes(name)) {
+      throw new RangeError(`Cannot create a second database for ${name}, they will have conflicting data`);
+    }
+    constructed.push(name);
+    this.#model = DatabaseModel;
+  }
 
-	async init(): Promise<void> {
-		if (this.message) return;
+  async init(): Promise<void> {
+    if (this.#doc) return;
+	//@ts-ignore will fix later
+    this.#doc = await this.#model.findOne({ name: this.name }).exec();
 
-		const content =
-			`__**${client.user.displayName.replaceAll(" ", "-").toUpperCase()} ${this.name.toUpperCase()} DATABASE**__\n` +
-			`\n*Please don’t delete this message. If you do, all ${this.name.replaceAll("_", " ")} information may be reset.*`;
-		if (databases[this.name]) await databases[this.name]?.edit(content);
-		this.message = databases[this.name] ||= await databaseThread.send(content);
+    if (!this.#doc) {
+      this.#doc = new this.#model({ name: this.name });
+      await this.#doc.save();
+    }
+  }
 
-		const attachment = (await getFilesFromMessage(this.message)).first();
-		if (!attachment) {
-			this.#queueWrite();
-			return;
-		}
+  get data(): readonly Data[] {
+    if (!this.#doc) throw new ReferenceError('Must call `.init()` before reading `.data`');
+    return this.#doc.data as Data[];
+  }
+  set data(content: readonly Data[]) {
+    if (!this.#doc) throw new ReferenceError('Must call `.init()` before setting `.data`');
+	//@ts-ignore will fix later
+    this.#doc.data = content;
+    this.#queueWrite();
+  }
 
-		this.#data = await fetch(attachment.url)
-			.then(async (res) => await res.text())
-			.then(
-				(csv) =>
-					papaparse.parse<Data>(csv.trim(), {
-						dynamicTyping: true,
-						header: true,
-						delimiter: ",",
-					}).data,
-			);
-	}
+  get extra(): string | undefined {
+    if (!this.#doc) throw new ReferenceError('Must call `.init()` before reading `.extra`');
+    return this.#doc.extra;
+  }
+  set extra(content: string | undefined) {
+    if (!this.#doc) throw new ReferenceError('Must call `.init()` before setting `.extra`');
+    this.#doc.extra = content ?? '';
+    this.#queueWrite();
+  }
 
-	get data(): readonly Data[] {
-		if (!this.message) throw new ReferenceError("Must call `.init()` before reading `.data`");
-		return this.#data;
-	}
-	set data(content: readonly Data[]) {
-		if (!this.message) throw new ReferenceError("Must call `.init()` before setting `.data`");
-		this.#data = content;
-		this.#queueWrite();
-	}
+  updateById<
+    Overwritten extends Partial<Data>,
+    DefaultKeys extends Extract<
+      {
+        [P in keyof Data]: Data[P] extends undefined
+          ? never
+          : Overwritten[P] extends Data[P]
+          ? never
+          : P;
+      }[keyof Data],
+      keyof Data
+    >,
+  >(newData: Data['id'] extends string ? Overwritten : never, oldData?: NoInfer<Partial<Data> & { [P in DefaultKeys]: Data[P] }>): void {
+    const data = [...this.data];
+    const index = data.findIndex(suggestion => suggestion.id === newData.id);
+    const suggestion = data[index];
+    if (suggestion) data[index] = { ...suggestion, ...newData };
+    else if (oldData) data.push({ ...oldData, ...newData } as unknown as Data);
 
-	updateById<
-		Overwritten extends Partial<Data>,
-		DefaultKeys extends Extract<
-			{
-				[P in keyof Data]: Data[P] extends undefined ? never
-				: Overwritten[P] extends Data[P] ? never
-				: P;
-			}[keyof Data],
-			keyof Data
-		>,
-	>(
-		newData: Data["id"] extends string ? Overwritten : never,
-		oldData?: NoInfer<Partial<Data> & { [P in DefaultKeys]: Data[P] }>,
-	): void {
-		const data = [...this.data];
-		const index = data.findIndex((suggestion) => suggestion.id === newData.id);
-		const suggestion = data[index];
-		if (suggestion) data[index] = { ...suggestion, ...newData };
-		else if (oldData) data.push({ ...oldData, ...newData } as unknown as Data);
+    this.data = data;
+  }
 
-		this.data = data;
-	}
+  #queueWrite(): void {
+    if (!this.#doc) {
+      throw new ReferenceError('Must call `.init()` before reading or setting `.data` or `.extra`');
+    }
 
-	#queueWrite(): void {
-		if (!this.message)
-			throw new ReferenceError("Must call `.init()` before reading or setting `.data`");
+    const timeoutId = timeouts[this.#doc.id];
 
-		const timeoutId = timeouts[this.message.id];
+    const callback = async (): Promise<void> => {
+      if (!this.#doc) {
+        throw new ReferenceError('Must call `.init()` before reading or setting `.data` or `.extra`');
+      }
 
-		const callback = async (): Promise<Message<true>> => {
-			if (!this.message)
-				throw new ReferenceError("Must call `.init()` before reading or setting `.data`");
+      await this.#doc.save();
+      timeouts[this.#doc.id] = undefined;
+    };
 
-			const { message } = this;
-
-			const data = papaparse.unparse([...this.#data]).trim();
-			const files = [
-				{ attachment: Buffer.from(data, "utf8"), name: `${this.name}.scradddb` },
-			];
-
-			const promise = message
-				.edit({ files })
-				.catch(async (error: unknown) => {
-					if (
-						error &&
-						typeof error === "object" &&
-						"code" in error &&
-						error.code === RESTJSONErrorCodes.UnknownMessage
-					) {
-						databases[this.name] = undefined;
-						this.message = undefined;
-						await this.init();
-						return await callback();
-					}
-
-					return await message.edit({ files }).catch((retryError: unknown) => {
-						throw new AggregateError(
-							[error, retryError],
-							"Failed to write to database!",
-							{ cause: { data, database: this.name } },
-						);
-					});
-				})
-				.then(async (edited) => {
-					databases[this.name] = edited;
-
-					const attachment = edited.attachments.first()?.url;
-
-					const written =
-						attachment &&
-						(await fetch(attachment).then(async (res) => await res.text())).trim();
-
-					if (attachment && written !== data && !written?.startsWith("<?xml")) {
-						throw new Error("Data changed through write!", {
-							cause: { written, data, database: this.name },
-						});
-					}
-
-					return edited;
-				});
-
-			timeouts[message.id] = undefined;
-			return await promise;
-		};
-
-		timeouts[this.message.id] = { timeout: setTimeout(callback, 15_000), callback };
-		if (timeoutId) clearTimeout(timeoutId.timeout);
-	}
+    timeouts[this.#doc.id] = { timeout: setTimeout(callback, 15_000), callback };
+    if (timeoutId) clearTimeout(timeoutId.timeout);
+  }
 }
 
 export async function cleanListeners(): Promise<void> {
-	const count = Object.values(timeouts).length;
-	console.log(
-		`Cleaning ${count} listener${count === 1 ? "" : "s"}: ${Object.keys(timeouts).join(",")}`,
-	);
-	await Promise.all(Object.values(timeouts).map((info) => info?.callback()));
-	console.log("Listeners cleaned");
-	timeouts = {};
+  const count = Object.values(timeouts).length;
+  console.log(`Cleaning ${count} listener${count === 1 ? '' : 's'}: ${Object.keys(timeouts).join(',')}`);
+  await Promise.all(Object.values(timeouts).map(info => info?.callback()));
+  console.log('Listeners cleaned');
+  timeouts = {};
 }
+
 export async function prepareExit(): Promise<void> {
-	await cleanListeners();
-	client.user.setStatus("dnd");
-	process.emitWarning("prepare-exit called");
-	await client.destroy();
+  await cleanListeners();
+  client.user.setStatus('dnd');
+  await client.destroy();
 }
 
+let called = false,
+  exited = false;
 for (const [event, code] of Object.entries({
-	exit: undefined,
-	beforeExit: 0,
-	SIGHUP: 12,
-	SIGINT: 130,
-	SIGTERM: 143,
-	SIGBREAK: 149,
-	message: 0,
+  exit: undefined,
+  beforeExit: 0,
+  SIGHUP: 12,
+  SIGINT: 130,
+  SIGTERM: 143,
+  SIGBREAK: 149,
+  message: 0,
 } as const)) {
-	// eslint-disable-next-line @typescript-eslint/no-loop-func
-	process.once(event, (message) => {
-		if (event === "message" && message !== "shutdown") return;
+  // eslint-disable-next-line @typescript-eslint/no-loop-func
+  process.on(event, message => {
+    if (called || (event === 'message' && message !== 'shutdown')) return;
+    called = true;
 
-		if (event !== "exit" && Object.values(timeouts).length) {
-			void prepareExit().then(() => {
-				process.nextTick(() => process.exit(code));
-			});
-			setTimeout(() => {
-				process.nextTick(() => process.exit(code));
-			}, 30_000);
-		} else {
-			void prepareExit();
-		}
-	});
+    function doExit(): void {
+      if (exited) return;
+      exited = true;
+
+      if (event !== 'exit') process.nextTick(() => process.exit(code));
+    }
+
+    if (event !== 'exit' && Object.values(timeouts).length) {
+      void prepareExit().then(() => {
+        process.nextTick(doExit);
+      });
+      setTimeout(doExit, 30_000);
+    } else {
+      void prepareExit();
+      doExit();
+    }
+  });
 }
 
 export async function backupDatabases(channel: TextBasedChannel): Promise<void> {
-	if (process.env.NODE_ENV !== "production") return;
+  if (process.env.NODE_ENV !== 'production') return;
 
-	const attachments = (
-		await Promise.all(
-			Object.values(databases).map(
-				async (database) => database && (await getFilesFromMessage(database)).first(),
-			),
-		)
-	).filter(Boolean);
+  const databases = await DatabaseModel.find({});
+  const attachments = databases.map(database => ({
+    attachment: Buffer.from(JSON.stringify(database.data), 'utf8'),
+    name: `${database.name}.${process.env.NODE_ENV == 'production' ? 'scrubdb' : 'json'}`,
+  }));
 
-	await channel.send("# Daily Scradd Database Backup");
-	while (attachments.length) {
-		await channel.send({ files: attachments.splice(0, 10) });
-	}
+  await channel.send('# Daily Scradd Database Backup');
+  while (attachments.length) {
+    await channel.send({ files: attachments.splice(0, 10) });
+  }
 }
