@@ -10,8 +10,6 @@ import { client } from "strife.js";
 import constants from "../../common/constants.js";
 import { generateError } from "../logging/errors.js";
 import { ignoredDeletions } from "../logging/messages.js";
-import { parse } from "papaparse";
-parse;
 
 const censoredToken = client.token
 	.split(".")
@@ -31,8 +29,9 @@ export default async function getCode(
 	)
 		return await interaction.reply({
 			ephemeral: true,
-			content: `${constants.emojis.statuses.no} This command is reserved for ${owner instanceof User ? owner.displayName : "the " + owner?.name + " team"
-				} only!`,
+			content: `${constants.emojis.statuses.no} This command is reserved for ${
+				owner instanceof User ? owner.displayName : "the " + owner?.name + " team"
+			} only!`,
 		});
 
 	await interaction.showModal({
@@ -58,12 +57,10 @@ export default async function getCode(
 export async function run(interaction: ModalSubmitInteraction): Promise<void> {
 	await interaction.deferReply();
 	const code = interaction.fields.getTextInputValue("code").trim();
-							
-
-
 	try {
 		const output: unknown = await eval(
-			`(async () => {${code.includes("\n") || code.includes("return") ? code : `return ${code}`
+			`(async () => {${
+				code.includes("\n") || code.includes("return") ? code : `return ${code}`
 			}})()`,
 		);
 
@@ -71,10 +68,10 @@ export async function run(interaction: ModalSubmitInteraction): Promise<void> {
 			typeof output === "bigint" || typeof output === "symbol" ?
 				// eslint-disable-next-line unicorn/string-content
 				`"${output.toString().replaceAll('"', '\\"')}"`
-				: output === undefined || typeof output === "object" ?
-					JSON.stringify(output, undefined, "  ") ?? "undefined"
-					// eslint-disable-next-line @typescript-eslint/no-base-to-string
-					: output.toString();
+			: output === undefined || typeof output === "object" ?
+				JSON.stringify(output, undefined, "  ") ?? "undefined"
+				// eslint-disable-next-line @typescript-eslint/no-base-to-string
+			:	output.toString();
 
 		await interaction.editReply({
 			files: [
@@ -84,10 +81,11 @@ export async function run(interaction: ModalSubmitInteraction): Promise<void> {
 						stringifiedOutput.replaceAll(client.token, censoredToken),
 						"utf8",
 					),
-					name: `output.${"string" === typeof output ? "txt"
+					name: `output.${
+						"string" === typeof output ? "txt"
 						: "function" === typeof output ? "js"
-							: "json"
-						}`,
+						: "json"
+					}`,
 				},
 			],
 		});
