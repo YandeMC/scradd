@@ -1,18 +1,16 @@
+import mongoose, { Document, Schema } from "mongoose";
+import { client } from "strife.js";
 import {
 	ChannelType,
-	RESTJSONErrorCodes,
 	ThreadAutoArchiveDuration,
-	type Message,
 	type Snowflake,
 	type TextBasedChannel,
 } from "discord.js";
-import papaparse from "papaparse";
-import { client } from "strife.js";
-import { extractMessageExtremities, getAllMessages } from "../util/discord.js";
 import config from "./config.js";
+
 let timeouts: Record<
 	Snowflake,
-	{ callback(): Promise<Message<true>>; timeout: NodeJS.Timeout } | undefined
+	{ callback(): Promise<void>; timeout: NodeJS.Timeout } | undefined
 > = {};
 
 const threadName = "databases";
@@ -28,84 +26,67 @@ export const databaseThread =
 		autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
 	}));
 
-const databases: Record<string, Message<true> | undefined> = {};
-export const allDatabaseMessages = await getAllMessages(databaseThread);
-for (const message of allDatabaseMessages) {
-	const name = message.content.split(" ")[1]?.toLowerCase();
-	if (name) {
-		databases[name] =
-			message.author.id === client.user.id ? message
-			: message.attachments.size ?
-				await databaseThread.send({
-					...extractMessageExtremities(message),
-					content: message.content,
-				})
-			:	undefined;
-	}
+// Define Mongoose schema and model for storing databases
+interface DatabaseDoc extends Document {
+	name: string;
+	data: Record<string, any>[];
+	extra: string;
 }
 
-const contructed: string[] = [];
+const databaseSchema = new Schema<DatabaseDoc>({
+	name: { type: String, required: true, unique: true },
+	//@ts-ignore will fix later
+	data: { type: Array, default: [] },
+	extra: { type: String, default: "" },
+});
+
+const DatabaseModel = mongoose.model<DatabaseDoc>("Database", databaseSchema);
+
+const constructed: string[] = [];
 
 export default class Database<Data extends Record<string, boolean | number | string | null>> {
-	message: Message<true> | undefined;
-	#data: readonly Data[] | undefined;
-	#extra: string | undefined;
+	#model: mongoose.Model<DatabaseDoc>;
+	#doc: DatabaseDoc | undefined;
 
 	constructor(public name: string) {
-		if (contructed.includes(name)) {
+		if (constructed.includes(name)) {
 			throw new RangeError(
 				`Cannot create a second database for ${name}, they will have conflicting data`,
 			);
 		}
-		contructed.push(name);
+		constructed.push(name);
+		this.#model = DatabaseModel;
 	}
 
 	async init(): Promise<void> {
-		if (this.message) return;
-		this.message = databases[this.name] ||= await databaseThread.send(
-			`__**SCRADD ${this.name.toUpperCase()} DATABASE**__\n\n*Please don’t delete this message. If you do, all ${this.name.replaceAll(
-				"_",
-				" ",
-			)} information may be reset.*`,
-		);
+		if (this.#doc) return;
+		//@ts-ignore will fix later
+		this.#doc = await this.#model.findOne({ name: this.name }).exec();
 
-		const attachment = this.message.attachments.first()?.url;
-
-		this.#data =
-			attachment ?
-				await fetch(attachment)
-					.then(async (res) => await res.text())
-					.then(
-						(csv) =>
-							papaparse.parse<Data>(csv.trim(), {
-								dynamicTyping: true,
-								header: true,
-								delimiter: ",",
-							}).data,
-					)
-			:	[];
-
-		// eslint-disable-next-line @typescript-eslint/prefer-destructuring
-		this.#extra = this.message.content.split("\n")[5];
+		if (!this.#doc) {
+			this.#doc = new this.#model({ name: this.name });
+			await this.#doc.save();
+		}
 	}
 
 	get data(): readonly Data[] {
-		if (!this.#data) throw new ReferenceError("Must call `.init()` before reading `.data`");
-		return this.#data;
+		if (!this.#doc) throw new ReferenceError("Must call `.init()` before reading `.data`");
+		return this.#doc.data as Data[];
 	}
 	set data(content: readonly Data[]) {
-		if (!this.message) throw new ReferenceError("Must call `.init()` before setting `.data`");
-		this.#data = content;
+		if (!this.#doc) throw new ReferenceError("Must call `.init()` before setting `.data`");
+		//@ts-ignore will fix later
+		this.#doc.data = content;
 		this.#queueWrite();
 	}
 
 	get extra(): string | undefined {
-		if (!this.#data) throw new ReferenceError("Must call `.init()` before reading `.extra`");
-		return this.#extra;
+		if (!this.#doc) throw new ReferenceError("Must call `.init()` before reading `.extra`");
+		return this.#doc.extra;
 	}
 	set extra(content: string | undefined) {
-		if (!this.message) throw new ReferenceError("Must call `.init()` before setting `.extra`");
-		this.#extra = content;
+		if (!this.#doc) throw new ReferenceError("Must call `.init()` before setting `.extra`");
+		this.#doc.extra = content ?? "";
 		this.#queueWrite();
 	}
 
@@ -133,83 +114,26 @@ export default class Database<Data extends Record<string, boolean | number | str
 	}
 
 	#queueWrite(): void {
-		if (!this.message) {
+		if (!this.#doc) {
 			throw new ReferenceError(
 				"Must call `.init()` before reading or setting `.data` or `.extra`",
 			);
 		}
 
-		const timeoutId = timeouts[this.message.id];
+		const timeoutId = timeouts[this.#doc.id];
 
-		const callback = async (): Promise<Message<true>> => {
-			if (!this.message) {
+		const callback = async (): Promise<void> => {
+			if (!this.#doc) {
 				throw new ReferenceError(
 					"Must call `.init()` before reading or setting `.data` or `.extra`",
 				);
 			}
-			const { message } = this;
 
-			const data = this.#data?.length && papaparse.unparse([...this.#data]).trim();
-
-			const files =
-				data ?
-					[
-						{
-							attachment: Buffer.from(data, "utf8"),
-							name: `${this.name}.${process.env.NODE_ENV == "production" ? "scrubdb" : "txt"}`,
-						},
-					]
-				:	[];
-			const messageContent = message.content.split("\n");
-			messageContent[3] = "";
-			messageContent[4] = this.#extra ? "Extra misc info:" : "";
-			messageContent[5] = this.#extra || "";
-
-			const content = messageContent.join("\n").trim();
-			const promise = message
-				.edit({ content, files })
-				.catch(async (error: unknown) => {
-					if (
-						error &&
-						typeof error === "object" &&
-						"code" in error &&
-						error.code === RESTJSONErrorCodes.UnknownMessage
-					) {
-						databases[this.name] = undefined;
-						this.message = undefined;
-						await this.init();
-						return await callback();
-					}
-
-					return await message.edit({ content, files }).catch((retryError: unknown) => {
-						throw new AggregateError(
-							[error, retryError],
-							"Failed to write to database!",
-							{ cause: { data, database: this.name } },
-						);
-					});
-				})
-				.then(async (edited) => {
-					const attachment = edited.attachments.first()?.url;
-
-					const written =
-						attachment &&
-						(await fetch(attachment).then(async (res) => await res.text())).trim();
-
-					if (attachment && written !== data && !written?.startsWith("<?xml")) {
-						throw new Error("Data changed through write!", {
-							cause: { written, data, database: this.name },
-						});
-					}
-
-					return edited;
-				});
-
-			timeouts[message.id] = undefined;
-			return await promise;
+			await this.#doc.save();
+			timeouts[this.#doc.id] = undefined;
 		};
 
-		timeouts[this.message.id] = { timeout: setTimeout(callback, 15_000), callback };
+		timeouts[this.#doc.id] = { timeout: setTimeout(callback, 15_000), callback };
 		if (timeoutId) clearTimeout(timeoutId.timeout);
 	}
 }
@@ -223,6 +147,7 @@ export async function cleanListeners(): Promise<void> {
 	console.log("Listeners cleaned");
 	timeouts = {};
 }
+
 export async function prepareExit(): Promise<void> {
 	await cleanListeners();
 	client.user.setStatus("dnd");
@@ -267,9 +192,11 @@ for (const [event, code] of Object.entries({
 export async function backupDatabases(channel: TextBasedChannel): Promise<void> {
 	if (process.env.NODE_ENV !== "production") return;
 
-	const attachments = Object.values(databases)
-		.map((database) => database?.attachments.first())
-		.filter(Boolean);
+	const databases = await DatabaseModel.find({});
+	const attachments = databases.map((database) => ({
+		attachment: Buffer.from(JSON.stringify(database.data), "utf8"),
+		name: `${database.name}.${process.env.NODE_ENV == "production" ? "scrubdb" : "json"}`,
+	}));
 
 	await channel.send("# Daily Scradd Database Backup");
 	while (attachments.length) {
