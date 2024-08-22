@@ -10,6 +10,7 @@ import {
 	type Snowflake,
 } from "discord.js";
 import config from "../../common/config.js";
+import { databaseThread } from "../../common/database.js";
 import { extractMessageExtremities, getBaseChannel, messageToText } from "../../util/discord.js";
 import { joinWithAnd } from "../../util/text.js";
 import log, { LogSeverity, LoggingEmojis, shouldLog } from "./misc.js";
@@ -25,7 +26,8 @@ export async function messageDelete(message: Message | PartialMessage): Promise<
 		return;
 	const shush =
 		message.partial ||
-		(config.channels.modlogs.id === getBaseChannel(message.channel)?.id);
+		(config.channels.modlogs.id === getBaseChannel(message.channel)?.id &&
+			databaseThread.id !== message.channel.id);
 
 	const content = !shush && messageToText(message, false);
 	const { embeds, files } =

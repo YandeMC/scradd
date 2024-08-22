@@ -10,9 +10,10 @@ import {
 	type Snowflake,
 	type User,
 } from "discord.js";
-import Database from "../../common/database.js";
+import Database, { allDatabaseMessages } from "../../common/database.js";
 import { GlobalUsersPattern, paginate } from "../../util/discord.js";
 import { convertBase } from "../../util/numbers.js";
+import { gracefulFetch } from "../../util/promises.js";
 import { LogSeverity, getLoggingThread } from "../logging/misc.js";
 import { EXPIRY_LENGTH } from "./misc.js";
 
@@ -27,14 +28,24 @@ export const strikeDatabase = new Database<{
 }>("strikes");
 await strikeDatabase.init();
 
-
+const robotopUrl = allDatabaseMessages
+	.find((message) => message.attachments.first()?.name === "robotop_warns.json")
+	?.attachments.first()?.url;
+const robotopStrikes =
+	(robotopUrl &&
+		(await gracefulFetch<{ id: number; mod: Snowflake; reason: string }[]>(robotopUrl))) ||
+	[];
 
 const strikesCache: Record<string, { mod?: string; reason?: string }> = {};
 
 export default async function filterToStrike(
 	filter: string,
 ): Promise<((typeof strikeDatabase)["data"][number] & (typeof strikesCache)[string]) | undefined> {
-	
+	if (/^\d{1,4}$/.test(filter)) {
+		const details = robotopStrikes.find((strike) => strike.id.toString() === filter);
+		const strike = strikeDatabase.data.find((strike) => strike.id.toString() === filter);
+		if (strike && details) return { ...details, ...strike, id: details.id.toString() };
+	}
 
 	const strikeId =
 		/^\d{17,20}$/.test(filter) ? convertBase(filter, 10, convertBase.MAX_BASE) : filter;
