@@ -1,15 +1,11 @@
 import mongoose, { Document, Schema } from "mongoose";
 import { client } from "strife.js";
-import {
-	type Snowflake,
-	type TextBasedChannel,
-} from "discord.js";
+import { type Snowflake, type TextBasedChannel } from "discord.js";
 
 let timeouts: Record<
 	Snowflake,
 	{ callback(): Promise<void>; timeout: NodeJS.Timeout } | undefined
 > = {};
-
 
 // Define Mongoose schema and model for storing databases
 interface DatabaseDoc extends Document {
