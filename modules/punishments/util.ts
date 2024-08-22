@@ -27,14 +27,11 @@ export const strikeDatabase = new Database<{
 }>("strikes");
 await strikeDatabase.init();
 
-
-
 const strikesCache: Record<string, { mod?: string; reason?: string }> = {};
 
 export default async function filterToStrike(
 	filter: string,
 ): Promise<((typeof strikeDatabase)["data"][number] & (typeof strikesCache)[string]) | undefined> {
-	
 	const strikeId =
 		/^\d{17,20}$/.test(filter) ? convertBase(filter, 10, convertBase.MAX_BASE) : filter;
 	const strike = strikeDatabase.data.find((strike) => strike.id.toString() === strikeId);
