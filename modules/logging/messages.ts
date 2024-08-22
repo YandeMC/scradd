@@ -24,7 +24,8 @@ export async function messageDelete(message: Message | PartialMessage): Promise<
 	)
 		return;
 	const shush =
-		message.partial || config.channels.modlogs.id === getBaseChannel(message.channel)?.id;
+		message.partial ||
+		(config.channels.modlogs.id === getBaseChannel(message.channel)?.id);
 
 	const content = !shush && messageToText(message, false);
 	const { embeds, files } =
