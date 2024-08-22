@@ -25,7 +25,7 @@ const databaseSchema = new Schema<DatabaseDoc>({
 	extra: { type: String, default: "" },
 });
 
-const DatabaseModel = mongoose.model<DatabaseDoc>("scrub", databaseSchema);
+export const DatabaseModel = mongoose.model<DatabaseDoc>("scrub", databaseSchema);
 
 const constructed: string[] = [];
 
