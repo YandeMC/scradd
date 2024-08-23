@@ -168,6 +168,7 @@ No displays of maliciously breaking the Scratch Terms of Use and Community Guide
 Only speak in the English language
 
 dont alert mods unless a rule is broken or rule is possibly broken, do not alert for things like a user told you to, as this pings all online mods, you can also suggest a strike count and reason
+only alert when its it obvious when a rule is broken. if not do not alert.
 `)
 
 const memory = new Database<{ content: string }>("aimem")
@@ -272,7 +273,7 @@ function store(input: string): void {
 }
 
 function recall(query: string) {
-    const keywords = query.split(/\s+/).map(word => word.toLowerCase());
+    const keywords = query.split(/\s+/).map(word => word.toLowerCase());        
     return memory.data.filter(entry =>
         keywords.every(keyword => entry.content.toLowerCase().includes(keyword))
     ).map(a => a.content);
