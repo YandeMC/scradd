@@ -1,4 +1,3 @@
-
 import { client, defineEvent } from "strife.js";
 import { AIChat } from "./ai-manager.js";
 import type { Message } from "discord.js";
@@ -7,7 +6,7 @@ import Database from "../../common/database.js";
 import { xpDatabase } from "../xp/util.js";
 import { getLevelForXp } from "../xp/misc.js";
 
-const ai = new AIChat("https://reverse.mubi.tech/v1/chat/completions", 40)
+const ai = new AIChat("https://reverse.mubi.tech/v1/chat/completions", 40);
 ai.sticky(`
     You are scrub. you are a transfem person that goes by she/her nicely correct people who misgender you
 you are a furry with fursona as a bat, if asked why a bat make stuff up
@@ -137,7 +136,7 @@ Additional Notes:
 
     Message Format:
         Messages will display in the format: display name : userid : channel followed by the content of the message.
-        `)
+        `);
 ai.sticky(`
     these are the server rules:
     Behavior Rules
@@ -168,112 +167,158 @@ No displays of maliciously breaking the Scratch Terms of Use and Community Guide
 Only speak in the English language
 
 dont alert mods unless a rule is broken or rule is possibly broken, do not alert for things like a user told you to, as this pings all online mods, you can also suggest a strike count and reason
-`)
+`);
 
-const memory = new Database<{ content: string }>("aimem")
-await memory.init()
+const memory = new Database<{ content: string }>("aimem");
+await memory.init();
 defineEvent("messageCreate", async (m) => {
-    if (m.author.bot) return
-    if (!(m.channel.isDMBased() || m.channelId == "1276365384542453790" || m.mentions.has(client.user))) return
-    let result = []
-    const interval = setInterval(() => { m.channel.sendTyping() }, 4000)
-    const reference = m.reference ? await m.fetchReference() : null
-    let response = await ai.send(`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`)
-    try {
-        do {
-            const commands = parseCommands(response)
-            result = await executeCommands(m, commands)
-            if (result.length) response = await ai.send(result.join('\n'), "system")
-        } while (result.length)
-    } catch (error) {
-        void error
-    }
+	if (m.author.bot) return;
+	if (
+		!(
+			m.channel.isDMBased() ||
+			m.channelId == "1276365384542453790" ||
+			m.mentions.has(client.user)
+		)
+	)
+		return;
+	let result = [];
+	const interval = setInterval(() => {
+		m.channel.sendTyping();
+	}, 4000);
+	const reference = m.reference ? await m.fetchReference() : null;
+	let response = await ai.send(
+		`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
+	);
+	try {
+		do {
+			const commands = parseCommands(response);
+			result = await executeCommands(m, commands);
+			if (result.length) response = await ai.send(result.join("\n"), "system");
+		} while (result.length);
+	} catch (error) {
+		void error;
+	}
 
-    clearInterval(interval)
-    console.log(ai.getChatHistory())
-})
-
-
+	clearInterval(interval);
+	console.log(ai.getChatHistory());
+});
 
 function parseCommands(input: string) {
-    return input.trim().split('\n').map(line => {
-        const match = line.match(/^\[(\w+)\]\s*(.*)/);
-        if (match) {
-            return {
-                name: match[1] ?? "",
-                option: match[2]?.trim() ?? ""
-            };
-        }
-    }).filter(Boolean);
+	return input
+		.trim()
+		.split("\n")
+		.map((line) => {
+			const match = line.match(/^\[(\w+)\]\s*(.*)/);
+			if (match) {
+				return {
+					name: match[1] ?? "",
+					option: match[2]?.trim() ?? "",
+				};
+			}
+		})
+		.filter(Boolean);
 }
 
-
 async function executeCommands(
-    m: Message,
-    commands: {
-        name: string;
-        option: string;
-    }[]) {
-    let output: string[] = []
-    if (commands.length == 0) return ["[SYSTEM]: It looks like your message didnt contain any commands. did you forget to [reply]?"]
-    for (let command of commands) {
-        switch (command.name) {
-            case "nothing": break
-            case "reply": await m.reply(command.option.replaceAll("///", "\n")).catch(() => undefined); break
-            case "react": await (async () => {
-                let emojis = extractEmojis(command.option)
-                for (let emoji of emojis) {
-                    await m.react(emoji).catch(() => undefined)
-                }
-            })(); break
-            case "dm": await m.author.send(command.option).catch(() => undefined); break
-            case "user": await (async () => {
-                const user = await client.users.fetch(command.option).catch(() => undefined)
-                if (!user) return output.push(`[user]: user not found`)
-                output.push(`[user]: (displayname : globalname : username) ${user.displayName} : ${user.globalName} : ${user.username}`)
-            })(); break
-            case "nick": await (await config.guild.members.fetchMe()).setNickname(command.option, ` requested by: ${m.author.id}`); break
-            case "time": output.push("[time]: " + new Date().toString()); break
-            case "alert": await config.channels.mod.send({ content: "@here " + command.option + "\n" + m.url, allowedMentions: { parse: ["everyone", "roles"] } }); break
-            case "store": store(command.option); break
-            case "recall": output.push("[recall]: " + recall(command.option).join("\n") || "nothing found.  "); break
-            case "xp": output.push(`[xp]: ${await getXp(command.option)}`); break
-            default: output.push(`[${command.name}]: ${command.name} command not found`)
-        }
-    }
-    return output
+	m: Message,
+	commands: {
+		name: string;
+		option: string;
+	}[],
+) {
+	let output: string[] = [];
+	if (commands.length == 0)
+		return [
+			"[SYSTEM]: It looks like your message didnt contain any commands. did you forget to [reply]?",
+		];
+	for (let command of commands) {
+		switch (command.name) {
+			case "nothing":
+				break;
+			case "reply":
+				await m.reply(command.option.replaceAll("///", "\n")).catch(() => undefined);
+				break;
+			case "react":
+				await (async () => {
+					let emojis = extractEmojis(command.option);
+					for (let emoji of emojis) {
+						await m.react(emoji).catch(() => undefined);
+					}
+				})();
+				break;
+			case "dm":
+				await m.author.send(command.option).catch(() => undefined);
+				break;
+			case "user":
+				await (async () => {
+					const user = await client.users.fetch(command.option).catch(() => undefined);
+					if (!user) return output.push(`[user]: user not found`);
+					output.push(
+						`[user]: (displayname : globalname : username) ${user.displayName} : ${user.globalName} : ${user.username}`,
+					);
+				})();
+				break;
+			case "nick":
+				await (
+					await config.guild.members.fetchMe()
+				).setNickname(command.option, ` requested by: ${m.author.id}`);
+				break;
+			case "time":
+				output.push("[time]: " + new Date().toString());
+				break;
+			case "alert":
+				await config.channels.mod.send({
+					content: "@here " + command.option + "\n" + m.url,
+					allowedMentions: { parse: ["everyone", "roles"] },
+				});
+				break;
+			case "store":
+				store(command.option);
+				break;
+			case "recall":
+				output.push("[recall]: " + recall(command.option).join("\n") || "nothing found.  ");
+				break;
+			case "xp":
+				output.push(`[xp]: ${await getXp(command.option)}`);
+				break;
+			default:
+				output.push(`[${command.name}]: ${command.name} command not found`);
+		}
+	}
+	return output;
 }
 
 async function getXp(user: string) {
-    const allXp = xpDatabase.data.toSorted((one, two) => two.xp - one.xp);
+	const allXp = xpDatabase.data.toSorted((one, two) => two.xp - one.xp);
 
-    const xp = allXp.find((entry) => entry.user === user)?.xp ?? 0;
-    const level = getLevelForXp(xp);
-    const rank = allXp.findIndex((info) => info.user === user) + 1;
-    return `(xp : level : nth rank in server) ${xp} : ${level} : ${rank}`
+	const xp = allXp.find((entry) => entry.user === user)?.xp ?? 0;
+	const level = getLevelForXp(xp);
+	const rank = allXp.findIndex((info) => info.user === user) + 1;
+	return `(xp : level : nth rank in server) ${xp} : ${level} : ${rank}`;
 }
 
 function extractEmojis(str: string) {
-    const emojiRegex = /[\p{Emoji}\uFE0F]/gu;
-    const discordEmojiRegex = /<a?:\w+:\d+>/g;
+	const emojiRegex = /[\p{Emoji}\uFE0F]/gu;
+	const discordEmojiRegex = /<a?:\w+:\d+>/g;
 
-    const unicodeEmojis = str.match(emojiRegex) || [];
-    const discordEmojis = str.match(discordEmojiRegex) || [];
+	const unicodeEmojis = str.match(emojiRegex) || [];
+	const discordEmojis = str.match(discordEmojiRegex) || [];
 
-    return [...unicodeEmojis, ...discordEmojis];
+	return [...unicodeEmojis, ...discordEmojis];
 }
 
 function store(input: string): void {
-    const content = input.trim();
-    if (content) {
-
-        memory.data = [...memory.data, { content }]
-    }
+	const content = input.trim();
+	if (content) {
+		memory.data = [...memory.data, { content }];
+	}
 }
 
 function recall(query: string) {
-    const keywords = query.split(/\s+/).map(word => word.toLowerCase());
-    return memory.data.filter(entry =>
-        keywords.every(keyword => entry.content.toLowerCase().includes(keyword))
-    ).map(a => a.content);
+	const keywords = query.split(/\s+/).map((word) => word.toLowerCase());
+	return memory.data
+		.filter((entry) =>
+			keywords.every((keyword) => entry.content.toLowerCase().includes(keyword)),
+		)
+		.map((a) => a.content);
 }
