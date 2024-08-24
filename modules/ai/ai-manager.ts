@@ -2,8 +2,8 @@ import { aiModel, updateModels } from "./model-status.js";
 
 export class AIChat {
 	private apiUrl: string;
-	private history: { role: string; content: string }[] = [];
-	private stickyMessages: { role: string; content: string }[] = [];
+	private history: { role: string; content: string | any[]; type?: string }[] = [];
+	private stickyMessages: { role: string; content: string | any[]; type?: string }[] = [];
 	private maxMessages: number;
 
 	constructor(apiUrl: string, maxMessages: number = 100) {
@@ -11,8 +11,8 @@ export class AIChat {
 		this.maxMessages = maxMessages;
 	}
 
-	async send(message: string, role: string = "user"): Promise<string> {
-		this.inform(message, role);
+	async send(message: string | any[], role: string = "user", type: "text" | "image" | "complex" = "text"): Promise<string> {
+		this.inform(message, role, type);
 
 		const response = await fetch(this.apiUrl, {
 			method: "POST",
@@ -30,30 +30,30 @@ export class AIChat {
 		if (!reply) {
 			await updateModels();
 			if (aiModel != "All Down")
-				return "[reply] Current model down. trying diffrent model...";
+				return "[reply] Current model down. trying different model...";
 		}
 
-		this.inform(reply, "assistant");
+		this.inform(reply, "assistant", "text");
 
 		return reply;
 	}
 
-	inform(content: string, role: string = "system"): void {
+	inform(content: string | any[], role: string = "system", type: "text" | "image" | "complex" = "text"): void {
 		if (this.history.length >= this.maxMessages) {
 			this.history.shift(); // Remove the oldest message
 		}
-		this.history.push({ role, content });
+		this.history.push({ role, content, type });
 	}
 
-	sticky(content: string, role: string = "system"): void {
-		this.stickyMessages.push({ role, content });
+	sticky(content: string | any[], role: string = "system", type: "text" | "image" | "complex" = "text"): void {
+		this.stickyMessages.push({ role, content, type });
 	}
 
-	getChatHistory(): { role: string; content: string }[] {
+	getChatHistory(): { role: string; content: string | any[]; type?: string }[] {
 		return [...this.stickyMessages, ...this.history];
 	}
 
-	private getEffectiveHistory(): { role: string; content: string }[] {
+	private getEffectiveHistory(): { role: string; content: string | any[]; type?: string }[] {
 		// Combine sticky messages and history for the API request
 		return [...this.stickyMessages, ...this.history];
 	}

@@ -192,7 +192,7 @@ only alert when its it obvious when a rule is broken. if not do not alert.
 
 const memory = new Database<{ content: string }>("aimem");
 await memory.init();
-defineEvent("messageCreate", async (m) => {
+defineEvent("messageCreate", async (m) => {	
 	if (m.author.bot) return;
 	if (
 		!(
@@ -211,9 +211,17 @@ defineEvent("messageCreate", async (m) => {
 	}, 4000);
 	const reference = m.reference ? await m.fetchReference() : null;
 	try {
-		let response = await ai.send(
-			`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
-		);
+		let response = m.attachments.filter((attachment) => attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i)).map(() => "").length ?
+			await ai.send(
+				[
+					{ type: 'text', text: `${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`},
+					...([...m.attachments.filter((attachment) => attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i)).map(v => v.url)].map((i) => ({type: "image_url", image_url: { url: i }})))
+				], "user", "complex"
+			) :
+			await ai.send(
+				`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
+			)
+		//[...m.attachments.filter((attachment) => attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i)).map(v => v.url)]
 
 		do {
 			const commands = parseCommands(response);
@@ -314,7 +322,7 @@ async function executeCommands(
 						(await gracefulFetch(
 							`https://discord.com/api/v9/gifs/search?q=${encodeURIComponent(command.option)}&media_format=gif&provider=tenor&locale=en-US`,
 						)) ?? [];
-					await m.reply(gifs.slice(0, 10).at(Math.round(Math.random() * 10))?.src ?? "");
+					await m.reply(gifs.slice(0, 10).at(Math.round(Math.random() * 10))?.src ?? "")
 				}
 				break;
 			default:
