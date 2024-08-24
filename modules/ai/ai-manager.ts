@@ -22,7 +22,7 @@ export class AIChat {
 
 		if (!aiModel?.supportsComplex) {
 			// Remove all messages with type 'complex'
-			messagesForApi = messagesForApi.filter((msg) => msg.type !== "complex");
+			messagesForApi = messagesForApi.filter(msg => msg.type !== "complex");
 
 			// Remove "type" from remaining messages
 			messagesForApi = messagesForApi.map(({ type, ...rest }) => rest);
