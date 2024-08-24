@@ -2,18 +2,13 @@ import axios from "axios";
 import { EmbedBuilder } from "discord.js";
 import { client } from "strife.js";
 let messageId: string | null = null;
-const models = [
-	{ supportsComplex: true, name: "gpt-4o" },
-	{ supportsComplex: true, name: "gpt-4o-mini" },
-	{ supportsComplex: false, name: "gpt-3.5-turbo" },
-	{ supportsComplex: false, name: "llama3.1-70b-131072" },
-];
+const models = [{ supportsComplex: true, name: "gpt-4o" }, { supportsComplex: true, name: "gpt-4o-mini" }, { supportsComplex: false, name: "gpt-3.5-turbo" }, { supportsComplex: false, name: "llama3.1-70b-131072" }];
 const apiUrl = "https://reverse.mubi.tech";
 export let aiModel = models[0];
 export async function updateStatus() {
 	const channel = await client.channels.fetch("1276928257043857531");
 	if (!channel?.isTextBased()) return;
-	const messages = await channel?.messages.fetch({ limit: 10 }); // get recent messages
+	const messages = await channel?.messages.fetch({ limit: 10 }); // get recent messages							
 	const botMessage = messages.find((msg) => msg.author.id === client.user.id); // find a message that was sent from the bot
 
 	if (botMessage) {
@@ -57,8 +52,8 @@ export async function updateModels() {
 			embed.addFields({ name: ":red_circle: | " + model, value: "Errored", inline: true });
 		}
 	}
-	if (!preferred) preferred = { supportsComplex: false, name: "All Down" };
-	aiModel = preferred;
+	if (!preferred) preferred = {supportsComplex: false, name:"All Down"};
+	aiModel = preferred
 	embed.setFooter({ text: `Current Model: ${aiModel.name}` });
 
 	// update msg
