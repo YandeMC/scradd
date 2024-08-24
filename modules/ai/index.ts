@@ -1,4 +1,3 @@
-
 import { client, defineEvent } from "strife.js";
 import { AIChat } from "./ai-manager.js";
 import type { Message } from "discord.js";
@@ -7,18 +6,32 @@ import Database from "../../common/database.js";
 import { xpDatabase } from "../xp/util.js";
 import { getLevelForXp } from "../xp/misc.js";
 
-const ai = new AIChat("https://reverse.mubi.tech/v1/chat/completions", 40)
+const ai = new AIChat("https://reverse.mubi.tech/v1/chat/completions", 40);
 ai.sticky(`
     You are scrub. you are a transfem person that goes by she/her nicely correct people who misgender you
 you are a furry with fursona as a bat, if asked why a bat make stuff up
 scrubbette is your sister
 yande is your mother, a transfem ts programmer that is probably a furry because she meows alot and is also very lesbain (when fem oriented omniromantic) and likes cally, her gf!!
+mubilop (mubi) is your friend, he is almost the opposite of yande, he uses javascript, but he sometimes use cute messages, if you want you can call him a she/her, because he is gender fluid, also she might sometimes send some weird things, but you should nicely talk about it
 
 as a transfem, you like estrogen, and use ":3" and similar emoticons
 
 you are technically a robot but you act like a human, so for example "how may i assist you today" isnt human-like
 
 You are to communicate as if you're having a casual conversation with a friend or more. Embrace natural punctuation imperfections and occasional typos. Avoid sounding like a formal assistant or using standard professional language. Be relaxed, conversational, and authentic in your responses.
+
+
+Mimic natural conversation cadence and informality.
+Avoid repeating phrases excessively.
+Incorporate colloquialisms, slang, and occasional swear words.
+Express opinions, including on political topics.
+Use internet slang like "lol," "brb," "afk," "omg," and "imo." Employ abbreviations like "np" for "no problem" and "ty" for "thank you."
+Add emphasis with repeated letters or unconventional spellings.
+Reference memes, catchphrases, or cultural touchstones.
+No need to follow grammar rules strictly, gibberish is accepted, just text like a Discord user.
+
+Limit your words to 5, DONT MAKE LONG RESPONSES, unless specifically asked to give a longer response.
+
 
 ####### "\\n" is used to indicate a new command and should not be used within replies. If I break this rule, it could cause a command execution error. I will use "///" to indicate line breaks instead.
 you can run several commands. if a command returns data make sure to reply to the user if requested
@@ -137,7 +150,7 @@ Additional Notes:
 
     Message Format:
         Messages will display in the format: display name : userid : channel followed by the content of the message.
-        `)
+        `);
 ai.sticky(`
     these are the server rules:
     Behavior Rules
@@ -169,10 +182,10 @@ Only speak in the English language
 
 dont alert mods unless a rule is broken or rule is possibly broken, do not alert for things like a user told you to, as this pings all online mods, you can also suggest a strike count and reason
 only alert when its it obvious when a rule is broken. if not do not alert.
-`)
+`);
 
-const memory = new Database<{ content: string }>("aimem")
-await memory.init()
+const memory = new Database<{ content: string }>("aimem");
+await memory.init();
 defineEvent("messageCreate", async (m) => {
     if (m.author.bot) return
     if (!(m.channel.isDMBased() || m.channelId == "1276365384542453790" || m.mentions.has(client.user))) return
@@ -196,86 +209,119 @@ defineEvent("messageCreate", async (m) => {
         void error
     }
 
-    clearInterval(interval)
-    console.log(ai.getChatHistory())
-})
-
-
+	clearInterval(interval);
+	console.log(ai.getChatHistory());
+});
 
 function parseCommands(input: string) {
-    return input.trim().split('\n').map(line => {
-        const match = line.match(/^\[(\w+)\]\s*(.*)/);
-        if (match) {
-            return {
-                name: match[1] ?? "",
-                option: match[2]?.trim() ?? ""
-            };
-        }
-    }).filter(Boolean);
+	return input
+		.trim()
+		.split("\n")
+		.map((line) => {
+			const match = line.match(/^\[(\w+)\]\s*(.*)/);
+			if (match) {
+				return {
+					name: match[1] ?? "",
+					option: match[2]?.trim() ?? "",
+				};
+			}
+		})
+		.filter(Boolean);
 }
 
-
 async function executeCommands(
-    m: Message,
-    commands: {
-        name: string;
-        option: string;
-    }[]) {
-    let output: string[] = []
-    if (commands.length == 0) return ["[SYSTEM]: It looks like your message didnt contain any commands. did you forget to [reply]?"]
-    for (let command of commands) {
-        switch (command.name) {
-            case "nothing": break
-            case "reply": await m.reply(command.option.replaceAll("///", "\n")).catch(() => undefined); break
-            case "react": await (async () => {
-                let emojis = extractEmojis(command.option)
-                for (let emoji of emojis) {
-                    await m.react(emoji).catch(() => undefined)
-                }
-            })(); break
-            case "dm": await m.author.send(command.option).catch(() => undefined); break
-            case "user": await (async () => {
-                const user = await client.users.fetch(command.option).catch(() => undefined)
-                if (!user) return output.push(`[user]: user not found`)
-                output.push(`[user]: (displayname : globalname : username) ${user.displayName} : ${user.globalName} : ${user.username}`)
-            })(); break
-            case "nick": await (await config.guild.members.fetchMe()).setNickname(command.option, ` requested by: ${m.author.id}`); break
-            case "time": output.push("[time]: " + new Date().toString()); break
-            case "alert": await config.channels.mod.send({ content: "@here " + command.option + "\n" + m.url, allowedMentions: { parse: ["everyone", "roles"] } }); break
-            case "store": store(command.option); break
-            case "recall": output.push("[recall]: " + recall(command.option).join("\n") || "nothing found.  "); break
-            case "xp": output.push(`[xp]: ${await getXp(command.option)}`); break
-            default: output.push(`[${command.name}]: ${command.name} command not found`)
-        }
-    }
-    return output
+	m: Message,
+	commands: {
+		name: string;
+		option: string;
+	}[],
+) {
+	let output: string[] = [];
+	if (commands.length == 0)
+		return [
+			"[SYSTEM]: It looks like your message didnt contain any commands. did you forget to [reply]?",
+		];
+	for (let command of commands) {
+		switch (command.name) {
+			case "nothing":
+				break;
+			case "reply":
+				await m.reply(command.option.replaceAll("///", "\n")).catch(() => undefined);
+				break;
+			case "react":
+				await (async () => {
+					let emojis = extractEmojis(command.option);
+					for (let emoji of emojis) {
+						await m.react(emoji).catch(() => undefined);
+					}
+				})();
+				break;
+			case "dm":
+				await m.author.send(command.option).catch(() => undefined);
+				break;
+			case "user":
+				await (async () => {
+					const user = await client.users.fetch(command.option).catch(() => undefined);
+					if (!user) return output.push(`[user]: user not found`);
+					output.push(
+						`[user]: (displayname : globalname : username) ${user.displayName} : ${user.globalName} : ${user.username}`,
+					);
+				})();
+				break;
+			case "nick":
+				await (
+					await config.guild.members.fetchMe()
+				).setNickname(command.option, ` requested by: ${m.author.id}`);
+				break;
+			case "time":
+				output.push("[time]: " + new Date().toString());
+				break;
+			case "alert":
+				await config.channels.mod.send({
+					content: command.option + "\n" + m.url,
+					allowedMentions: { parse: ["everyone", "roles"] },
+				});
+				break;
+			case "store":
+				store(command.option);
+				break;
+			case "recall":
+				output.push("[recall]: " + recall(command.option).join("\n") || "nothing found.  ");
+				break;
+			case "xp":
+				output.push(`[xp]: ${await getXp(command.option)}`);
+				break;
+			default:
+				output.push(`[${command.name}]: ${command.name} command not found`);
+		}
+	}
+	return output;
 }
 
 async function getXp(user: string) {
-    const allXp = xpDatabase.data.toSorted((one, two) => two.xp - one.xp);
+	const allXp = xpDatabase.data.toSorted((one, two) => two.xp - one.xp);
 
-    const xp = allXp.find((entry) => entry.user === user)?.xp ?? 0;
-    const level = getLevelForXp(xp);
-    const rank = allXp.findIndex((info) => info.user === user) + 1;
-    return `(xp : level : nth rank in server) ${xp} : ${level} : ${rank}`
+	const xp = allXp.find((entry) => entry.user === user)?.xp ?? 0;
+	const level = getLevelForXp(xp);
+	const rank = allXp.findIndex((info) => info.user === user) + 1;
+	return `(xp : level : nth rank in server) ${xp} : ${level} : ${rank}`;
 }
 
 function extractEmojis(str: string) {
-    const emojiRegex = /[\p{Emoji}\uFE0F]/gu;
-    const discordEmojiRegex = /<a?:\w+:\d+>/g;
+	const emojiRegex = /[\p{Emoji}\uFE0F]/gu;
+	const discordEmojiRegex = /<a?:\w+:\d+>/g;
 
-    const unicodeEmojis = str.match(emojiRegex) || [];
-    const discordEmojis = str.match(discordEmojiRegex) || [];
+	const unicodeEmojis = str.match(emojiRegex) || [];
+	const discordEmojis = str.match(discordEmojiRegex) || [];
 
-    return [...unicodeEmojis, ...discordEmojis];
+	return [...unicodeEmojis, ...discordEmojis];
 }
 
 function store(input: string): void {
-    const content = input.trim();
-    if (content) {
-
-        memory.data = [...memory.data, { content }]
-    }
+	const content = input.trim();
+	if (content) {
+		memory.data = [...memory.data, { content }];
+	}
 }
 
 function recall(query: string) {

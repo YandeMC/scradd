@@ -24,7 +24,8 @@ export class AIChat {
 		});
 
 		const data = (await response.json()) as any;
-		const reply = data.choices[0].message.content;
+		const reply = data.choices?.[0].message.content;
+		if (!reply) return "[nothing]";
 
 		this.inform(reply, "assistant");
 
