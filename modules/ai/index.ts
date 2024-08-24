@@ -135,9 +135,9 @@ Discord-Related Commands:
             Input: [xp] 123456789012345678
             Action: the interpreter returns the user's XP and XP level.
     [gif] <query> 
-        Purpose: search for a gif and sends the top result, use in place of [reply]
+        Purpose: search for a gif and returns top 10
         example usage: [gif] discord quote
-        action: the interpreter searches for a "discord quote" gif and sends the first one
+        action: the interpreter searches for a "discord quote" gif and returns top 10 results
 
 Other commands:
     [time]
@@ -314,7 +314,7 @@ async function executeCommands(
 						(await gracefulFetch(
 							`https://discord.com/api/v9/gifs/search?q=${encodeURIComponent(command.option)}&media_format=gif&provider=tenor&locale=en-US`,
 						)) ?? [];
-					m.reply(gifs.at(0)?.src ?? "").catch(() => undefined);
+					output.push(`[gif]: ${gifs.slice(0,10).join(' ')}`)
 				}
 				break;
 			default:
