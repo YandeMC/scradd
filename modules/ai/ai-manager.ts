@@ -1,3 +1,5 @@
+import { aiModel, updateModels } from "./model-status.js";
+
 export class AIChat {
 	private apiUrl: string;
 	private history: { role: string; content: string }[] = [];
@@ -18,14 +20,18 @@ export class AIChat {
 				"Content-Type": "application/json",
 			},
 			body: JSON.stringify({
-				model: "gpt-4o",
+				model: aiModel,
 				messages: this.getEffectiveHistory(),
 			}),
 		});
 
 		const data = (await response.json()) as any;
 		const reply = data.choices?.[0].message.content;
-		if (!reply) return "[nothing]";
+		if (!reply) {
+			
+			await updateModels()
+			if (aiModel != "All Down") return "[reply] Current model down. trying diffrent model..."
+		};
 
 		this.inform(reply, "assistant");
 

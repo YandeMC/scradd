@@ -2,9 +2,9 @@
     import { EmbedBuilder } from "discord.js";
     import { client } from "strife.js";
     let messageId: string | null = null;
-    const models = ['gpt-4o', 'gpt-3.5-turbo', 'gpt-4o-mini', 'llama3.1-70b-131072', 'gemma2-9b-8192'];
+    const models = ['gpt-4o', 'gpt-3.5-turbo', 'gpt-4o-mini'];
     const apiUrl = 'https://reverse.mubi.tech';
-
+    export let aiModel = models[0]
     export async function updateStatus() {
         const channel = await client.channels.fetch("1276928257043857531");
         if (!channel?.isTextBased()) return
@@ -19,8 +19,8 @@
         setInterval(updateModels, 300000);
     }
 
-    async function updateModels() {
-        
+    export async function updateModels() {
+        let preferred = null
         let totalRequests = 'N/A';
 
         try {
@@ -32,7 +32,6 @@
 
         const embed = new EmbedBuilder()
             .setTitle('Models Status')
-            .setFooter({ text: `Total Requests: ${totalRequests}` })
             .setTimestamp();
 
         for (const model of models) {
@@ -44,6 +43,7 @@
 
                 if (response.status === 200 && response.data.choices) {
                     embed.addFields({ name: ":green_circle: | " + model, value: response.data.choices[0].message.content.replace("\n", " "), inline: true });
+                    if (!preferred) preferred = model
                 } else {
                     embed.addFields({ name: ":red_circle: | " + model, value: 'Errored', inline: true });
                 }
@@ -51,6 +51,9 @@
                 embed.addFields({ name: ":red_circle: | " + model, value: 'Errored', inline: true });
             }
         }
+        if (!preferred) preferred = "All Down"
+
+        embed.setFooter({ text: `Current Model: ${aiModel}` })
 
         // update msg
         try {
