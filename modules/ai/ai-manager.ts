@@ -35,7 +35,7 @@ export class AIChat {
 		if (!reply) {
 			await updateModels();
 			if (aiModel?.name != "All Down")
-				return "[reply] Current model down. trying different model...";
+				return "[react] <:error:1193656283396579418>";
 		}
 
 		this.inform(reply, "assistant", "text");
