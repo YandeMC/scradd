@@ -314,7 +314,7 @@ async function executeCommands(
 						(await gracefulFetch(
 							`https://discord.com/api/v9/gifs/search?q=${encodeURIComponent(command.option)}&media_format=gif&provider=tenor&locale=en-US`,
 						)) ?? [];
-					output.push(`[gif]: ${gifs.slice(0,10).join(' ')}`)
+					output.push(`[gif]: ${gifs.slice(0, 10).join(" ")}`);
 				}
 				break;
 			default:
