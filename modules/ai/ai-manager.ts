@@ -28,10 +28,10 @@ export class AIChat {
 		const data = (await response.json()) as any;
 		const reply = data.choices?.[0].message.content;
 		if (!reply) {
-			
-			await updateModels()
-			if (aiModel != "All Down") return "[reply] Current model down. trying diffrent model..."
-		};
+			await updateModels();
+			if (aiModel != "All Down")
+				return "[reply] Current model down. trying diffrent model...";
+		}
 
 		this.inform(reply, "assistant");
 
