@@ -193,17 +193,17 @@ const memory = new Database<{ content: string }>("aimem");
 await memory.init();
 defineEvent("messageCreate", async (m) => {
 	if (m.author.bot) return;
-	console.log(aiModel)
-	let messagesForApi = ai.getChatHistory().slice(2)
+	console.log(aiModel);
+	let messagesForApi = ai.getChatHistory().slice(2);
 
-		if (!aiModel?.supportsComplex) {
-			// Remove all messages with type 'complex'
-			messagesForApi = messagesForApi.filter(msg => msg.type !== "complex");
+	if (!aiModel?.supportsComplex) {
+		// Remove all messages with type 'complex'
+		messagesForApi = messagesForApi.filter((msg) => msg.type !== "complex");
 
-			// Remove "type" from remaining messages
-			messagesForApi = messagesForApi.map(({ type, ...rest }) => rest);
-		}
-	console.log(messagesForApi)
+		// Remove "type" from remaining messages
+		messagesForApi = messagesForApi.map(({ type, ...rest }) => rest);
+	}
+	console.log(messagesForApi);
 	if (
 		!(
 			m.channel.isDMBased() ||
@@ -253,7 +253,8 @@ defineEvent("messageCreate", async (m) => {
 				);
 		//[...m.attachments.filter((attachment) => attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i)).map(v => v.url)]
 
-		do {console.log(response)
+		do {
+			console.log(response);
 			const commands = parseCommands(response);
 			result = await executeCommands(m, commands);
 			if (result.length) response = await ai.send(result.join("\n"), "system");

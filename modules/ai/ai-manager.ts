@@ -44,8 +44,7 @@ export class AIChat {
 		const reply = data.choices?.[0].message.content;
 		if (!reply) {
 			await updateModels();
-			if (aiModel?.name != "All Down")
-				return "[nothing]";
+			if (aiModel?.name != "All Down") return "[nothing]";
 		}
 
 		this.inform(reply, "assistant", "text");
