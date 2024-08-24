@@ -11,7 +11,11 @@ export class AIChat {
 		this.maxMessages = maxMessages;
 	}
 
-	async send(message: string | any[], role: string = "user", type: "text" | "image" | "complex" = "text"): Promise<string> {
+	async send(
+		message: string | any[],
+		role: string = "user",
+		type: "text" | "image" | "complex" = "text",
+	): Promise<string> {
 		this.inform(message, role, type);
 
 		const response = await fetch(this.apiUrl, {
@@ -38,14 +42,22 @@ export class AIChat {
 		return reply;
 	}
 
-	inform(content: string | any[], role: string = "system", type: "text" | "image" | "complex" = "text"): void {
+	inform(
+		content: string | any[],
+		role: string = "system",
+		type: "text" | "image" | "complex" = "text",
+	): void {
 		if (this.history.length >= this.maxMessages) {
 			this.history.shift(); // Remove the oldest message
 		}
 		this.history.push({ role, content, type });
 	}
 
-	sticky(content: string | any[], role: string = "system", type: "text" | "image" | "complex" = "text"): void {
+	sticky(
+		content: string | any[],
+		role: string = "system",
+		type: "text" | "image" | "complex" = "text",
+	): void {
 		this.stickyMessages.push({ role, content, type });
 	}
 
