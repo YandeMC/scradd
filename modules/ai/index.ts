@@ -11,7 +11,7 @@ import { prompts } from "./prompts.js";
 
 const ai = new AIChat("https://reverse.mubi.tech/v1/chat/completions", 40);
 
-prompts.forEach((p) => ai.sticky(p))
+prompts.forEach((p) => ai.sticky(p));
 
 const memory = new Database<{ content: string }>("aimem");
 await memory.init();
