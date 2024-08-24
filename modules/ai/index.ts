@@ -177,10 +177,16 @@ defineEvent("messageCreate", async (m) => {
     if (m.author.bot) return
     if (!(m.channel.isDMBased() || m.channelId == "1276365384542453790" || m.mentions.has(client.user))) return
     let result = []
-    const interval = setInterval(() => { m.channel.sendTyping() }, 4000)
+    let intCount = 0
+    const interval = setInterval(() => {
+        m.channel.sendTyping()
+        if (intCount > 30) clearInterval(interval)
+        intCount++
+    }, 4000)
     const reference = m.reference ? await m.fetchReference() : null
-    let response = await ai.send(`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`)
     try {
+        let response = await ai.send(`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`)
+
         do {
             const commands = parseCommands(response)
             result = await executeCommands(m, commands)
@@ -273,7 +279,7 @@ function store(input: string): void {
 }
 
 function recall(query: string) {
-    const keywords = query.split(/\s+/).map(word => word.toLowerCase());        
+    const keywords = query.split(/\s+/).map(word => word.toLowerCase());
     return memory.data.filter(entry =>
         keywords.every(keyword => entry.content.toLowerCase().includes(keyword))
     ).map(a => a.content);
