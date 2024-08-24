@@ -255,24 +255,27 @@ defineEvent("messageCreate", async (m) => {
 });
 
 function parseCommands(input: string) {
-	const commands: { name: string; option: string; }[] = [];
-	let lastCommand: { option: any; name	: string; } | null = null;
+	const commands: { name: string; option: string }[] = [];
+	let lastCommand: { option: any; name: string } | null = null;
 
-	input.trim().split("\n").forEach((line) => {
-		const match = line.match(/^\[(\w+)\]\s*(.*)/);
-		if (match) {
-			// If the line contains a command, create a new command object
-			lastCommand = {
-				name: match[1] ?? "",
-				option: match[2]?.trim() ?? "",
-			};
-			//@ts-ignore
-			commands.push(lastCommand);
-		} else if (lastCommand) {
-			// If the line does not contain a command, add the line to the 'option' of the last command
-			lastCommand.option += "\n" + line.trim();
-		}
-	});
+	input
+		.trim()
+		.split("\n")
+		.forEach((line) => {
+			const match = line.match(/^\[(\w+)\]\s*(.*)/);
+			if (match) {
+				// If the line contains a command, create a new command object
+				lastCommand = {
+					name: match[1] ?? "",
+					option: match[2]?.trim() ?? "",
+				};
+				//@ts-ignore
+				commands.push(lastCommand);
+			} else if (lastCommand) {
+				// If the line does not contain a command, add the line to the 'option' of the last command
+				lastCommand.option += "\n" + line.trim();
+			}
+		});
 
 	return commands;
 }
