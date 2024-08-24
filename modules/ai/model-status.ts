@@ -2,7 +2,7 @@ import axios from "axios";
 import { EmbedBuilder } from "discord.js";
 import { client } from "strife.js";
 let messageId: string | null = null;
-const models = [{ supportsComplex: true, name: "gpt-4o" }, { supportsComplex: true, name: "gpt-4o-mini" }, { supportsComplex: false, name: "gpt-3.5-turbo" }, { supportsComplex: false, name: "gemma2-9b-8192" }];
+const models = [{ supportsComplex: true, name: "gpt-4o" }, { supportsComplex: true, name: "gpt-4o-mini" }, { supportsComplex: false, name: "gpt-3.5-turbo" }, { supportsComplex: false, name: "llama3.1-70b-131072" }];
 const apiUrl = "https://reverse.mubi.tech";
 export let aiModel = models[0];
 export async function updateStatus() {
@@ -36,14 +36,14 @@ export async function updateModels() {
 
 			if (response.status === 200 && response.data.choices) {
 				embed.addFields({
-					name: ":green_circle: | " + model,
+					name: ":green_circle: | " + model.name,
 					value: response.data.choices[0].message.content.replace("\n", " "),
 					inline: true,
 				});
 				if (!preferred) preferred = model;
 			} else {
 				embed.addFields({
-					name: ":red_circle: | " + model,
+					name: ":red_circle: | " + model.name,
 					value: "Errored",
 					inline: true,
 				});
@@ -58,7 +58,7 @@ export async function updateModels() {
 
 	// update msg
 	try {
-		const channel = await client.channels.fetch("1276928257043857531");
+		const channel = await client.channels.fetch("1276928257043857531").catch(() => undefined);
 		if (!channel?.isTextBased()) return;
 		if (messageId) {
 			const message = await channel?.messages.fetch(messageId);
