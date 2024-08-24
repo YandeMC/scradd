@@ -21,14 +21,6 @@
 
     export async function updateModels() {
         let preferred = null
-        let totalRequests = 'N/A';
-
-        try {
-            const statsres = await axios.get(`${apiUrl}/v1/stats`);
-            totalRequests = statsres.data.totalRequests || 'N/A';
-        } catch (error) {
-            console.error('Error fetching stats:', error);
-        }
 
         const embed = new EmbedBuilder()
             .setTitle('Models Status')
