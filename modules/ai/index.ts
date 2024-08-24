@@ -5,6 +5,7 @@ import config from "../../common/config.js";
 import Database from "../../common/database.js";
 import { xpDatabase } from "../xp/util.js";
 import { getLevelForXp } from "../xp/misc.js";
+import { gracefulFetch } from "../../util/promises.js";
 
 const ai = new AIChat("https://reverse.mubi.tech/v1/chat/completions", 40);
 ai.sticky(`
@@ -132,6 +133,10 @@ Discord-Related Commands:
         Usage Example:
             Input: [xp] 123456789012345678
             Action: the interpreter returns the user's XP and XP level.
+    [gif] <query> 
+        Purpose: search for a gif and sends the top result, use in place of [reply]
+        example usage: [gif] discord quote
+        action: the interpreter searches for a "discord quote" gif and sends the first one
 
 Other commands:
     [time]
@@ -300,6 +305,14 @@ async function executeCommands(
 			case "xp":
 				output.push(`[xp]: ${await getXp(command.option)}`);
 				break;
+            case "gif": 
+                {
+                    const gifs:{
+                        "src": string,
+                      }[] = await gracefulFetch(`https://discord.com/api/v9/gifs/search?q=${encodeURIComponent(command.option)}&media_format=gif&provider=tenor&locale=en-US`) ?? []
+                    m.reply(gifs.at(0)?.src ?? "").catch(() => undefined)
+                }
+            break
 			default:
 				output.push(`[${command.name}]: ${command.name} command not found`);
 		}
