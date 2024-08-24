@@ -25,7 +25,7 @@ export class AIChat {
 				[process.env.AIBYPASS ?? ""]: process.env.AITOKEN ?? "",
 			},
 			body: JSON.stringify({
-				model: aiModel,
+				model: aiModel?.name,
 				messages: this.getEffectiveHistory(),
 			}),
 		});
