@@ -2,7 +2,12 @@ import axios from "axios";
 import { EmbedBuilder } from "discord.js";
 import { client } from "strife.js";
 let messageId: string | null = null;
-const models = [{ supportsComplex: true, name: "gpt-4o" }, { supportsComplex: true, name: "gpt-4o-mini" }, { supportsComplex: false, name: "gpt-3.5-turbo" }, { supportsComplex: false, name: "gemma2-9b-8192" }];
+const models = [
+	{ supportsComplex: true, name: "gpt-4o" },
+	{ supportsComplex: true, name: "gpt-4o-mini" },
+	{ supportsComplex: false, name: "gpt-3.5-turbo" },
+	{ supportsComplex: false, name: "gemma2-9b-8192" },
+];
 const apiUrl = "https://reverse.mubi.tech";
 export let aiModel = models[0];
 export async function updateStatus() {
@@ -52,8 +57,8 @@ export async function updateModels() {
 			embed.addFields({ name: ":red_circle: | " + model, value: "Errored", inline: true });
 		}
 	}
-	if (!preferred) preferred = {supportsComplex: false, name:"All Down"};
-	aiModel = preferred
+	if (!preferred) preferred = { supportsComplex: false, name: "All Down" };
+	aiModel = preferred;
 	embed.setFooter({ text: `Current Model: ${aiModel.name}` });
 
 	// update msg
