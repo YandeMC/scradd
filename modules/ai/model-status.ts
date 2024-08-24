@@ -53,7 +53,7 @@ export async function updateModels() {
 		}
 	}
 	if (!preferred) preferred = "All Down";
-
+	aiModel = preferred
 	embed.setFooter({ text: `Current Model: ${aiModel}` });
 
 	// update msg
