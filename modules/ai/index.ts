@@ -187,27 +187,36 @@ only alert when its it obvious when a rule is broken. if not do not alert.
 const memory = new Database<{ content: string }>("aimem");
 await memory.init();
 defineEvent("messageCreate", async (m) => {
-    if (m.author.bot) return
-    if (!(m.channel.isDMBased() || m.channelId == "1276365384542453790" || m.mentions.has(client.user))) return
-    let result = []
-    let intCount = 0
-    const interval = setInterval(() => {
-        m.channel.sendTyping()
-        if (intCount > 30) clearInterval(interval)
-        intCount++
-    }, 4000)
-    const reference = m.reference ? await m.fetchReference() : null
-    try {
-        let response = await ai.send(`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`)
+	if (m.author.bot) return;
+	if (
+		!(
+			m.channel.isDMBased() ||
+			m.channelId == "1276365384542453790" ||
+			m.mentions.has(client.user)
+		)
+	)
+		return;
+	let result = [];
+	let intCount = 0;
+	const interval = setInterval(() => {
+		m.channel.sendTyping();
+		if (intCount > 30) clearInterval(interval);
+		intCount++;
+	}, 4000);
+	const reference = m.reference ? await m.fetchReference() : null;
+	try {
+		let response = await ai.send(
+			`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
+		);
 
-        do {
-            const commands = parseCommands(response)
-            result = await executeCommands(m, commands)
-            if (result.length) response = await ai.send(result.join('\n'), "system")
-        } while (result.length)
-    } catch (error) {
-        void error
-    }
+		do {
+			const commands = parseCommands(response);
+			result = await executeCommands(m, commands);
+			if (result.length) response = await ai.send(result.join("\n"), "system");
+		} while (result.length);
+	} catch (error) {
+		void error;
+	}
 
 	clearInterval(interval);
 	console.log(ai.getChatHistory());
@@ -325,8 +334,10 @@ function store(input: string): void {
 }
 
 function recall(query: string) {
-    const keywords = query.split(/\s+/).map(word => word.toLowerCase());
-    return memory.data.filter(entry =>
-        keywords.every(keyword => entry.content.toLowerCase().includes(keyword))
-    ).map(a => a.content);
+	const keywords = query.split(/\s+/).map((word) => word.toLowerCase());
+	return memory.data
+		.filter((entry) =>
+			keywords.every((keyword) => entry.content.toLowerCase().includes(keyword)),
+		)
+		.map((a) => a.content);
 }
