@@ -35,7 +35,7 @@ export class AIChat {
 				[process.env.AIBYPASS ?? ""]: process.env.AITOKEN ?? "",
 			},
 			body: JSON.stringify({
-				model: aiModel?.name,
+				model: aiModel,
 				messages: messagesForApi,
 			}),
 		});
@@ -45,7 +45,7 @@ export class AIChat {
 		if (!reply) {
 			await updateModels();
 			if (aiModel?.name != "All Down")
-				return "[nothing]";
+				return "[reply] Current model down. trying different model...";
 		}
 
 		this.inform(reply, "assistant", "text");
