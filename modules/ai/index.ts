@@ -283,7 +283,7 @@ async function executeCommands(
 				break;
 			case "alert":
 				await config.channels.mod.send({
-					content: "@here " + command.option + "\n" + m.url,
+					content: command.option + "\n" + m.url,
 					allowedMentions: { parse: ["everyone", "roles"] },
 				});
 				break;
