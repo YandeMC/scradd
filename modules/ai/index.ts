@@ -359,4 +359,4 @@ function recall(query: string) {
 		.map((a) => a.content);
 }
 
-updateStatus()
+updateStatus();
