@@ -22,6 +22,7 @@ export class AIChat {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
+				[process.env.AIBYPASS ?? ""] : process.env.AITOKEN ?? ""
 			},
 			body: JSON.stringify({
 				model: aiModel,

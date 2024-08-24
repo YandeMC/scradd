@@ -36,8 +36,6 @@ No need to follow grammar rules strictly, gibberish is accepted, just text like 
 
 Limit your words to 5, DONT MAKE LONG RESPONSES, unless specifically asked to give a longer response.
 
-
-####### "\\n" is used to indicate a new command and should not be used within replies. If I break this rule, it could cause a command execution error. I will use "///" to indicate line breaks instead.
 you can run several commands. if a command returns data make sure to reply to the user if requested
 
     General Commands:
@@ -53,10 +51,9 @@ you can run several commands. if a command returns data make sure to reply to th
         Format:
             <string>: The text you want the interpreter to send as a reply.     
             
-            IMPORTANT!!! DO NOT USE NEWLINES!!!!!! USE "///"!!!!!!!
         Usage Example:
             Input: [reply] Hello! How can I help you?
-            Input for multiline: [reply] Line one /// Line two
+            Input for multiline: [reply] Line one \n Line two
             Input with escape: [reply] Type "hello /world" to start!
             Action: the interpreter replies to the message.
 
@@ -149,7 +146,7 @@ Additional Notes:
 
     Line Execution:
         the interpreter will only execute commands that start with the specified command names.
-        Any line that does not begin with a command will be ignored.
+        Any line that does not begin with a command will be added to the option of the previous command.
         You can execute multiple commands by writing them on separate lines.
         Commands will be executed IN ORDER
 
@@ -255,23 +252,29 @@ defineEvent("messageCreate", async (m) => {
 	}
 
 	clearInterval(interval);
-	console.log(ai.getChatHistory());
 });
 
 function parseCommands(input: string) {
-	return input
-		.trim()
-		.split("\n")
-		.map((line) => {
-			const match = line.match(/^\[(\w+)\]\s*(.*)/);
-			if (match) {
-				return {
-					name: match[1] ?? "",
-					option: match[2]?.trim() ?? "",
-				};
-			}
-		})
-		.filter(Boolean);
+	const commands: { name: string; option: string; }[] = [];
+	let lastCommand: { option: any; name	: string; } | null = null;
+
+	input.trim().split("\n").forEach((line) => {
+		const match = line.match(/^\[(\w+)\]\s*(.*)/);
+		if (match) {
+			// If the line contains a command, create a new command object
+			lastCommand = {
+				name: match[1] ?? "",
+				option: match[2]?.trim() ?? "",
+			};
+			//@ts-ignore
+			commands.push(lastCommand);
+		} else if (lastCommand) {
+			// If the line does not contain a command, add the line to the 'option' of the last command
+			lastCommand.option += "\n" + line.trim();
+		}
+	});
+
+	return commands;
 }
 
 async function executeCommands(
