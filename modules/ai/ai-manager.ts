@@ -18,6 +18,16 @@ export class AIChat {
 	): Promise<string> {
 		this.inform(message, role, type);
 
+		let messagesForApi = this.getEffectiveHistory();
+
+		if (!aiModel?.supportsComplex) {
+			// Remove all messages with type 'complex'
+			messagesForApi = messagesForApi.filter(msg => msg.type !== "complex");
+
+			// Remove "type" from remaining messages
+			messagesForApi = messagesForApi.map(({ type, ...rest }) => rest);
+		}
+
 		const response = await fetch(this.apiUrl, {
 			method: "POST",
 			headers: {
@@ -26,7 +36,7 @@ export class AIChat {
 			},
 			body: JSON.stringify({
 				model: aiModel,
-				messages: this.getEffectiveHistory(),
+				messages: messagesForApi,
 			}),
 		});
 
@@ -34,7 +44,7 @@ export class AIChat {
 		const reply = data.choices?.[0].message.content;
 		if (!reply) {
 			await updateModels();
-			if (aiModel != "All Down")
+			if (aiModel?.name != "All Down")
 				return "[reply] Current model down. trying different model...";
 		}
 
