@@ -2,7 +2,7 @@
     import { EmbedBuilder } from "discord.js";
     import { client } from "strife.js";
     let messageId: string | null = null;
-    const models = ['gpt-4o', 'gpt-3.5-turbo', 'gpt-4o-mini'];
+    const models = ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'];
     const apiUrl = 'https://reverse.mubi.tech';
     export let aiModel = models[0]
     export async function updateStatus() {
