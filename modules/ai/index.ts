@@ -6,6 +6,7 @@ import Database from "../../common/database.js";
 import { xpDatabase } from "../xp/util.js";
 import { getLevelForXp } from "../xp/misc.js";
 import { gracefulFetch } from "../../util/promises.js";
+import { updateStatus } from "./model-status.js";
 
 const ai = new AIChat("https://reverse.mubi.tech/v1/chat/completions", 40);
 ai.sticky(`
@@ -357,3 +358,5 @@ function recall(query: string) {
 		)
 		.map((a) => a.content);
 }
+
+updateStatus()
