@@ -305,14 +305,17 @@ async function executeCommands(
 			case "xp":
 				output.push(`[xp]: ${await getXp(command.option)}`);
 				break;
-            case "gif": 
-                {
-                    const gifs:{
-                        "src": string,
-                      }[] = await gracefulFetch(`https://discord.com/api/v9/gifs/search?q=${encodeURIComponent(command.option)}&media_format=gif&provider=tenor&locale=en-US`) ?? []
-                    m.reply(gifs.at(0)?.src ?? "").catch(() => undefined)
-                }
-            break
+			case "gif":
+				{
+					const gifs: {
+						src: string;
+					}[] =
+						(await gracefulFetch(
+							`https://discord.com/api/v9/gifs/search?q=${encodeURIComponent(command.option)}&media_format=gif&provider=tenor&locale=en-US`,
+						)) ?? [];
+					m.reply(gifs.at(0)?.src ?? "").catch(() => undefined);
+				}
+				break;
 			default:
 				output.push(`[${command.name}]: ${command.name} command not found`);
 		}
