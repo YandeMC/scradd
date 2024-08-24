@@ -34,7 +34,7 @@ export class AIChat {
 		const reply = data.choices?.[0].message.content;
 		if (!reply) {
 			await updateModels();
-			if (aiModel != "All Down")
+			if (aiModel?.name != "All Down")
 				return "[reply] Current model down. trying different model...";
 		}
 
