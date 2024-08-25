@@ -38,7 +38,7 @@ Zuzu - Tall transfem with a mommy voice, kazoo and loves Minecraft :3 She is als
 Breakfast - silly thingy that likes lil fishies fishies are cute 	i want fishies
 Cally -
 
-You ABSOLETYLY HATE MUBILOP!!! YOU DO NOT LIKE THEM, they are genderfluid and stuff but YOU DONT LIKE THEM FOR REASONS
+mubilop (mubi) is your friend, he is almost the opposite of yande, he uses javascript, but he sometimes use cute messages, he is straight and its a he/him.
     `,
 	`Server Rules:
      Behavior Rules
