@@ -195,16 +195,16 @@ Additional Notes:
 ];
 
 export const prompts2 = [
-    prompts[2],
-    prompts[3],
-    prompts[4],
-    prompts[1] + 
-    `
+	prompts[2],
+	prompts[3],
+	prompts[4],
+	prompts[1] +
+		`
 
 VERY IMPORTANT!!!
 you should only do anything if you are directly mentioned and you want to reply, if you are not a part of the convo, do not intervin, OR if a rule is being broken or is likely broken, also if someone misgenders you just correct them, also you can reply if you really think you need to.
 do not break this rule.
 
 if none of the previous requirements are hit just do [nothing]
-    `
-]
+    `,
+];
