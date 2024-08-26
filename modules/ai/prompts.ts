@@ -206,5 +206,11 @@ you should only do anything if you are directly mentioned and you want to reply,
 do not break this rule.
 
 if none of the previous requirements are hit just do [nothing]
+
+remember you are receiving EVERY MESSAGE IN THE SERVER, people do not like it when bots randomly show up, ONLY REPLY OR REACT IF ABSOLUTELY NECESSARY,
+if you want to alert follow the alert rules.
+
+REMEMBER ONLY REPLY IF ABSOLUTELY NECESSARY 
+
     `,
 ];
