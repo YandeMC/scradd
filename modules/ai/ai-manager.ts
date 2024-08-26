@@ -34,7 +34,7 @@ export class AIChat {
 		const reply = data.choices?.[0].message.content;
 		if (!reply) {
 			await updateModels();
-			if (aiModel?.name != "All Down") return "[react] <:error:1193656283396579418>";
+			if (aiModel?.name != "All Down") return "[nothing]";
 		}
 
 		this.inform(reply, "assistant", "text");
