@@ -42,7 +42,7 @@ defineEvent("messageCreate", async (m) => {
 					)
 					.map(() => "").length
 			) ?
-				await (forcedReply ? ai : ai2).send(
+				await (!forcedReply ? ai : ai2).send(
 					[
 						{
 							type: "text",
@@ -61,7 +61,7 @@ defineEvent("messageCreate", async (m) => {
 					"user",
 					"complex",
 				)
-			:	await (forcedReply ? ai : ai2).send(
+			:	await (!forcedReply ? ai : ai2).send(
 					`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
 				);
 		//[...m.attachments.filter((attachment) => attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i)).map(v => v.url)]
