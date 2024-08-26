@@ -54,7 +54,11 @@ export async function updateModels() {
 				});
 			}
 		} catch (error) {
-			embed.addFields({ name: ":red_circle: | " + model.name, value: "Errored", inline: true });
+			embed.addFields({
+				name: ":red_circle: | " + model.name,
+				value: "Errored",
+				inline: true,
+			});
 		}
 	}
 	if (!preferred) preferred = { supportsComplex: false, name: "All Down" };
