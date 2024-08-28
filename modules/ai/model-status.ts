@@ -1,17 +1,24 @@
 import axios from "axios";
 import { EmbedBuilder } from "discord.js";
 import { client } from "strife.js";
-let messageId: string | null = null;
-const models = [
-	{ supportsComplex: true, name: "gpt-4o" },
-	{ supportsComplex: true, name: "gpt-4o-mini" },
-	{ supportsComplex: false, name: "gpt-3.5-turbo" },
-	{ supportsComplex: false, name: "llama3.1-70b-131072" },
-];
+let messageId: string | null = null
+const models = 
+	[
+		{ supportsComplex: true, name: "gpt-4o" },
+		{ supportsComplex: true, name: "gemini-pro-vision" },
+		{ supportsComplex: true, name: "gemini-pro" },
+		{ supportsComplex: true, name: "gemini-1.5-pro-latest" },
+		{ supportsComplex: true, name: "gemini-1.5-flash-latest" },
+		{ supportsComplex: true, name: "gemini-1.0-pro-vision-latest" },
+		{ supportsComplex: true, name: "gemini-1.0-pro-latest" },
+		{ supportsComplex: true, name: "gemini-1.0-pro" },
+		{ supportsComplex: true, name: "gpt-4o-mini" }
+	]
+
 const apiUrl = "https://reverse.mubi.tech";
 export let aiModel = models[0];
 export async function updateStatus() {
-	const channel = await client.channels.fetch("1276928257043857531");
+	const channel = await client.channels.fetch(process.env.NODE_ENV == "production" ? "1276928257043857531" : "1021061242049286237");
 	if (!channel?.isTextBased()) return;
 	const messages = await channel?.messages.fetch({ limit: 10 }); // get recent messages
 	const botMessage = messages.find((msg) => msg.author.id === client.user.id); // find a message that was sent from the bot
@@ -67,7 +74,7 @@ export async function updateModels() {
 
 	// update msg
 	try {
-		const channel = await client.channels.fetch("1276928257043857531").catch(() => undefined);
+		const channel = await client.channels.fetch(process.env.NODE_ENV == "production" ? "1276928257043857531" : "1021061242049286237").catch(() => undefined);
 		if (!channel?.isTextBased()) return;
 		if (messageId) {
 			const message = await channel?.messages.fetch(messageId);
