@@ -52,26 +52,26 @@ export async function giveXpForMessage(message: Message): Promise<void> {
 		message.url,
 		spam === -1 && !newChannel ?
 			1
-			: Math.max(
+		:	Math.max(
 				1,
 				Math.round(
 					(DEFAULT_XP - (newChannel ? lastInChannel.length - 1 : spam)) /
-					bot /
-					(1 +
-						Number(
-							![
-								MessageType.Default,
-								MessageType.GuildBoost,
-								MessageType.GuildBoostTier1,
-								MessageType.GuildBoostTier2,
-								MessageType.GuildBoostTier3,
-								MessageType.Reply,
-								MessageType.ChatInputCommand,
-								MessageType.ContextMenuCommand,
-								MessageType.RoleSubscriptionPurchase,
-								MessageType.GuildApplicationPremiumSubscription,
-							].includes(message.type),
-						)),
+						bot /
+						(1 +
+							Number(
+								![
+									MessageType.Default,
+									MessageType.GuildBoost,
+									MessageType.GuildBoostTier1,
+									MessageType.GuildBoostTier2,
+									MessageType.GuildBoostTier3,
+									MessageType.Reply,
+									MessageType.ChatInputCommand,
+									MessageType.ContextMenuCommand,
+									MessageType.RoleSubscriptionPurchase,
+									MessageType.GuildApplicationPremiumSubscription,
+								].includes(message.type),
+							)),
 				),
 			),
 	);
@@ -159,7 +159,7 @@ async function sendLevelUpMessage(member: GuildMember, newXp: number, url?: stri
 						type: ComponentType.ActionRow,
 					},
 				]
-				: [],
+			:	[],
 
 		embeds: [
 			{
@@ -184,8 +184,9 @@ async function sendLevelUpMessage(member: GuildMember, newXp: number, url?: stri
 
 				footer: {
 					icon_url: config.guild.iconURL() ?? undefined,
-					text: `View your XP with /xp rank${pingsConfigured === undefined ? "" : "\nToggle pings via /settings"
-						}`,
+					text: `View your XP with /xp rank${
+						pingsConfigured === undefined ? "" : "\nToggle pings via /settings"
+					}`,
 				},
 			},
 		],
@@ -198,9 +199,8 @@ export async function checkXPRoles(member: GuildMember): Promise<void> {
 		const level = getLevelForXp(xp);
 		if (member.id !== "916740508368384010")
 			await (level >= ESTABLISHED_THRESHOLD ?
-
 				member.roles.add(config.roles.established, "Reached level 5")
-				: member.roles.remove(config.roles.established, "Lost level 5"));
+			:	member.roles.remove(config.roles.established, "Lost level 5"));
 	}
 
 	if (config.roles.active && !member.roles.resolve(config.roles.active.id)) {
@@ -215,7 +215,6 @@ export async function checkXPRoles(member: GuildMember): Promise<void> {
 			) >= ACTIVE_THRESHOLD_TWO;
 		if (member.id !== "916740508368384010")
 			if (isActive) {
-
 				await member.roles.add(config.roles.active, "Active");
 				await config.channels.bots?.send({
 					allowedMentions:

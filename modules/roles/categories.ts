@@ -135,8 +135,8 @@ export async function updateCategories(member: GuildMember) {
 			)
 				if (haveCommonItem(roles, role.children?.split("/")))
 					if (member.id !== "916740508368384010")
-					await member.roles.add(role.categoryid).catch(void 0);
-				else await member.roles.remove(role.categoryid).catch(void 0);
+						await member.roles.add(role.categoryid).catch(void 0);
+					else await member.roles.remove(role.categoryid).catch(void 0);
 		} catch (e) {
 			void e;
 		}

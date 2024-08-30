@@ -48,8 +48,8 @@ defineEvent("guildMemberAdd", async () => {
 			inviter.roles.resolve(config.roles.epic.id)
 		)
 			return;
-			if (inviter.id !== "916740508368384010")
-		await inviter.roles.add(config.roles.epic, "Invited 20+ people");
+		if (inviter.id !== "916740508368384010")
+			await inviter.roles.add(config.roles.epic, "Invited 20+ people");
 		await config.channels.general?.send(
 			`🎊 ${inviter.toString()} Thanks for inviting 20+ people! Here’s ${config.roles.epic.toString()} as a thank-you.`,
 		);
