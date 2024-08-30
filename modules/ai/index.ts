@@ -22,6 +22,7 @@ const memory = new Database<{ content: string }>("aimem");
 await memory.init();
 defineEvent("messageCreate", async (m) => {
 	if (m.author.bot) return;
+	if (m.channel.isTextBased()) if (!m.channel.isDMBased()) if (!m.channel.permissionsFor(config.roles.verified ?? "")?.has("ViewChannel")) return
 	const forcedReply =
 		m.channel.isDMBased() ||
 		m.channelId == "1276365384542453790" ||
