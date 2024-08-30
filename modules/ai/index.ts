@@ -9,11 +9,11 @@ import { gracefulFetch } from "../../util/promises.js";
 import { updateStatus } from "./model-status.js";
 import { prompts, freeWillPrompts, dmPrompts } from "./prompts.js";
 
-let sharedHistory: { role: string; content: string | any[]; type?: string; }[] | undefined = []
+let sharedHistory: { role: string; content: string | any[]; type?: string }[] | undefined = [];
 
 const normalAi = new AIChat("https://reverse.mubi.tech/v1/chat/completions", sharedHistory, 40);
 const freeWill = new AIChat("https://reverse.mubi.tech/v1/chat/completions", sharedHistory, 10);
-let dmAis: { [id: string]: AIChat } = {}
+let dmAis: { [id: string]: AIChat } = {};
 
 prompts.forEach((p) => normalAi.sticky(p));
 freeWillPrompts.forEach((p) => freeWill.sticky(p ?? ""));
@@ -22,24 +22,26 @@ const memory = new Database<{ content: string }>("aimem");
 await memory.init();
 defineEvent("messageCreate", async (m) => {
 	if (m.author.bot) return;
-	const forcedReply = (
+	const forcedReply =
 		m.channel.isDMBased() ||
 		m.channelId == "1276365384542453790" ||
-		m.mentions.has(client.user)
-	);
-	const ai = m.channel.isDMBased() ? (() => {
-		const userAi = dmAis[m.channel.id]
-		if (userAi) return userAi
-		console.log("making new ai for " + m.author.displayName)
-		const newAi = new AIChat("https://reverse.mubi.tech/v1/chat/completions", [], 40);
-		dmPrompts.forEach((p) => newAi.sticky(p ?? ''))
-		dmAis[m.channel.id] = newAi
-		return newAi
-	})() : normalAi
-	
+		m.mentions.has(client.user);
+	const ai =
+		m.channel.isDMBased() ?
+			(() => {
+				const userAi = dmAis[m.channel.id];
+				if (userAi) return userAi;
+				console.log("making new ai for " + m.author.displayName);
+				const newAi = new AIChat("https://reverse.mubi.tech/v1/chat/completions", [], 40);
+				dmPrompts.forEach((p) => newAi.sticky(p ?? ""));
+				dmAis[m.channel.id] = newAi;
+				return newAi;
+			})()
+		:	normalAi;
+
 	if (!forcedReply) {
 		const reference = m.reference ? await m.fetchReference() : null;
-		let response = (
+		let response =
 			(
 				m.attachments
 					.filter((attachment) =>
@@ -65,15 +67,17 @@ defineEvent("messageCreate", async (m) => {
 					],
 					"user",
 					"complex",
-					true
+					true,
 				)
-				: await freeWill.send(
-					`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,"user","text",true
-				)
-		)
+			:	await freeWill.send(
+					`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
+					"user",
+					"text",
+					true,
+				);
 		const commands = parseCommands(response);
 
-		if (!(commands.some((c) => c.name == "continue"))) return
+		if (!commands.some((c) => c.name == "continue")) return;
 	}
 	let result = [];
 	let intCount = 0;
@@ -111,7 +115,7 @@ defineEvent("messageCreate", async (m) => {
 					"user",
 					"complex",
 				)
-				: await ai.send(
+			:	await ai.send(
 					`${!forcedReply ? "!!!you are only answering this message because your freewill system detected it as important\n" : ""}${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
 				);
 		//[...m.attachments.filter((attachment) => attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i)).map(v => v.url)]

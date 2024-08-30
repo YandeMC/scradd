@@ -8,6 +8,7 @@ export class AIChat {
 
 	/**
 	 * Constructs an AIChat instance.
+	 *
 	 * @param apiUrl - The API endpoint URL.
 	 * @param sharedHistory - An external array to store shared messages.
 	 * @param maxMessages - The maximum number of messages to retain in history.
@@ -15,7 +16,7 @@ export class AIChat {
 	constructor(
 		apiUrl: string,
 		sharedHistory?: { role: string; content: string | any[]; type?: string }[],
-		maxMessages: number = 100
+		maxMessages: number = 100,
 	) {
 		this.apiUrl = apiUrl;
 		this.history = sharedHistory || [];
@@ -24,6 +25,7 @@ export class AIChat {
 
 	/**
 	 * Sends a message to the AI and returns the AI's response.
+	 *
 	 * @param message - The message content.
 	 * @param role - The role of the message sender (default: "user").
 	 * @param type - The type of message (default: "text").
@@ -33,7 +35,7 @@ export class AIChat {
 		message: string | any[],
 		role: string = "user",
 		type: "text" | "image" | "complex" = "text",
-		dontSave = false
+		dontSave = false,
 	): Promise<string> {
 		this.inform(message, role, type);
 
@@ -55,14 +57,14 @@ export class AIChat {
 			await updateModels();
 			if (aiModel?.name != "All Down") return "[nothing]";
 		}
-		if (!dontSave						)
-		this.inform(reply, "assistant", "text");
+		if (!dontSave) this.inform(reply, "assistant", "text");
 
 		return reply;
 	}
 
 	/**
 	 * Adds a message to the shared history.
+	 *
 	 * @param content - The message content.
 	 * @param role - The role of the message sender (default: "system").
 	 * @param type - The type of message (default: "text").
@@ -80,6 +82,7 @@ export class AIChat {
 
 	/**
 	 * Adds a sticky message unique to this AIChat instance.
+	 *
 	 * @param content - The sticky message content.
 	 * @param role - The role of the message sender (default: "system").
 	 * @param type - The type of message (default: "text").
@@ -94,6 +97,7 @@ export class AIChat {
 
 	/**
 	 * Retrieves the full chat history, including sticky messages.
+	 *
 	 * @returns An array of messages.
 	 */
 	getChatHistory(): { role: string; content: string | any[]; type?: string }[] {
@@ -102,6 +106,7 @@ export class AIChat {
 
 	/**
 	 * Combines sticky messages with shared history for API requests.
+	 *
 	 * @returns An array of messages.
 	 */
 	private getEffectiveHistory(): { role: string; content: string | any[]; type?: string }[] {

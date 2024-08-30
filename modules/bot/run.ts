@@ -56,7 +56,7 @@ export default async function getCode(
 
 export async function run(interaction: ModalSubmitInteraction): Promise<void> {
 	await interaction.deferReply();
-	
+
 	const code = interaction.fields.getTextInputValue("code").trim();
 	try {
 		const output: unknown = await eval(
