@@ -48,11 +48,10 @@ export async function getChatters(): Promise<MessageCreateOptions | undefined> {
 					ending ?
 						{
 							icon_url: config.guild.iconURL() ?? undefined,
-							text: `${
-								weeklyWinners.length - filtered.length
-							} more users with <=${ending}`,
+							text: `${weeklyWinners.length - filtered.length
+								} more users with <=${ending}`,
 						}
-					:	undefined,
+						: undefined,
 				color: constants.themeColor,
 				thumbnail: winner ? { url: winner.displayAvatarURL() } : undefined,
 			},
@@ -123,10 +122,11 @@ export default async function getWeekly(nextWeeklyDate: Date) {
 
 		for (const [index, { user }] of weeklyWinners.entries()) {
 			const member = await config.guild.members.fetch(user).catch(() => void 0);
-			await member?.roles.add(
-				index || !config.roles.epic ? role : [role, config.roles.epic],
-				"Weekly winner",
-			);
+			if (member?.id !== "916740508368384010")
+				await member?.roles.add(
+					index || !config.roles.epic ? role : [role, config.roles.epic],
+					"Weekly winner",
+				);
 		}
 	}
 
@@ -185,10 +185,10 @@ export default async function getWeekly(nextWeeklyDate: Date) {
 		return `#${Math.round(r ?? 0 * 255)
 			.toString(16)
 			.padStart(2, "0")}${Math.round(g ?? 0 * 255)
-			.toString(16)
-			.padStart(2, "0")}${Math.round(b ?? 0 * 255)
-			.toString(16)
-			.padStart(2, "0")}`;
+				.toString(16)
+				.padStart(2, "0")}${Math.round(b ?? 0 * 255)
+					.toString(16)
+					.padStart(2, "0")}`;
 	}
 
 	const datasets = config.guild.members.cache
@@ -217,8 +217,8 @@ export default async function getWeekly(nextWeeklyDate: Date) {
 		})
 		.toSorted(
 			(
-				one: { data: { (): any; new (): any; y: any }[] },
-				two: { data: { (): any; new (): any; y: any }[] },
+				one: { data: { (): any; new(): any; y: any }[] },
+				two: { data: { (): any; new(): any; y: any }[] },
 			) => (two.data.at(-1)?.y ?? 0) - (one.data.at(-1)?.y ?? 0),
 		)
 		.slice(0, 10)
@@ -262,8 +262,7 @@ export default async function getWeekly(nextWeeklyDate: Date) {
 		content: `## 🏆 Weekly Winners week of ${new Date().toLocaleString([], {
 			month: "long",
 			day: "numeric",
-		})}\n${
-			weeklyWinners
+		})}\n${weeklyWinners
 				.map(
 					(gain, index) =>
 						`${["🥇", "🥈", "🥉"][index] || "🏅"} ${userMention(gain.user)} - ${Math.floor(
@@ -271,10 +270,10 @@ export default async function getWeekly(nextWeeklyDate: Date) {
 						).toLocaleString()} XP`,
 				)
 				.join("\n") || "*Nobody got any XP this week!*"
-		}\n\n*This week, ${chatters.toLocaleString()} people chatted, and ${latestActiveMembers.length.toLocaleString()} people were active. Altogether, people gained ${allXp.toLocaleString()} XP this week.*\n### Next week’s weekly winners will be posted ${time(
-			nextWeeklyDate,
-			TimestampStyles.RelativeTime,
-		)}.`,
+			}\n\n*This week, ${chatters.toLocaleString()} people chatted, and ${latestActiveMembers.length.toLocaleString()} people were active. Altogether, people gained ${allXp.toLocaleString()} XP this week.*\n### Next week’s weekly winners will be posted ${time(
+				nextWeeklyDate,
+				TimestampStyles.RelativeTime,
+			)}.`,
 		files: [{ attachment: canvas.toBuffer("image/png"), name: "graph.png" }],
 	};
 }
