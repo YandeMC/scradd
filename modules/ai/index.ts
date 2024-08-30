@@ -11,8 +11,8 @@ import { prompts, freeWillPrompts, dmPrompts } from "./prompts.js";
 
 let sharedHistory: { role: string; content: string | any[]; type?: string }[] | undefined = [];
 
-const normalAi = new AIChat("https://reverse.mubi.tech/v1/chat/completions", sharedHistory, 40);
-const freeWill = new AIChat("https://reverse.mubi.tech/v1/chat/completions", sharedHistory, 10);
+const normalAi = new AIChat("https://reverse.mubi.tech/v1/chat/completions", sharedHistory, 100);
+const freeWill = new AIChat("https://reverse.mubi.tech/v1/chat/completions", sharedHistory, 100);
 let dmAis: { [id: string]: AIChat } = {};
 
 prompts.forEach((p) => normalAi.sticky(p));
@@ -32,7 +32,7 @@ defineEvent("messageCreate", async (m) => {
 				const userAi = dmAis[m.channel.id];
 				if (userAi) return userAi;
 				console.log("making new ai for " + m.author.displayName);
-				const newAi = new AIChat("https://reverse.mubi.tech/v1/chat/completions", [], 40);
+				const newAi = new AIChat("https://reverse.mubi.tech/v1/chat/completions", [], 100);
 				dmPrompts.forEach((p) => newAi.sticky(p ?? ""));
 				dmAis[m.channel.id] = newAi;
 				return newAi;
