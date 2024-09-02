@@ -45,6 +45,7 @@ export function shouldLog(channel: TextBasedChannel | null): boolean {
 }
 
 export enum LogSeverity {
+	
 	/**
 	 * Critical alerts that require actions in response. All mods should read this channel, preferably with
 	 * notifications on.
@@ -62,6 +63,7 @@ export enum LogSeverity {
 	 * - Raid alerts.
 	 */
 	Alert,
+	AiAlerts,
 	/**
 	 * Updates that are important to know or not easily noticeable otherwise. All mods should read.
 	 *
@@ -105,11 +107,11 @@ export enum LogSeverity {
 	 */
 	Resource,
 	/**
-	 * Logged for lurkurs,
+	 * for errors when shit fucks up,
 	 *
-	 * - User changed presence.
+	 * - FUCK FUCK ERROR AAAAAAAAAAA.
 	 */
-	Lurk,
+	TheBotFuckedUp,
 }
 
 export default async function log(
@@ -188,7 +190,7 @@ export default async function log(
 export async function getLoggingThread(group: LogSeverity): Promise<TextChannel | ThreadChannel> {
 	if (group === LogSeverity.Alert) return config.channels.modlogs;
 
-	const name = `${group}) ${LogSeverity[group]
+	const name = `${group - 1}) ${LogSeverity[group]
 		.replaceAll(/([a-z])([A-Z])/g, "$1 $2")
 		.toLowerCase()}s`;
 

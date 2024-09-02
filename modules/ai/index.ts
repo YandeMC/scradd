@@ -8,6 +8,7 @@ import { getLevelForXp } from "../xp/misc.js";
 import { gracefulFetch } from "../../util/promises.js";
 import { updateStatus } from "./model-status.js";
 import { prompts, freeWillPrompts, dmPrompts } from "./prompts.js";
+import log, { LoggingEmojis, LogSeverity } from "../logging/misc.js";
 
 let sharedHistory: { role: string; content: string | any[]; type?: string }[] | undefined = [];
 
@@ -208,10 +209,8 @@ async function executeCommands(
 				output.push("[time]: " + new Date().toString());
 				break;
 			case "alert":
-				await config.channels.mod.send({
-					content: command.option + "\n" + m.url,
-					allowedMentions: { parse: ["everyone", "roles"] },
-				});
+				await 
+				log(`${LoggingEmojis.Bot} ${command.option + "\n" + m.url}`,LogSeverity.AiAlerts)
 				break;
 			case "store":
 				store(command.option);
