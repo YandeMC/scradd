@@ -45,7 +45,6 @@ export function shouldLog(channel: TextBasedChannel | null): boolean {
 }
 
 export enum LogSeverity {
-	
 	/**
 	 * Critical alerts that require actions in response. All mods should read this channel, preferably with
 	 * notifications on.
@@ -107,7 +106,7 @@ export enum LogSeverity {
 	 */
 	Resource,
 	/**
-	 * for errors when shit fucks up,
+	 * For errors when shit fucks up,
 	 *
 	 * - FUCK FUCK ERROR AAAAAAAAAAA.
 	 */

@@ -209,8 +209,10 @@ async function executeCommands(
 				output.push("[time]: " + new Date().toString());
 				break;
 			case "alert":
-				await 
-				log(`${LoggingEmojis.Bot} ${command.option + "\n" + m.url}`,LogSeverity.AiAlerts)
+				await log(
+					`${LoggingEmojis.Bot} ${command.option + "\n" + m.url}`,
+					LogSeverity.AiAlerts,
+				);
 				break;
 			case "store":
 				store(command.option);
