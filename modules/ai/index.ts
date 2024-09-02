@@ -51,7 +51,7 @@ defineEvent("messageCreate", async (m) => {
 					.filter((attachment) =>
 						attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i),
 					)
-										.map(() => "").length
+					.map(() => "").length
 			) ?
 				await freeWill.send(
 					[
