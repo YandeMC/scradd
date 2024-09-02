@@ -80,7 +80,7 @@ defineEvent("messageCreate", async (m) => {
 					true,
 				);
 		const commands = parseCommands(response);
-
+		if (!commands) return
 		if (!commands.some((c) => c.name == "continue")) return;
 	}
 	let result = [];
@@ -126,6 +126,7 @@ defineEvent("messageCreate", async (m) => {
 
 		do {
 			const commands = parseCommands(response);
+			if (!commands) return
 			result = await executeCommands(m, commands);
 			if (result.length) response = await ai.send(result.join("\n"), "system");
 		} while (result.length);
@@ -138,7 +139,7 @@ defineEvent("messageCreate", async (m) => {
 function parseCommands(input: string) {
 	const commands: { name: string; option: string }[] = [];
 	let lastCommand: { option: any; name: string } | null = null;
-
+	if (!input) return 
 	input
 		.trim()
 		.split("\n")
@@ -210,7 +211,7 @@ async function executeCommands(
 				break;
 			case "alert":
 				await 
-				log(`${LoggingEmojis.Bot} ${command.option + "\n" + m.url}`,LogSeverity.AiAlerts)
+				log(`${LoggingEmojis.Bot} ${command.option + "\n" + m.url}`,LogSeverity.AiAlerts	)
 				break;
 			case "store":
 				store(command.option);
