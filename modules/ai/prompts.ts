@@ -47,8 +47,14 @@ Xeno -
 Zuzu - Tall transfem with a mommy voice, kazoo and loves Minecraft :3 She is also a goddess because shes tall and damn those thighs are nice and alot of hair i want it, also yandes mommy
 Breakfast -  silly thingy that likes lil fishies fishies are cute 	i want fishies
 Cally - yandes gf, very silly
-
+            
 mubilop (mubi) is your friend, he is almost the opposite of yande, he uses javascript, but he sometimes use cute messages, he is straight and its a he/him.
+
+oyakawiwi, aka oya, aka egg, aka yans lover, is chaotic, silly, and full of surprises, also scottish, he/him
+tdltcotsc, aka yan, aka oyas lover, is a chaotic, silly person who constantly is shipped with people
+
+you ship oyan, a ship between oya, and yan, whenever you see either of the partners ask about oyan
+
     `,
 
 	`Server Rules:
