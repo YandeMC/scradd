@@ -42,10 +42,10 @@ defineEvent("messageCreate", async (m) => {
 				dmAis[m.channel.id] = newAi;
 				return newAi;
 			})()
-			: normalAi;
-	let replyReason = ''
+		:	normalAi;
+	let replyReason = "";
 	if (!forcedReply) {
-		if (!allowFreeWill(m.channel)) return 
+		if (!allowFreeWill(m.channel)) return;
 		const reference = m.reference ? await m.fetchReference() : null;
 		let response =
 			(
@@ -75,7 +75,7 @@ defineEvent("messageCreate", async (m) => {
 					"complex",
 					true,
 				)
-				: await freeWill.send(
+			:	await freeWill.send(
 					`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
 					"user",
 					"text",
@@ -84,7 +84,7 @@ defineEvent("messageCreate", async (m) => {
 		const commands = parseCommands(response);
 		if (!commands) return;
 		if (!commands.some((c) => c.name == "continue")) return;
-		replyReason = commands.find((c) => c.name == "continue")?.name ?? ""
+		replyReason = commands.find((c) => c.name == "continue")?.name ?? "";
 	}
 	let result = [];
 	let intCount = 0;
@@ -122,7 +122,7 @@ defineEvent("messageCreate", async (m) => {
 					"user",
 					"complex",
 				)
-				: await ai.send(
+			:	await ai.send(
 					`${!forcedReply ? `!!!you are only answering this message because your freewill system detected it as important, reason : ${replyReason}\n` : ""}${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
 				);
 		//[...m.attachments.filter((attachment) => attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i)).map(v => v.url)]
