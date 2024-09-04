@@ -105,7 +105,7 @@ export class AIChat {
 	}
 
 	getStickies() {
-		return this.stickyMessages
+		return this.stickyMessages;
 	}
 
 	/**
