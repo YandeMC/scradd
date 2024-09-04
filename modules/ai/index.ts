@@ -85,7 +85,7 @@ defineEvent("messageCreate", async (m) => {
 					"user",
 					"text",
 				);
-				return
+			return;
 		}
 
 		let response =
