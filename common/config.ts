@@ -92,7 +92,10 @@ async function getConfig() {
 			admin: getChannel("admin", ChannelType.GuildText, "start") ?? modChannel,
 
 			general: getChannel("general", ChannelType.GuildText, "full"),
-			general2 : getChannel("general2", ChannelType.GuildText, "full") || getChannel("general-2", ChannelType.GuildText, "full") || getChannel("alternate-universe", ChannelType.GuildText, "full"),
+			general2:
+				getChannel("general2", ChannelType.GuildText, "full") ||
+				getChannel("general-2", ChannelType.GuildText, "full") ||
+				getChannel("alternate-universe", ChannelType.GuildText, "full"),
 
 			updates: getChannel("updates", ChannelType.GuildText, "partial"),
 			suggestions: getChannel("suggestions", ChannelType.GuildForum),
@@ -109,7 +112,7 @@ async function getConfig() {
 			help: getChannel("help", ChannelType.GuildForum, "partial"),
 			radio: getChannel("radio", ChannelType.GuildVoice, "partial"),
 			queer: getChannel("qdex", ChannelType.GuildText, "partial"),
-			memes: getChannel("memes", ChannelType.GuildText, "partial")
+			memes: getChannel("memes", ChannelType.GuildText, "partial"),
 		},
 
 		roles: {
