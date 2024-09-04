@@ -1,7 +1,7 @@
 import type { TextChannel, ForumChannel, Channel } from "discord.js";
 import config from "../../common/config.js";
 
-const disallowFreeWillChannels: (TextChannel | ForumChannel)[] = [
+const disallowFreeWillChannels: (TextChannel | ForumChannel | undefined)[] = [
     config.channels.general,
     config.channels.memes,
     config.channels.queer,
@@ -11,7 +11,7 @@ const disallowFreeWillChannels: (TextChannel | ForumChannel)[] = [
     config.channels.intros,
     config.channels.verify,
     config.channels.help
-].filter(c => !!c)
+].filter(c => !!c && c !== undefined)
 
 
 export const allowFreeWill = (channel: Channel): boolean => {
@@ -25,4 +25,4 @@ export const allowFreeWill = (channel: Channel): boolean => {
 
 
 
-const id = (c: { id: string }) => c.id
+const id = (c?: { id?: string }) => c?.id

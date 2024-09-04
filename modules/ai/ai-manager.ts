@@ -101,7 +101,11 @@ export class AIChat {
 	 * @returns An array of messages.
 	 */
 	getChatHistory(): { role: string; content: string | any[]; type?: string }[] {
-		return [...this.stickyMessages, ...this.history];
+		return [...this.history];
+	}
+
+	getStickies() {
+		return this.stickyMessages
 	}
 
 	/**

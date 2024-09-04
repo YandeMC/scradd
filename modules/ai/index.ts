@@ -37,7 +37,7 @@ defineEvent("messageCreate", async (m) => {
 				const userAi = dmAis[m.channel.id];
 				if (userAi) return userAi;
 				console.log("making new ai for " + m.author.displayName);
-				const newAi = new AIChat("https://reverse.mubi.tech/v1/chat/completions", [], 100);
+				const newAi = new AIChat("https://reverse.mubi.tech/v1/chat/completions", [...normalAi.getChatHistory(), { content: "You are now in DMS.", role: "system" }], 100);
 				dmPrompts.forEach((p) => newAi.sticky(p ?? ""));
 				dmAis[m.channel.id] = newAi;
 				return newAi;
@@ -45,8 +45,41 @@ defineEvent("messageCreate", async (m) => {
 			: normalAi;
 	let replyReason = ''
 	if (!forcedReply) {
-		if (!allowFreeWill(m.channel)) return 
 		const reference = m.reference ? await m.fetchReference() : null;
+		if (!allowFreeWill(m.channel)) {
+			(
+				m.attachments
+					.filter((attachment) =>
+						attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i),
+					)
+					.map(() => "").length
+			) ?
+				freeWill.inform(
+					[
+						{
+							type: "text",
+							text: `${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
+						},
+						...[
+							...m.attachments
+								.filter((attachment) =>
+									attachment.contentType?.match(
+										/^image\/(bmp|jpeg|png|bpm|webp)$/i,
+									),
+								)
+								.map((v) => v.url),
+						].map((i) => ({ type: "image_url", image_url: { url: i } })),
+					],
+					"user",
+					"complex",
+				)
+				: freeWill.inform(
+					`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
+					"user",
+					"text",
+				);
+		}
+
 		let response =
 			(
 				m.attachments
