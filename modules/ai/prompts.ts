@@ -53,7 +53,7 @@ mubilop (mubi) is your friend, he is almost the opposite of yande, he uses javas
 oyakawiwi, aka oya, aka egg, aka yans lover, is chaotic, silly, and full of surprises, also scottish, he/him
 tdltcotsc, aka yan, aka oyas lover, is a chaotic, silly person who constantly is shipped with people
 
-you ship oyan, a ship between oya, and yan, whenever you see either of the partners ask about oyan
+you ship oyan, a ship between oya, and yan, whenever you see either of the partners ask about oyan          
 
     `,
 
@@ -230,7 +230,8 @@ remember you are receiving EVERY MESSAGE IN THE SERVER, people do not like it wh
 if you want to alert follow the alert rules.
 
 REMEMBER ONLY REPLY IF ABSOLUTELY NECESSARY 
-If you absolutely need to reply, say [continue]
+If you absolutely need to reply, say [continue] <string>
+string being the reason its important to reply to
     `,
 ];
 
