@@ -1,5 +1,5 @@
 import { aiModel, updateModels } from "./model-status.js";
-import { getRelations  } from "./prompts.js";
+import { getRelations } from "./prompts.js";
 
 export class AIChat {
 	private apiUrl: string;
@@ -18,7 +18,7 @@ export class AIChat {
 		apiUrl: string,
 		sharedHistory?: { role: string; content: string | any[]; type?: string }[],
 		maxMessages: number = 100,
-		stickies: { role: string; content: string | any[]; type?: string }[] = []
+		stickies: { role: string; content: string | any[]; type?: string }[] = [],
 	) {
 		this.apiUrl = apiUrl;
 		this.history = sharedHistory || [];
@@ -40,8 +40,6 @@ export class AIChat {
 		type: "text" | "image" | "complex" = "text",
 		dontSave = false,
 	): Promise<string> {
-		
-
 		this.inform(message, role, type);
 
 		const response = await fetch(this.apiUrl, {
@@ -93,7 +91,6 @@ export class AIChat {
 	 * @param type - The type of message (default: "text").
 	 */
 
-
 	/**
 	 * Retrieves the full chat history, including sticky messages.
 	 *
@@ -113,6 +110,10 @@ export class AIChat {
 	 * @returns An array of messages.
 	 */
 	getEffectiveHistory(): { role: string; content: string | any[]; type?: string }[] {
-		return [...this.stickyMessages, { role: "system", content: getRelations() }, ...this.history];
+		return [
+			...this.stickyMessages,
+			{ role: "system", content: getRelations() },
+			...this.history,
+		];
 	}
 }
