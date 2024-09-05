@@ -7,26 +7,28 @@ import { xpDatabase } from "../xp/util.js";
 import { getLevelForXp } from "../xp/misc.js";
 import { gracefulFetch } from "../../util/promises.js";
 import { updateStatus } from "./model-status.js";
-import { prompts, freeWillPrompts, dmPrompts } from "./prompts.js";
+import { prompts, freeWillPrompts, dmPrompts, people } from "./prompts.js";
 import log, { LoggingEmojis, LogSeverity } from "../logging/misc.js";
 import { allowFreeWill } from "./misc.js";
 
 let sharedHistory: { role: string; content: string | any[]; type?: string }[] | undefined = [];
 
-const normalAi = new AIChat("https://reverse.mubi.tech/v1/chat/completions", sharedHistory, 100);
-const freeWill = new AIChat("https://reverse.mubi.tech/v1/chat/completions", sharedHistory, 100);
+const normalAi = new AIChat("https://reverse.mubi.tech/v1/chat/completions", sharedHistory, 100, prompts.map(p => ({ content: `${p}`, role: "system" })));
+const freeWill = new AIChat("https://reverse.mubi.tech/v1/chat/completions", sharedHistory, 100, freeWillPrompts.map(p => ({ content: `${p}`, role: "system" })));
 let dmAis: { [id: string]: AIChat } = {};
 
-prompts.forEach((p) => normalAi.sticky(p));
-freeWillPrompts.forEach((p) => freeWill.sticky(p ?? ""));
 
 const memory = new Database<{ content: string }>("aimem");
+
 await memory.init();
 defineEvent("messageCreate", async (m) => {
 	if (m.author.bot) return;
-	if (m.channel.isTextBased())
-		if (!m.channel.isDMBased())
-			if (!m.channel.permissionsFor(config.roles.verified ?? "")?.has("ViewChannel")) return;
+	// if (m.channel.isTextBased())
+	// 	if (!m.channel.isDMBased())
+	// 		if (!m.channel.permissionsFor(config.roles.verified?.id ?? "")?.has("ViewChannel")) 
+	// 			if (!!config.roles.verified?.id	) return
+	console.log(normalAi.getEffectiveHistory())	
+
 	const forcedReply =
 		m.channel.isDMBased() ||
 		m.channelId == "1276365384542453790" ||
@@ -44,49 +46,52 @@ defineEvent("messageCreate", async (m) => {
 						{ content: "You are now in DMS.", role: "system" },
 					],
 					100,
+					dmPrompts.map(p => ({ content: `${p}`, role: "system" }))
 				);
-				dmPrompts.forEach((p) => newAi.sticky(p ?? ""));
 				dmAis[m.channel.id] = newAi;
 				return newAi;
 			})()
-		:	normalAi;
+			: normalAi;
 	let replyReason = "";
+	const canReply = allowFreeWill(m.channel) || forcedReply
+
+	console.log(canReply, forcedReply)
 	if (!forcedReply) {
 		const reference = m.reference ? await m.fetchReference() : null;
-		if (!allowFreeWill(m.channel)) {
-			(
-				m.attachments
-					.filter((attachment) =>
-						attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i),
-					)
-					.map(() => "").length
-			) ?
-				freeWill.inform(
-					[
-						{
-							type: "text",
-							text: `${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
-						},
-						...[
-							...m.attachments
-								.filter((attachment) =>
-									attachment.contentType?.match(
-										/^image\/(bmp|jpeg|png|bpm|webp)$/i,
-									),
-								)
-								.map((v) => v.url),
-						].map((i) => ({ type: "image_url", image_url: { url: i } })),
-					],
-					"user",
-					"complex",
-				)
-			:	freeWill.inform(
-					`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
-					"user",
-					"text",
-				);
-			return;
-		}
+		// if (!allowFreeWill(m.channel)) {
+		// 	(
+		// 		m.attachments
+		// 			.filter((attachment) =>
+		// 				attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i),
+		// 			)
+		// 			.map(() => "").length
+		// 	) ?
+		// 		freeWill.inform(
+		// 			[
+		// 				{
+		// 					type: "text",
+		// 					text: `${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
+		// 				},
+		// 				...[
+		// 					...m.attachments
+		// 						.filter((attachment) =>
+		// 							attachment.contentType?.match(
+		// 								/^image\/(bmp|jpeg|png|bpm|webp)$/i,
+		// 							),
+		// 						)
+		// 						.map((v) => v.url),
+		// 				].map((i) => ({ type: "image_url", image_url: { url: i } })),
+		// 			],
+		// 			"user",
+		// 			"complex",
+		// 		)
+		// 	:	freeWill.inform(
+		// 			`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
+		// 			"user",
+		// 			"text",
+		// 		);
+		// 	return;
+		// }
 
 		let response =
 			(
@@ -116,7 +121,7 @@ defineEvent("messageCreate", async (m) => {
 					"complex",
 					true,
 				)
-			:	await freeWill.send(
+				: await freeWill.send(
 					`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
 					"user",
 					"text",
@@ -163,7 +168,7 @@ defineEvent("messageCreate", async (m) => {
 					"user",
 					"complex",
 				)
-			:	await ai.send(
+				: await ai.send(
 					`${!forcedReply ? `!!!you are only answering this message because your freewill system detected it as important, reason : ${replyReason}\n` : ""}${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
 				);
 		//[...m.attachments.filter((attachment) => attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i)).map(v => v.url)]
@@ -171,7 +176,7 @@ defineEvent("messageCreate", async (m) => {
 		do {
 			const commands = parseCommands(response);
 			if (!commands) return;
-			result = await executeCommands(m, commands);
+			result = await executeCommands(m, commands, canReply);
 			if (result.length) response = await ai.send(result.join("\n"), "system");
 		} while (result.length);
 	} catch (error) {
@@ -212,6 +217,7 @@ async function executeCommands(
 		name: string;
 		option: string;
 	}[],
+	canReply: boolean
 ) {
 	let output: string[] = [];
 	if (commands.length == 0)
@@ -223,7 +229,7 @@ async function executeCommands(
 			case "nothing":
 				break;
 			case "reply":
-				await m.reply(command.option.replaceAll("///", "\n")).catch(() => undefined);
+				if (canReply) await m.reply(command.option).catch(() => undefined);
 				break;
 			case "react":
 				await (async () => {
@@ -279,6 +285,22 @@ async function executeCommands(
 					await m.reply(gifs.slice(0, 10).at(Math.round(Math.random() * 10))?.src ?? "");
 				}
 				break;
+			case "updatedesc":
+				{
+
+					const parts = command.option.split(" ")
+					const id = parts.shift() ?? ""
+					if (id !== m.author.id) break
+					const desc = parts.join(" ")
+					console.log(id,desc)
+					let data = [...people.data]
+					const index = data.findIndex((a) => a.id == id)
+					if (index === -1) data.push({ id, desc })
+					else
+						data[index] = ({ id, desc })
+
+					people.data = data
+				} break
 			default:
 				output.push(`[${command.name}]: ${command.name} command not found`);
 		}

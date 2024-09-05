@@ -1,4 +1,5 @@
 import { aiModel, updateModels } from "./model-status.js";
+import { getRelations  } from "./prompts.js";
 
 export class AIChat {
 	private apiUrl: string;
@@ -17,10 +18,12 @@ export class AIChat {
 		apiUrl: string,
 		sharedHistory?: { role: string; content: string | any[]; type?: string }[],
 		maxMessages: number = 100,
+		stickies: { role: string; content: string | any[]; type?: string }[] = []
 	) {
 		this.apiUrl = apiUrl;
 		this.history = sharedHistory || [];
 		this.maxMessages = maxMessages;
+		this.stickyMessages = stickies || [];
 	}
 
 	/**
@@ -37,6 +40,8 @@ export class AIChat {
 		type: "text" | "image" | "complex" = "text",
 		dontSave = false,
 	): Promise<string> {
+		
+
 		this.inform(message, role, type);
 
 		const response = await fetch(this.apiUrl, {
@@ -87,13 +92,7 @@ export class AIChat {
 	 * @param role - The role of the message sender (default: "system").
 	 * @param type - The type of message (default: "text").
 	 */
-	sticky(
-		content: string | any[],
-		role: string = "system",
-		type: "text" | "image" | "complex" = "text",
-	): void {
-		this.stickyMessages.push({ role, content, type });
-	}
+
 
 	/**
 	 * Retrieves the full chat history, including sticky messages.
@@ -113,7 +112,7 @@ export class AIChat {
 	 *
 	 * @returns An array of messages.
 	 */
-	private getEffectiveHistory(): { role: string; content: string | any[]; type?: string }[] {
-		return [...this.stickyMessages, ...this.history];
+	getEffectiveHistory(): { role: string; content: string | any[]; type?: string }[] {
+		return [...this.stickyMessages, { role: "system", content: getRelations() }, ...this.history];
 	}
 }
