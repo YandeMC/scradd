@@ -23,10 +23,10 @@ const memory = new Database<{ content: string }>("aimem");
 await memory.init();
 defineEvent("messageCreate", async (m) => {
 	if (m.author.bot) return;
-	// if (m.channel.isTextBased())
-	// 	if (!m.channel.isDMBased())
-	// 		if (!m.channel.permissionsFor(config.roles.verified?.id ?? "")?.has("ViewChannel")) 
-	// 			if (!!config.roles.verified?.id	) return
+	if (m.channel.isTextBased())
+		if (!m.channel.isDMBased())
+			if (!m.channel.permissionsFor(config.roles.verified?.id ?? "")?.has("ViewChannel")) 
+				if (!!config.roles.verified?.id	) return
 	console.log(normalAi.getEffectiveHistory())	
 
 	const forcedReply =
