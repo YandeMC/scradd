@@ -165,7 +165,9 @@ defineEvent("presenceUpdate", async (_, newPresence) => {
 		);
 	}
 });
-function drawRectangle(ctx: SKRSContext2D, pos: { x0: any; y0: any; x1: any; y1: any; }, color: any, opacity: any) {
+//todo: type it pls aughayigweyfga
+//~ like actually type it im not joking yande ill kill you
+export function drawRectangle(ctx: SKRSContext2D, pos: { x0: any; y0: any; x1: any; y1: any; }, color: any, opacity: any) {
 	ctx.fillStyle = hexToRgba(color, opacity);
 	const { x0, y0, x1, y1 } = pos;
 	const width = x1 - x0;

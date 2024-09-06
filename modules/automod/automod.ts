@@ -19,21 +19,36 @@ import tryCensor, { badWordRegexps, badWordsAllowed } from "./misc.js";
 import { ignoredDeletions } from "../logging/messages.js";
 import papa from "papaparse";
 import { createWorker } from "tesseract.js";
+import { createCanvas, loadImage } from "@napi-rs/canvas";
+import { drawRectangle } from "./index.js";
 
 export const OCR = await createWorker("eng");
-async function getMessageImageText(message: Message): Promise<string[]> {
+async function getMessageImageText(message: Message) {
 	const imageTextPromises = message.attachments
 		.filter((attachment) => attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i))
 		.map(async ({ url }) => {
 			if (url) {
-				const ret = await OCR.recognize(url);
-				return ret.data.text;
+
+				const imageResult = await OCR.recognize(url)
+				const result = tryCensor(imageResult.data.text);
+				if (result) {
+					const imageBadWords = imageResult.data.words.map((w) => ({ pos: w.bbox, text: w.text })).filter((w) => result.words.flat().some((s) => w.text.includes(s)))
+					const img = await loadImage(url);
+					const canvas = createCanvas(img.width, img.height);
+					const ctx = canvas.getContext('2d');
+					ctx.drawImage(img, 0, 0);
+
+					imageBadWords.forEach((word) => drawRectangle(ctx, word.pos, "#ff0000", 0.0))
+					return ({ buffer: canvas.toBuffer("image/png"), strikes: result })
+				}
+				return false
+
 			}
 		})
 		.filter(Boolean);
 
 	const imageTextResults = await Promise.all(imageTextPromises);
-	return imageTextResults as string[];
+	return imageTextResults.filter(Boolean);
 }
 const malwareDomains = papa.parse<{
 	"Domain": string;
@@ -171,8 +186,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 			if (shorteners.length) {
 				await warn(
 					message.author,
-					`Used ${
-						shorteners.length === 1 ? "a link shortener" : "link shorteners"
+					`Used ${shorteners.length === 1 ? "a link shortener" : "link shorteners"
 					} in ${message.channel.toString()} while at level ${level}`,
 					shorteners.length * PARTIAL_STRIKE_COUNT,
 					shorteners.join(" "),
@@ -185,16 +199,14 @@ export default async function automodMessage(message: Message): Promise<boolean>
 			if (ads.length) {
 				await warn(
 					message.author,
-					`Posted blacklisted link${
-						ads.length === 1 ? "" : "s"
+					`Posted blacklisted link${ads.length === 1 ? "" : "s"
 					} in ${message.channel.toString()} while at level ${level}`,
 					ads.length * PARTIAL_STRIKE_COUNT,
 					ads.join(" "),
 				);
 				needsDelete = true;
 				deletionMessages.push(
-					`Sorry, but you need level ${ESTABLISHED_THRESHOLD} to post ${
-						ads.length === 1 ? "that link" : "those links"
+					`Sorry, but you need level ${ESTABLISHED_THRESHOLD} to post ${ads.length === 1 ? "that link" : "those links"
 					} outside a channel like ${config.channels.share.toString()}!`,
 				);
 			}
@@ -211,8 +223,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 	if (malware.length) {
 		await warn(
 			message.author,
-			`Posted malware link${
-				malware.length === 1 ? "" : "s"
+			`Posted malware link${malware.length === 1 ? "" : "s"
 			} in ${message.channel.toString()}`,
 			malware.length * 5,
 			malware.map((m) => `${m[0]} (${m[1]})`).join(", "),
@@ -220,11 +231,12 @@ export default async function automodMessage(message: Message): Promise<boolean>
 		needsDelete = true;
 		deletionMessages.push(`You are not allowed to post malware on this server.`);
 	}
+	const imageBadWords = await getMessageImageText(message)
 	const badWords = [
 		tryCensor(stripMarkdown(message.content)),
 		...message.stickers.map(({ name }) => tryCensor(name)),
 		...invites.map(([, invite]) => !!invite?.guild && tryCensor(invite.guild.name)),
-		...(await getMessageImageText(message)).map((content) => tryCensor(content)),
+		...(imageBadWords).map((i) => i.strikes),
 	].reduce(
 		(bad, censored) =>
 			typeof censored === "boolean" ? bad : (
@@ -252,14 +264,14 @@ export default async function automodMessage(message: Message): Promise<boolean>
 			(bad, current) => {
 				const censored = tryCensor(current || "", 1);
 				return censored ?
-						{
-							strikes: bad.strikes + censored.strikes,
-							words: bad.words.map((words, index) => [
-								...words,
-								...(censored.words[index] ?? []),
-							]),
-						}
-					:	bad;
+					{
+						strikes: bad.strikes + censored.strikes,
+						words: bad.words.map((words, index) => [
+							...words,
+							...(censored.words[index] ?? []),
+						]),
+					}
+					: bad;
 			},
 			{ strikes: 0, words: Array.from<string[]>({ length: badWordRegexps.length }).fill([]) },
 		);
@@ -273,6 +285,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 			words.length === 1 ? "Used a banned word" : "Used banned words",
 			languageStrikes,
 			words.join(", "),
+			imageBadWords.map((i => i.buffer))
 		);
 		deletionMessages.push(
 			languageStrikes < 1 ? "Please don’t say that here!" : "Please watch your language!",
@@ -322,7 +335,7 @@ export default async function automodMessage(message: Message): Promise<boolean>
 		if (needsDelete) {
 			await (message.deletable ?
 				message.delete()
-			:	log(
+				: log(
 					`${LoggingErrorEmoji} Unable to delete ${message.url} (${deletionMessages.join(" ")})`,
 					LogSeverity.Alert,
 				));

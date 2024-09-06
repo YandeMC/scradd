@@ -32,6 +32,7 @@ export default async function warn(
 	reason: string,
 	rawStrikes: number = DEFAULT_STRIKES,
 	contextOrModerator: User | string = client.user,
+	images?: Buffer[]
 ): Promise<boolean | "no-dm"> {
 	if ((user instanceof GuildMember ? user.user : user).bot) return false;
 	const allUserStrikes = strikeDatabase.data.filter(
@@ -57,10 +58,9 @@ export default async function warn(
 	const moderator = contextOrModerator instanceof User ? contextOrModerator : client.user;
 	const context = contextOrModerator instanceof User ? "" : contextOrModerator;
 	const logMessage = await log(
-		`${LoggingEmojis.Punishment} ${user.toString()} ${
-			strikes > 0.5 ?
-				`warned ${displayStrikes} time${displayStrikes === 1 ? "" : "s"}`
-			:	"verbally warned"
+		`${LoggingEmojis.Punishment} ${user.toString()} ${strikes > 0.5 ?
+			`warned ${displayStrikes} time${displayStrikes === 1 ? "" : "s"}`
+			: "verbally warned"
 		} by ${moderator.toString()}`,
 		LogSeverity.ImportantUpdate,
 		{ files: [{ content: reason + (context && `\n>>> ${context}`), extension: "md" }] },
@@ -77,11 +77,10 @@ export default async function warn(
 		.send({
 			embeds: [
 				{
-					title: `You were ${
-						strikes > 0.5 ?
+					title: `You were ${strikes > 0.5 ?
 							`warned${displayStrikes > 1 ? ` ${displayStrikes} times` : ""}`
-						:	"verbally warned"
-					} in ${escapeMessage(config.guild.name)}!`,
+							: "verbally warned"
+						} in ${escapeMessage(config.guild.name)}!`,
 
 					description: reason + (context && `\n>>> ${context}`),
 					color: member?.displayColor,
@@ -89,13 +88,11 @@ export default async function warn(
 					footer: {
 						icon_url: config.guild.iconURL() ?? undefined,
 
-						text: `Strike ${id}${
-							displayStrikes ?
-								`${constants.footerSeperator}Expiring in 21 ${
-									process.env.NODE_ENV === "production" ? "day" : "minute"
+						text: `Strike ${id}${displayStrikes ?
+								`${constants.footerSeperator}Expiring in 21 ${process.env.NODE_ENV === "production" ? "day" : "minute"
 								}s`
-							:	""
-						}`,
+								: ""
+							}`,
 					},
 				},
 			],
@@ -114,7 +111,8 @@ export default async function warn(
 							],
 						},
 					]
-				:	[],
+					: [],
+			...(images ? { files: images.map(b => ({ attachment: b, name: "image.png" })) } : {})
 		})
 		.catch(async () => {
 			await logMessage.edit(logMessage.content + " (could not send DM)");
@@ -138,7 +136,7 @@ export default async function warn(
 			(process.env.NODE_ENV === "production" || member.roles.highest.name === "@everyone")
 		) ?
 			member.ban({ reason: "Too many strikes" })
-		:	log(`${LoggingErrorEmoji} Unable to ban ${user.toString()}`, LogSeverity.Alert));
+			: log(`${LoggingErrorEmoji} Unable to ban ${user.toString()}`, LogSeverity.Alert));
 		return true;
 	}
 
@@ -154,12 +152,11 @@ export default async function warn(
 		await (member?.moderatable ?
 			member.disableCommunicationUntil(
 				addedMuteLength * (process.env.NODE_ENV === "production" ? 3_600_000 : 60_000) +
-					Date.now(),
+				Date.now(),
 				"Too many strikes",
 			)
-		:	log(
-				`${LoggingErrorEmoji} Unable to mute ${user.toString()} for ${addedMuteLength} ${
-					process.env.NODE_ENV === "production" ? "hour" : "minute"
+			: log(
+				`${LoggingErrorEmoji} Unable to mute ${user.toString()} for ${addedMuteLength} ${process.env.NODE_ENV === "production" ? "hour" : "minute"
 				}${addedMuteLength === 1 ? "" : "s"}`,
 				LogSeverity.Alert,
 			));
@@ -215,8 +212,7 @@ export async function removeStrike(
 	)
 		await member.disableCommunicationUntil(Date.now(), "Strike removed");
 	await log(
-		`${
-			LoggingEmojis.Punishment
+		`${LoggingEmojis.Punishment
 		} Strike \`${id}\` removed from ${user.toString()} by ${interaction.user.toString()}`,
 		LogSeverity.ImportantUpdate,
 	);
@@ -247,13 +243,11 @@ export async function addStrikeBack(
 	const user = await client.users.fetch(strike.user).catch(() => userMention(strike.user));
 	const { url: logUrl } = await interaction.reply({
 		fetchReply: true,
-		content: `${
-			constants.emojis.statuses.yes
-		} Added ${user.toString()}’s strike \`${id}\` back!`,
+		content: `${constants.emojis.statuses.yes
+			} Added ${user.toString()}’s strike \`${id}\` back!`,
 	});
 	await log(
-		`${
-			LoggingEmojis.Punishment
+		`${LoggingEmojis.Punishment
 		} Strike \`${id}\` was added back to ${user.toString()} by ${interaction.user.toString()}`,
 		LogSeverity.ImportantUpdate,
 	);
