@@ -20,13 +20,13 @@ import { ignoredDeletions } from "../logging/messages.js";
 import papa from "papaparse";
 import { createWorker } from "tesseract.js";
 
-const worker = await createWorker("eng");
+export const OCR = await createWorker("eng");
 async function getMessageImageText(message: Message): Promise<string[]> {
 	const imageTextPromises = message.attachments
 		.filter((attachment) => attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i))
 		.map(async ({ url }) => {
 			if (url) {
-				const ret = await worker.recognize(url);
+				const ret = await OCR.recognize(url);
 				return ret.data.text;
 			}
 		})

@@ -15,10 +15,11 @@ import { escapeMessage } from "../../util/markdown.js";
 import { joinWithAnd } from "../../util/text.js";
 import { ignoredDeletions } from "../logging/messages.js";
 import warn from "../punishments/warn.js";
-import automodMessage from "./automod.js";
+import automodMessage, { OCR } from "./automod.js";
 import tryCensor, { badWordsAllowed } from "./misc.js";
 import changeNickname from "./nicknames.js";
 import { handleMessage } from "./spam.js";
+import { createCanvas, loadImage, type SKRSContext2D } from "@napi-rs/canvas";
 
 defineEvent.pre("interactionCreate", async (interaction) => {
 	if (
@@ -46,9 +47,8 @@ defineEvent.pre("interactionCreate", async (interaction) => {
 	if (censored.strikes) {
 		await interaction.reply({
 			ephemeral: true,
-			content: `${constants.emojis.statuses.no} Please ${
-				censored.strikes < 1 ? "don’t say that here" : "watch your language"
-			}!`,
+			content: `${constants.emojis.statuses.no} Please ${censored.strikes < 1 ? "don’t say that here" : "watch your language"
+				}!`,
 		});
 		await warn(
 			interaction.user,
@@ -165,7 +165,24 @@ defineEvent("presenceUpdate", async (_, newPresence) => {
 		);
 	}
 });
+function drawRectangle(ctx: SKRSContext2D, pos: { x0: any; y0: any; x1: any; y1: any; }, color: any, opacity: any) {
+	ctx.fillStyle = hexToRgba(color, opacity);
+	const { x0, y0, x1, y1 } = pos;
+	const width = x1 - x0;
+	const height = y1 - y0;
+	ctx.fillRect(x0, y0, width, height);
+	ctx.strokeStyle = color;
+	ctx.lineWidth = 2;
+	ctx.strokeRect(x0 - 3, y0 - 3, width + 6, height + 6);
+}
 
+function hexToRgba(hex: string, opacity: any) {
+	const bigint = parseInt(hex.slice(1), 16);
+	const r = (bigint >> 16) & 255;
+	const g = (bigint >> 8) & 255;
+	const b = bigint & 255;
+	return `rgba(${r},${g},${b},${opacity})`;
+}
 defineChatCommand(
 	{
 		name: "is-bad-word",
@@ -175,7 +192,12 @@ defineChatCommand(
 			text: {
 				type: ApplicationCommandOptionType.String,
 				description: "Text to check",
-				required: true,
+				required: false,
+			},
+			image: {
+				type: ApplicationCommandOptionType.Attachment,
+				description: "Text to check",
+				required: false,
 			},
 		},
 
@@ -183,33 +205,93 @@ defineChatCommand(
 	},
 
 	async (interaction, options) => {
-		const result = tryCensor(options.text);
-		if (!result)
-			return await interaction.reply({
+		if (options.image) {
+			await interaction.reply({
 				ephemeral: true,
-				content: `${constants.emojis.statuses.yes} No bad words found.`,
+				content: "Reading Image..."
+			})
+			const imageResult = await OCR.recognize(options.image.url)
+
+			// console.log(imageResult.data.words.map((w) => console.log(w.bbox, w.text)))
+
+			const result = tryCensor(imageResult.data.text);
+
+			if (!result)
+				return await interaction.editReply({
+					content: `${constants.emojis.statuses.yes} No bad words found.`,
+				});
+			interaction.editReply({
+				content: "Highlighting..."
+			})
+			const imageBadWords = imageResult.data.words.map((w) => ({ pos: w.bbox, text: w.text })).filter((w) => result.words.flat().some((s) => w.text.includes(s)))
+			const img = await loadImage(options.image.url);
+			const canvas = createCanvas(img.width, img.height);
+			const ctx = canvas.getContext('2d');
+			ctx.drawImage(img, 0, 0);
+			imageBadWords.forEach((word) => drawRectangle(ctx, word.pos, "#ff0000", 0.0))
+
+			const words = result.words.flat();
+			const strikes = Math.trunc(result.strikes);
+
+			const isMod =
+				interaction.member instanceof GuildMember ?
+					interaction.member.roles.resolve(config.roles.mod.id)
+					: interaction.member.roles.includes(config.roles.mod.id);
+
+			await interaction.editReply({
+
+
+				content:
+					`## ⚠️ ${words.length} bad word${words.length === 1 ? "s" : ""} detected!\n` +
+					(isMod ?
+						`That text gives **${strikes} strike${strikes === 1 ? "" : "s"}**.\n\n`
+						: "") +
+					`*I detected the following words as bad*: ${joinWithAnd(words, (word) =>
+						underline(escapeMessage(word)),
+					)}`,
+				files: [{ attachment: canvas.toBuffer("image/png"), name: "swears!!!!!!!.png" }]
 			});
+		} else if (options.text) {
+			await interaction.deferReply({
+				ephemeral: true
+			})
 
-		const words = result.words.flat();
-		const strikes = Math.trunc(result.strikes);
 
-		const isMod =
-			interaction.member instanceof GuildMember ?
-				interaction.member.roles.resolve(config.roles.mod.id)
-			:	interaction.member.roles.includes(config.roles.mod.id);
+			// console.log(imageResult.data.words.map((w) => console.log(w.bbox, w.text)))
 
-		await interaction.reply({
-			ephemeral: true,
+			const result = tryCensor(options.text);
 
-			content:
-				`## ⚠️ ${words.length} bad word${words.length === 1 ? "s" : ""} detected!\n` +
-				(isMod ?
-					`That text gives **${strikes} strike${strikes === 1 ? "" : "s"}**.\n\n`
-				:	"") +
-				`*I detected the following words as bad*: ${joinWithAnd(words, (word) =>
-					underline(escapeMessage(word)),
-				)}`,
-		});
+			if (!result)
+				return await interaction.editReply({
+					content: `${constants.emojis.statuses.yes} No bad words found.`,
+				});
+
+			const words = result.words.flat();
+			const strikes = Math.trunc(result.strikes);
+
+			const isMod =
+				interaction.member instanceof GuildMember ?
+					interaction.member.roles.resolve(config.roles.mod.id)
+					: interaction.member.roles.includes(config.roles.mod.id);
+
+			await interaction.editReply({
+
+
+				content:
+					`## ⚠️ ${words.length} bad word${words.length === 1 ? "s" : ""} detected!\n` +
+					(isMod ?
+						`That text gives **${strikes} strike${strikes === 1 ? "" : "s"}**.\n\n`
+						: "") +
+					`*I detected the following words as bad*: ${joinWithAnd(words, (word) =>
+						underline(escapeMessage(word)),
+					)}`,
+			});
+		} else {
+			interaction.reply({
+				ephemeral: true,
+				content: "No inputs found."
+			})
+		}
 	},
 );
 
