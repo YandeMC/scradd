@@ -79,6 +79,8 @@ defineSubcommands(
 			case "combine": {
 				return i.reply("not implimented yet");
 				//@ts-ignore
+				//todo do it yande
+				//~ or else
 				const a = o.options.a;
 				const b = o.options.b;
 				const crafted = getElements().find(
