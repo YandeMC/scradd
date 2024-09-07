@@ -47,8 +47,9 @@ defineEvent.pre("interactionCreate", async (interaction) => {
 	if (censored.strikes) {
 		await interaction.reply({
 			ephemeral: true,
-			content: `${constants.emojis.statuses.no} Please ${censored.strikes < 1 ? "don’t say that here" : "watch your language"
-				}!`,
+			content: `${constants.emojis.statuses.no} Please ${
+				censored.strikes < 1 ? "don’t say that here" : "watch your language"
+			}!`,
 		});
 		await warn(
 			interaction.user,
@@ -167,7 +168,12 @@ defineEvent("presenceUpdate", async (_, newPresence) => {
 });
 //todo: type it pls aughayigweyfga
 //~ like actually type it im not joking yande ill kill you
-export function drawRectangle(ctx: SKRSContext2D, pos: { x0: any; y0: any; x1: any; y1: any; }, color: any, opacity: any) {
+export function drawRectangle(
+	ctx: SKRSContext2D,
+	pos: { x0: any; y0: any; x1: any; y1: any },
+	color: any,
+	opacity: any,
+) {
 	ctx.fillStyle = hexToRgba(color, opacity);
 	const { x0, y0, x1, y1 } = pos;
 	const width = x1 - x0;
@@ -210,9 +216,9 @@ defineChatCommand(
 		if (options.image) {
 			await interaction.reply({
 				ephemeral: true,
-				content: "Reading Image..."
-			})
-			const imageResult = await OCR.recognize(options.image.url)
+				content: "Reading Image...",
+			});
+			const imageResult = await OCR.recognize(options.image.url);
 
 			// console.log(imageResult.data.words.map((w) => console.log(w.bbox, w.text)))
 
@@ -223,14 +229,16 @@ defineChatCommand(
 					content: `${constants.emojis.statuses.yes} No bad words found.`,
 				});
 			interaction.editReply({
-				content: "Highlighting..."
-			})
-			const imageBadWords = imageResult.data.words.map((w) => ({ pos: w.bbox, text: w.text })).filter((w) => result.words.flat().some((s) => w.text.includes(s)))
+				content: "Highlighting...",
+			});
+			const imageBadWords = imageResult.data.words
+				.map((w) => ({ pos: w.bbox, text: w.text }))
+				.filter((w) => result.words.flat().some((s) => w.text.includes(s)));
 			const img = await loadImage(options.image.url);
 			const canvas = createCanvas(img.width, img.height);
-			const ctx = canvas.getContext('2d');
+			const ctx = canvas.getContext("2d");
 			ctx.drawImage(img, 0, 0);
-			imageBadWords.forEach((word) => drawRectangle(ctx, word.pos, "#ff0000", 0.0))
+			imageBadWords.forEach((word) => drawRectangle(ctx, word.pos, "#ff0000", 0.0));
 
 			const words = result.words.flat();
 			const strikes = Math.trunc(result.strikes);
@@ -238,26 +246,23 @@ defineChatCommand(
 			const isMod =
 				interaction.member instanceof GuildMember ?
 					interaction.member.roles.resolve(config.roles.mod.id)
-					: interaction.member.roles.includes(config.roles.mod.id);
+				:	interaction.member.roles.includes(config.roles.mod.id);
 
 			await interaction.editReply({
-
-
 				content:
 					`## ⚠️ ${words.length} bad word${words.length === 1 ? "s" : ""} detected!\n` +
 					(isMod ?
 						`That text gives **${strikes} strike${strikes === 1 ? "" : "s"}**.\n\n`
-						: "") +
+					:	"") +
 					`*I detected the following words as bad*: ${joinWithAnd(words, (word) =>
 						underline(escapeMessage(word)),
 					)}`,
-				files: [{ attachment: canvas.toBuffer("image/png"), name: "swears!!!!!!!.png" }]
+				files: [{ attachment: canvas.toBuffer("image/png"), name: "swears!!!!!!!.png" }],
 			});
 		} else if (options.text) {
 			await interaction.deferReply({
-				ephemeral: true
-			})
-
+				ephemeral: true,
+			});
 
 			// console.log(imageResult.data.words.map((w) => console.log(w.bbox, w.text)))
 
@@ -274,16 +279,14 @@ defineChatCommand(
 			const isMod =
 				interaction.member instanceof GuildMember ?
 					interaction.member.roles.resolve(config.roles.mod.id)
-					: interaction.member.roles.includes(config.roles.mod.id);
+				:	interaction.member.roles.includes(config.roles.mod.id);
 
 			await interaction.editReply({
-
-
 				content:
 					`## ⚠️ ${words.length} bad word${words.length === 1 ? "s" : ""} detected!\n` +
 					(isMod ?
 						`That text gives **${strikes} strike${strikes === 1 ? "" : "s"}**.\n\n`
-						: "") +
+					:	"") +
 					`*I detected the following words as bad*: ${joinWithAnd(words, (word) =>
 						underline(escapeMessage(word)),
 					)}`,
@@ -291,8 +294,8 @@ defineChatCommand(
 		} else {
 			interaction.reply({
 				ephemeral: true,
-				content: "No inputs found."
-			})
+				content: "No inputs found.",
+			});
 		}
 	},
 );
