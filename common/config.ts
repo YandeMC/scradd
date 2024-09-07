@@ -110,9 +110,9 @@ async function getConfig() {
 			trivia: getChannel("trivia", ChannelType.GuildText, "partial"),
 			oldSuggestions: getChannel("suggestions", ChannelType.GuildText, "partial"),
 			help: getChannel("help", ChannelType.GuildForum, "partial"),
-			radio: getChannel("radio", ChannelType.GuildVoice, "partial"),
 			queer: getChannel("qdex", ChannelType.GuildText, "partial"),
 			memes: getChannel("memes", ChannelType.GuildText, "partial"),
+			vc: getChannel("vc", ChannelType.GuildVoice, "partial") || getChannel("voice", ChannelType.GuildVoice, "partial"),	
 		},
 
 		roles: {

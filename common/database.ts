@@ -128,8 +128,10 @@ export default class Database<Data extends Record<string, boolean | number | str
 					"Must call `.init()` before reading or setting `.data` or `.extra`",
 				);
 			}
-
-			await this.#doc.save();
+			//hahahahhahahahahahahahahahahahhahahahahahahahahahahahahahhahahahahahahahahahahahahahahahahahahahahahahahahahahahahhahahahahahahahahahahahahahahaha
+			//~ figure out whats wrong
+			////bandaid fix fr
+			await this.#doc.save().catch(() => undefined);
 			timeouts[this.#doc.id] = undefined;
 		};
 

@@ -20,6 +20,7 @@ import config from "../../common/config.js";
 import { formatAnyEmoji } from "../../util/markdown.js";
 import { messageDeleteBulk } from "./messages.js";
 import log, { LogSeverity, LoggingEmojis, extraAuditLogsInfo, type AuditLog } from "./misc.js";
+import { userChannelPrefix } from "../user-voice-channels.js";
 
 export async function channelCreate(entry: AuditLog<AuditLogEvent.ChannelCreate>): Promise<void> {
 	await log(
@@ -40,7 +41,7 @@ export async function channelCreate(entry: AuditLog<AuditLogEvent.ChannelCreate>
 		:	`${LoggingEmojis.Channel} Unknown channel ${channelMention(
 				entry.target.id,
 			)} created${extraAuditLogsInfo(entry)}`,
-		LogSeverity.ImportantUpdate,
+			entry.target instanceof BaseChannel && entry.target.name.startsWith(userChannelPrefix) ? LogSeverity.Resource : LogSeverity.ImportantUpdate,
 	);
 }
 export async function channelDelete(entry: AuditLog<AuditLogEvent.ChannelDelete>): Promise<void> {
@@ -51,7 +52,7 @@ export async function channelDelete(entry: AuditLog<AuditLogEvent.ChannelDelete>
 		`${LoggingEmojis.Channel} ${
 			"name" in entry.target ? `#${entry.target.name}` : "Unknown channel"
 		} (ID: ${entry.target.id}) deleted${extraAuditLogsInfo(entry)}`,
-		LogSeverity.ImportantUpdate,
+		"name" in entry.target  && entry.target.name.startsWith(userChannelPrefix) ? LogSeverity.Resource : LogSeverity.ImportantUpdate,
 	);
 }
 export async function channelOverwriteCreate(
@@ -155,7 +156,7 @@ export async function channelUpdate(
 			`${LoggingEmojis.Channel} ${newChannel.toString()} (${oldChannel.name}) renamed to ${
 				newChannel.name
 			}`,
-			LogSeverity.ImportantUpdate,
+			newChannel.name.startsWith(userChannelPrefix) ? LogSeverity.Resource : LogSeverity.ImportantUpdate,
 		);
 	if (oldChannel.rawPosition !== newChannel.rawPosition)
 		await log(
