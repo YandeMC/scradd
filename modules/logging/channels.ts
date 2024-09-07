@@ -41,7 +41,9 @@ export async function channelCreate(entry: AuditLog<AuditLogEvent.ChannelCreate>
 		:	`${LoggingEmojis.Channel} Unknown channel ${channelMention(
 				entry.target.id,
 			)} created${extraAuditLogsInfo(entry)}`,
-			entry.target instanceof BaseChannel && entry.target.name.startsWith(userChannelPrefix) ? LogSeverity.Resource : LogSeverity.ImportantUpdate,
+		entry.target instanceof BaseChannel && entry.target.name.startsWith(userChannelPrefix) ?
+			LogSeverity.Resource
+		:	LogSeverity.ImportantUpdate,
 	);
 }
 export async function channelDelete(entry: AuditLog<AuditLogEvent.ChannelDelete>): Promise<void> {
@@ -52,7 +54,9 @@ export async function channelDelete(entry: AuditLog<AuditLogEvent.ChannelDelete>
 		`${LoggingEmojis.Channel} ${
 			"name" in entry.target ? `#${entry.target.name}` : "Unknown channel"
 		} (ID: ${entry.target.id}) deleted${extraAuditLogsInfo(entry)}`,
-		"name" in entry.target  && entry.target.name.startsWith(userChannelPrefix) ? LogSeverity.Resource : LogSeverity.ImportantUpdate,
+		"name" in entry.target && entry.target.name.startsWith(userChannelPrefix) ?
+			LogSeverity.Resource
+		:	LogSeverity.ImportantUpdate,
 	);
 }
 export async function channelOverwriteCreate(
@@ -156,7 +160,9 @@ export async function channelUpdate(
 			`${LoggingEmojis.Channel} ${newChannel.toString()} (${oldChannel.name}) renamed to ${
 				newChannel.name
 			}`,
-			newChannel.name.startsWith(userChannelPrefix) ? LogSeverity.Resource : LogSeverity.ImportantUpdate,
+			newChannel.name.startsWith(userChannelPrefix) ?
+				LogSeverity.Resource
+			:	LogSeverity.ImportantUpdate,
 		);
 	if (oldChannel.rawPosition !== newChannel.rawPosition)
 		await log(
