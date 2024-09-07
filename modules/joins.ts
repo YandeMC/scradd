@@ -32,7 +32,7 @@ defineEvent("guildMemberAdd", async (member) => {
 						},
 						{
 							name: "‼️ **We are not the Scratch Team.**",
-							value: "Please know that **nobody here is a Scratch developer or moderator**, we’re all just people who like to code! If you wish to contact the Scratch Team, please use the official [Contact Us](<${constants.domains.scratch}/contact-us>) page.\n**No official Scratch server exists**, but please feel free to socialize with other Scratchers here.",
+							value: `Please know that **nobody here is a Scratch developer or moderator**, we’re all just people who like to code! If you wish to contact the Scratch Team, please use the official [Contact Us](<${constants.domains.scratch}/contact-us>) page.\n**No official Scratch server exists**, but please feel free to socialize with other Scratchers here.`,
 						},
 					],
 					title: "Welcome to the __Scratch Coders__ Discord server!",
