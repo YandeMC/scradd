@@ -37,6 +37,9 @@ defineEvent("messageCreate", async (m) => {
 		m.channel.isDMBased() ||
 		m.channelId == "1276365384542453790" ||
 		m.mentions.has(client.user);
+
+		if (!forcedReply) return
+
 	const ai =
 		m.channel.isDMBased() ?
 			(() => {
