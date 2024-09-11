@@ -40,7 +40,7 @@ const databaseSchema = new Schema<DatabaseDoc>({
 	extra: { type: String, default: "" },
 });
 
-const DatabaseModel = mongoose.model<DatabaseDoc>("scruby", databaseSchema);
+const DatabaseModel = mongoose.model<DatabaseDoc>("scrub", databaseSchema);
 
 const constructed: string[] = [];
 
