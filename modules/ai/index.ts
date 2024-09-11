@@ -60,7 +60,7 @@ defineEvent("messageCreate", async (m) => {
 	const canReply = allowFreeWill(m.channel) || forcedReply;
 
 	console.log(canReply, forcedReply);
-	
+
 	let result = [];
 	let intCount = 0;
 	const interval = setInterval(() => {
