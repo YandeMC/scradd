@@ -1,16 +1,16 @@
-# Scrub
+# scruby
 
 ## About
 
-Scrub is a custom all-in-one Discord bot for the [Scratch Coders server](https://discord.gg/FPv957V6SD). It has many features, including punishments, auto moderation, XP tracking, and more. Scrub is also equipped with features specific to Scratch Coders, such as project search, suggestion tools, fun games, inside jokes, and additional utilities.
+scruby is a custom all-in-one Discord bot for the [Scratch Coders server](https://discord.gg/FPv957V6SD). It has many features, including punishments, auto moderation, XP tracking, and more. scruby is also equipped with features specific to Scratch Coders, such as project search, suggestion tools, fun games, inside jokes, and additional utilities.
 
-> [!NOTE] > **Scrub is a fork of Scradd,** an original bot developed for the Scratch Addons server. Scradd was created by @RedGuy12 (`cobaltt7` on Discord), and Scrub builds upon the foundation established by Scradd.
+> [!NOTE] > **scruby is a fork of Scradd,** an original bot developed for the Scratch Addons server. Scradd was created by @RedGuy12 (`cobaltt7` on Discord), and scruby builds upon the foundation established by Scradd.
 
 ## Contributors
 
-Scrub is developed by @yande.dev on Discord (GitHub: `theyande`). For more details on contributors, please run `/credits` in the server. Special thanks to everyone involved, including the original creators of Scradd!
+scruby is developed by @yande.dev on Discord (GitHub: `theyande`). For more details on contributors, please run `/credits` in the server. Special thanks to everyone involved, including the original creators of Scradd!
 
-> [!TIP] Contributions are welcome! If you'd like to help develop Scrub, please read through the [Contributing Guidelines](/.github/CONTRIBUTING.md) before submitting a pull request.
+> [!TIP] Contributions are welcome! If you'd like to help develop scruby, please read through the [Contributing Guidelines](/.github/CONTRIBUTING.md) before submitting a pull request.
 
 ## Setup
 
@@ -27,7 +27,7 @@ Scrub is developed by @yande.dev on Discord (GitHub: `theyande`). For more detai
 
 ### Set up the testing server
 
-1. Create a new server using the [Scrub Testing server template](https://discord.new/htbTxKBq6EVp).
+1. Create a new server using the [scruby Testing server template](https://discord.new/htbTxKBq6EVp).
 2. Enable Community in Server Settings. Use `#info` for the Rules or Guidelines channel and `#mod-logs` for the Community Updates Channel.
 3. Enable Developer Mode under User Settings → Advanced.
 4. Right-click on your new testing server, copy its ID, and note it for future use.
@@ -36,7 +36,7 @@ Scrub is developed by @yande.dev on Discord (GitHub: `theyande`). For more detai
 ### Set up MongoDB
 
 1. [Create a MongoDB account](https://www.mongodb.com/cloud/atlas/register) if you don't already have one.
-2. When prompted to deploy a cluster, select a free M0 cluster and name it Scrub. Default settings are acceptable.
+2. When prompted to deploy a cluster, select a free M0 cluster and name it scruby. Default settings are acceptable.
 3. Set up authentication with a username and password. Note the password for future use.
 4. Opt to connect from your local environment and add your current IP address to the whitelist. If you plan to work from multiple locations, you can use `0.0.0.0/0` to allow connections from any IP address.
 
@@ -73,11 +73,11 @@ Scrub is developed by @yande.dev on Discord (GitHub: `theyande`). For more detai
 
 ### File structure
 
-Scrub is built using [strife.js](https://www.npmjs.com/package/strife.js) and follows its recommended style guide and structure. The `common` directory contains code shared across multiple features, while the `util` directory includes utility functions that can be used in other projects as well.
+scruby is built using [strife.js](https://www.npmjs.com/package/strife.js) and follows its recommended style guide and structure. The `common` directory contains code shared across multiple features, while the `util` directory includes utility functions that can be used in other projects as well.
 
 ### Commands
 
-Scrub provides several development commands to streamline the coding process.
+scruby provides several development commands to streamline the coding process.
 
 -   `npm run build`: One-time build with TypeScript
 -   `npm run start`: Run the bot

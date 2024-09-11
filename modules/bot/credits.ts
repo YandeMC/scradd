@@ -34,7 +34,7 @@ export default async function credits(interaction: ChatInputCommandInteraction):
 		embeds: [
 			{
 				title: "Credits",
-				description: `Scrub is hosted on <@1014588310036951120>'s local server using Node.JS ${process.version}.`,
+				description: `scruby is hosted on <@1014588310036951120>'s local server using Node.JS ${process.version}.`,
 
 				fields: [
 					{ name: "🧑‍💻 Developers", value: await getRole(developers) },

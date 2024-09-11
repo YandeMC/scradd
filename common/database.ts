@@ -40,7 +40,7 @@ const databaseSchema = new Schema<DatabaseDoc>({
 	extra: { type: String, default: "" },
 });
 
-const DatabaseModel = mongoose.model<DatabaseDoc>("scrub", databaseSchema);
+const DatabaseModel = mongoose.model<DatabaseDoc>("scruby", databaseSchema);
 
 const constructed: string[] = [];
 
@@ -197,7 +197,7 @@ export async function backupDatabases(channel: TextBasedChannel): Promise<void> 
 	const databases = await DatabaseModel.find({});
 	const attachments = databases.map((database) => ({
 		attachment: Buffer.from(JSON.stringify(database.data), "utf8"),
-		name: `${database.name}.${process.env.NODE_ENV == "production" ? "scrubdb" : "json"}`,
+		name: `${database.name}.${process.env.NODE_ENV == "production" ? "scrubydb" : "json"}`,
 	}));
 
 	await channel.send("# Daily Scradd Database Backup");

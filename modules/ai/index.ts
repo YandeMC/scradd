@@ -14,13 +14,13 @@ import { allowFreeWill } from "./misc.js";
 let sharedHistory: { role: string; content: string | any[]; type?: string }[] | undefined = [];
 
 const normalAi = new AIChat(
-	"https://reverse.mubi.tech/v1/chat/completions",
+	"https://zukijourney.xyzbot.net/unf/chat/completions",
 	sharedHistory,
 	100,
 	prompts.map((p) => ({ content: `${p}`, role: "system" })),
 );
 const freeWill = new AIChat(
-	"https://reverse.mubi.tech/v1/chat/completions",
+	"https://zukijourney.xyzbot.net/unf/chat/completions",
 	sharedHistory,
 	100,
 	freeWillPrompts.map((p) => ({ content: `${p}`, role: "system" })),

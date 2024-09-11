@@ -93,7 +93,7 @@ defineButton("contactMods", async (interaction) => {
 								appeal: "Appeal a strike",
 								report: "Report a user",
 								role: "Request a role",
-								bug: "Report a Scrub bug",
+								bug: "Report a scruby bug",
 								[SERVER_CATEGORY]: "Suggest a server change",
 								rules: "Get clarification on a rule",
 								[SA_CATEGORY]: "Get help with code",

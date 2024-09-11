@@ -133,7 +133,7 @@ export default async function rps(
 		embeds: GenerateRound(
 			{ name: games[interaction.id].players[0].displayName, choices: player1Choices },
 			{
-				name: games[interaction.id].players[1]?.displayName || "Scrub",
+				name: games[interaction.id].players[1]?.displayName || "scruby",
 				choices: player2Choices,
 			},
 			games[interaction.id].results,
@@ -241,7 +241,7 @@ export default async function rps(
 									{
 										name:
 											games[interaction.id].players[1]?.displayName ||
-											"Scrub",
+											"scruby",
 										choices: player2Choices,
 									},
 									games[interaction.id].results,
@@ -263,7 +263,7 @@ export default async function rps(
 				embeds: GenerateRound(
 					{ name: games[interaction.id].players[0].displayName, choices: player1Choices },
 					{
-						name: games[interaction.id].players[1]?.displayName || "Scrub",
+						name: games[interaction.id].players[1]?.displayName || "scruby",
 						choices: player2Choices,
 					},
 					games[interaction.id].results,
@@ -322,12 +322,12 @@ export default async function rps(
 			} else if (counter[emojis["p1"]] > counter[emojis["p2"]]) {
 				result = games[interaction.id].players[0].displayName + " Wins";
 			} else {
-				result = (games[interaction.id].players[1]?.displayName || "Scrub") + " Wins";
+				result = (games[interaction.id].players[1]?.displayName || "scruby") + " Wins";
 			}
 			let finalEmbed = GenerateRound(
 				{ name: games[interaction.id].players[0].displayName, choices: player1Choices },
 				{
-					name: games[interaction.id].players[1]?.displayName || "Scrub",
+					name: games[interaction.id].players[1]?.displayName || "scruby",
 					choices: player2Choices,
 				},
 				arr,
@@ -346,7 +346,7 @@ export default async function rps(
 						inline: true,
 					},
 					{
-						name: `${games[interaction.id].players[1]?.displayName || "Scrub"}`,
+						name: `${games[interaction.id].players[1]?.displayName || "scruby"}`,
 						value: `${counter[emojis["p2"]]} Points`,
 						inline: true,
 					},
