@@ -44,7 +44,7 @@ const badWords: [RegExp[]?, RegExp[]?, RegExp[]?][] = [
 			/wrex ?bss/,
 			/ovg?pu/,
 			/ubeal/,
-			/encr/
+			/encr/,
 		],
 		[
 			/wvm+z?/,
