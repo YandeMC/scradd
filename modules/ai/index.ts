@@ -7,19 +7,24 @@ import { xpDatabase } from "../xp/util.js";
 import { getLevelForXp } from "../xp/misc.js";
 import { gracefulFetch } from "../../util/promises.js";
 import { updateStatus } from "./model-status.js";
-import { prompts, dmPrompts, people } from "./prompts.js";
+import { prompts, freeWillPrompts, dmPrompts, people } from "./prompts.js";
 import log, { LoggingEmojis, LogSeverity } from "../logging/misc.js";
 import { allowFreeWill } from "./misc.js";
 
 let sharedHistory: { role: string; content: string | any[]; type?: string }[] | undefined = [];
 
 const normalAi = new AIChat(
-	"https://zukijourney.xyzbot.net/unf/chat/completions",
+	"https://reverse.mubi.tech/v1/chat/completions",
 	sharedHistory,
 	100,
 	prompts.map((p) => ({ content: `${p}`, role: "system" })),
 );
-
+const freeWill = new AIChat(
+	"https://reverse.mubi.tech/v1/chat/completions",
+	sharedHistory,
+	100,
+	freeWillPrompts.map((p) => ({ content: `${p}`, role: "system" })),
+);
 let dmAis: { [id: string]: AIChat } = {};
 
 const memory = new Database<{ content: string }>("aimem");
@@ -37,9 +42,6 @@ defineEvent("messageCreate", async (m) => {
 		m.channel.isDMBased() ||
 		m.channelId == "1276365384542453790" ||
 		m.mentions.has(client.user);
-
-	if (!forcedReply) return;
-
 	const ai =
 		m.channel.isDMBased() ?
 			(() => {
@@ -47,7 +49,7 @@ defineEvent("messageCreate", async (m) => {
 				if (userAi) return userAi;
 				console.log("making new ai for " + m.author.displayName);
 				const newAi = new AIChat(
-					"https://zukijourney.xyzbot.net/unf/chat/completions",
+					"https://reverse.mubi.tech/v1/chat/completions",
 					[
 						...normalAi.getChatHistory(),
 						{ content: "You are now in DMS.", role: "system" },
@@ -63,7 +65,82 @@ defineEvent("messageCreate", async (m) => {
 	const canReply = allowFreeWill(m.channel) || forcedReply;
 
 	console.log(canReply, forcedReply);
+	if (!forcedReply) {
+		const reference = m.reference ? await m.fetchReference() : null;
+		// if (!allowFreeWill(m.channel)) {
+		// 	(
+		// 		m.attachments
+		// 			.filter((attachment) =>
+		// 				attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i),
+		// 			)
+		// 			.map(() => "").length
+		// 	) ?
+		// 		freeWill.inform(
+		// 			[
+		// 				{
+		// 					type: "text",
+		// 					text: `${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
+		// 				},
+		// 				...[
+		// 					...m.attachments
+		// 						.filter((attachment) =>
+		// 							attachment.contentType?.match(
+		// 								/^image\/(bmp|jpeg|png|bpm|webp)$/i,
+		// 							),
+		// 						)
+		// 						.map((v) => v.url),
+		// 				].map((i) => ({ type: "image_url", image_url: { url: i } })),
+		// 			],
+		// 			"user",
+		// 			"complex",
+		// 		)
+		// 	:	freeWill.inform(
+		// 			`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
+		// 			"user",
+		// 			"text",
+		// 		);
+		// 	return;
+		// }
 
+		let response =
+			(
+				m.attachments
+					.filter((attachment) =>
+						attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i),
+					)
+					.map(() => "").length
+			) ?
+				await freeWill.send(
+					[
+						{
+							type: "text",
+							text: `${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
+						},
+						...[
+							...m.attachments
+								.filter((attachment) =>
+									attachment.contentType?.match(
+										/^image\/(bmp|jpeg|png|bpm|webp)$/i,
+									),
+								)
+								.map((v) => v.url),
+						].map((i) => ({ type: "image_url", image_url: { url: i } })),
+					],
+					"user",
+					"complex",
+					true,
+				)
+			:	await freeWill.send(
+					`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
+					"user",
+					"text",
+					true,
+				);
+		const commands = parseCommands(response);
+		if (!commands) return;
+		if (!commands.some((c) => c.name == "continue")) return;
+		replyReason = commands.find((c) => c.name == "continue")?.name ?? "";
+	}
 	let result = [];
 	let intCount = 0;
 	const interval = setInterval(() => {
