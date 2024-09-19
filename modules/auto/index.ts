@@ -50,7 +50,7 @@ defineEvent("messageUpdate", async (_, message) => {
 async function handleMutatable(
 	message: Message,
 ): Promise<BaseMessageOptions | true | [BaseMessageOptions, ...(number | string)[]] | undefined> {
-	const blocks = /block{(.*)}/ms.exec(message.content);
+	const blocks = /```sb2?3?\n+(.*)\n*```/ms.exec(message.content);
 	if (blocks?.[1]) {
 		message.channel.sendTyping();
 		return {
