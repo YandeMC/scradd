@@ -21,12 +21,12 @@ const xmlEscape = (unsafe: string): string => {
 	return unsafe.replace(/[<>&'"]/g, (c) => escapeMap[c] as any);
 };
 
-export async function scratchBlocksToImage(text: string) {
+export async function scratchBlocksToImage(text: string, style:string) {
 	const window = new JSDOM(`<pre class='blocks'>${xmlEscape(text)}</pre>`);
 	const scratchBlocksInstance = scratchblocks(window.window);
 	scratchBlocksInstance.appendStyles();
 	scratchBlocksInstance.renderMatching("pre.blocks", {
-		style: "scratch3",
+		style: "scratch" + style,
 		languages: ["en"],
 	});
 	const scratchBlocksDiv = window.window.document.querySelector("div.scratchblocks");
@@ -94,6 +94,6 @@ defineChatCommand(
 		},
 	},
 	async (i, o) => {
-		i.reply({ files: [await scratchBlocksToImage(o.blocks)] });
+		i.reply({ files: [await scratchBlocksToImage(o.blocks, "3")] });
 	},
 );

@@ -50,12 +50,18 @@ defineEvent("messageUpdate", async (_, message) => {
 async function handleMutatable(
 	message: Message,
 ): Promise<BaseMessageOptions | true | [BaseMessageOptions, ...(number | string)[]] | undefined> {
-	const blocks = /```sb2?3?\n+(.*)\n*```/ms.exec(message.content);
-	if (blocks?.[1]) {
-		message.channel.sendTyping();
+	const blocks = /```sb(2|3)?\n+(.*)\n*```/ms.exec(message.content);
+	if (blocks?.[2] && blocks?.[1]) {
 		return {
 			content: "",
-			files: [await scratchBlocksToImage(blocks[1])],
+			files: [await scratchBlocksToImage(blocks[2], blocks[1])],
+			embeds: [],
+			components: [],
+		};
+	} else if (blocks?.[1]) {
+		return {
+			content: "",
+			files: [await scratchBlocksToImage(blocks[1], "3")],
 			embeds: [],
 			components: [],
 		};
