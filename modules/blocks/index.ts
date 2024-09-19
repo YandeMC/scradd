@@ -21,7 +21,7 @@ const xmlEscape = (unsafe: string): string => {
 	return unsafe.replace(/[<>&'"]/g, (c) => escapeMap[c] as any);
 };
 
-export async function scratchBlocksToImage(text: string, style:string) {
+export async function scratchBlocksToImage(text: string, style: string) {
 	const window = new JSDOM(`<pre class='blocks'>${xmlEscape(text)}</pre>`);
 	const scratchBlocksInstance = scratchblocks(window.window);
 	scratchBlocksInstance.appendStyles();
