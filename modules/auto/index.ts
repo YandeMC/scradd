@@ -50,22 +50,29 @@ defineEvent("messageUpdate", async (_, message) => {
 async function handleMutatable(
 	message: Message,
 ): Promise<BaseMessageOptions | true | [BaseMessageOptions, ...(number | string)[]] | undefined> {
-	const blocks = /```sb(2|3)?\n+(.*)\n*```/ms.exec(message.content);
-	if (blocks?.[2] && blocks?.[1]) {
+	const blocks = Array.from(
+		message.content.matchAll(/```sb(2|3)?\n+([\s\S]*?)\n*```/g)
+	).slice(0, 10); // Limit to 10 matches
+	
+	if (blocks.length > 0) {
+		const files = await Promise.all(
+			blocks.map(async (block) => {
+				const type = block[1] || "3"; // Default to "3" if type is missing
+				const content = block[2] || block[1]; // Use block[1] content if no block[2]
+				return await scratchBlocksToImage(content ?? "", type);
+			})
+		);
+	
 		return {
 			content: "",
-			files: [await scratchBlocksToImage(blocks[2], blocks[1])],
+			files: files,
 			embeds: [],
 			components: [],
 		};
-	} else if (blocks?.[1]) {
-		return {
-			content: "",
-			files: [await scratchBlocksToImage(blocks[1], "3")],
-			embeds: [],
-			components: [],
-		};
+	} else {
+		return true;
 	}
+	
 }
 
 defineEvent("messageDelete", async (message) => {
