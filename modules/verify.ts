@@ -27,14 +27,14 @@ if (process.env.SCRATCH_PASS) {
 			if (!loginSuccess) return;
 			let cloud: CloudConnection;
 			try {
-				cloud = new CloudConnection(session, 961167982);
+				cloud = new CloudConnection(session, 1076121848);
 			} catch (error) {
 				cloudStatus = false;
 			}
 
 			await session.init("YandeTest", process.env.SCRATCH_PASS ?? "");
 			if (!session.auth) throw Error();
-			const project = new Project(session, 961167982);
+			const project = new Project(session, 1076121848);
 
 			const user = new Profile(session, session.auth?.username);
 			async function testProject() {
