@@ -73,6 +73,6 @@ const autoreactions: [
 	],
 	["🍪", "cookie"],
 	["<:haha:1237847801073897583>", "@everyone"],
-	["⚠️",/\bscrub+\b/ig]
+	["⚠️", /\bscrub+\b/gi],
 ];
 export default autoreactions;
