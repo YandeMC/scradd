@@ -49,7 +49,7 @@ defineEvent("messageCreate", async (m) => {
 				if (userAi) return userAi;
 				console.log("making new ai for " + m.author.displayName);
 				const newAi = new AIChat(
-					"https://reverse.mubi.tech/v1/chat/completions",
+					"https://proxy.mubilop.tech/v1/chat/completions",
 					[
 						...normalAi.getChatHistory(),
 						{ content: "You are now in DMS.", role: "system" },

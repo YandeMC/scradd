@@ -14,7 +14,7 @@ const models = [
 	{ supportsComplex: true, name: "gpt-4o-mini" },
 ];
 
-const apiUrl = "https://reverse.mubi.tech";
+const apiUrl = "https://proxy.mubilop.tech";
 export let aiModel = models[0];
 export async function updateStatus() {
 	const channel = await client.channels.fetch(
@@ -87,7 +87,7 @@ export async function updateModels() {
 			const message = await channel?.messages.fetch(messageId);
 			await message.edit({ embeds: [embed] });
 		} else {
-			const message = await channel?.send({ embeds: [embed] });
+			const message = await channel?.send({ embeds: [embed] });		
 			messageId = message.id; // we need the id so we can change later even tho it will be the only message of the channel
 		}
 	} catch (error) {
