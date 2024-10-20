@@ -2,17 +2,7 @@ import axios from "axios";
 import { EmbedBuilder } from "discord.js";
 import { client } from "strife.js";
 let messageId: string | null = null;
-const models = [
-	{ supportsComplex: true, name: "gpt-4o" },
-	{ supportsComplex: true, name: "gemini-pro-vision" },
-	{ supportsComplex: true, name: "gemini-pro" },
-	{ supportsComplex: true, name: "gemini-1.5-pro-latest" },
-	{ supportsComplex: true, name: "gemini-1.5-flash-latest" },
-	{ supportsComplex: true, name: "gemini-1.0-pro-vision-latest" },
-	{ supportsComplex: true, name: "gemini-1.0-pro-latest" },
-	{ supportsComplex: true, name: "gemini-1.0-pro" },
-	{ supportsComplex: true, name: "gpt-4o-mini" },
-];
+const models = [{ supportsComplex: true, name: "@cf/meta/llama-3.2-11b-vision-instruct" }];
 
 const apiUrl = "https://proxy.mubilop.tech";
 export let aiModel = models[0];
