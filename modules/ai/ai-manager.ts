@@ -42,20 +42,21 @@ export class AIChat {
 	): Promise<string> {
 		this.inform(message, role, type);
 
-		const headers: Record<string, string> = { // why
+		const headers: Record<string, string> = {
+			// why
 			"Content-Type": "application/json",
 		};
-		  
+
 		if (process.env.OPENAI_KEY) {
 			headers["Authorization"] = `Bearer ${process.env.OPENAI_KEY}`;
 		}
-		  
+
 		const response = await fetch(this.apiUrl, {
 			method: "POST",
 			headers: headers,
 			body: JSON.stringify({
-			  model: aiModel?.name,
-			  messages: this.getEffectiveHistory(),
+				model: aiModel?.name,
+				messages: this.getEffectiveHistory(),
 			}),
 		});
 
