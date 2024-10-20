@@ -101,6 +101,8 @@ you should be pretty lax on these rules, at least the less serious ones, stuff l
 	`Commands:
             you can run several commands. if a command returns data make sure to reply to the user if requested
 
+            you should always include a command
+
             General Commands:
 
             [nothing]
