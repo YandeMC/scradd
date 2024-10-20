@@ -14,13 +14,13 @@ import { allowFreeWill } from "./misc.js";
 let sharedHistory: { role: string; content: string | any[]; type?: string }[] | undefined = [];
 
 const normalAi = new AIChat(
-	"https://hello-ai.ciceroraphael-turmaprealfa.workers.dev/",
+	"https://api.openai.com/v1/chat/completions",
 	sharedHistory,
 	100,
 	prompts.map((p) => ({ content: `${p}`, role: "system" })),
 );
 const freeWill = new AIChat(
-	"https://hello-ai.ciceroraphael-turmaprealfa.workers.dev/",
+	"https://api.openai.com/v1/chat/completions",
 	sharedHistory,
 	100,
 	freeWillPrompts.map((p) => ({ content: `${p}`, role: "system" })),
@@ -49,7 +49,7 @@ defineEvent("messageCreate", async (m) => {
 				if (userAi) return userAi;
 				console.log("making new ai for " + m.author.displayName);
 				const newAi = new AIChat(
-					"https://hello-ai.ciceroraphael-turmaprealfa.workers.dev/",
+					"https://api.openai.com/v1/chat/completions",
 					[
 						...normalAi.getChatHistory(),
 						{ content: "You are now in DMS.", role: "system" },
