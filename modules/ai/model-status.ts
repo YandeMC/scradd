@@ -2,9 +2,7 @@ import axios from "axios";
 import { EmbedBuilder } from "discord.js";
 import { client } from "strife.js";
 let messageId: string | null = null;
-const models = [
-	{ supportsComplex: true, name: "@cf/meta/llama-3.2-11b-vision-instruct" }
-];
+const models = [{ supportsComplex: true, name: "@cf/meta/llama-3.2-11b-vision-instruct" }];
 
 const apiUrl = "https://proxy.mubilop.tech";
 export let aiModel = models[0];
