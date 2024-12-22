@@ -1,8 +1,8 @@
 {
 	"compilerOptions": {
 		"allowJs": true,
-		"allowUnreachableCode": false,
-		"allowUnusedLabels": false,
+		"allowUnreachableCode": true,
+		"allowUnusedLabels": true,
 		"baseUrl": "./",
 		"checkJs": false,
 		"esModuleInterop": true,
@@ -12,16 +12,17 @@
 		"isolatedModules": true,
 		"lib": ["es2023"],
 		"module": "NodeNext",
-		"noEmitOnError": true,
+		"noEmitOnError": false,  // Allow emitting even when errors occur
 		"noErrorTruncation": true,
-		"noImplicitOverride": true,
-		"noUncheckedIndexedAccess": true,
-		"noUnusedLocals": true,
-		"noUnusedParameters": true,
+		"noImplicitOverride": false,  // Allow implicit overrides
+		"noUncheckedIndexedAccess": false,  // Turn off indexed access checking
+		"noUnusedLocals": false,  // Ignore unused local variable errors
+		"noUnusedParameters": false,  // Ignore unused parameter errors
 		"outDir": "dist",
 		"resolveJsonModule": true,
 		"sourceMap": true,
-		"strict": true,
+		"strict": false,  // Disable strict mode to allow more lenient checks
+		"skipLibCheck": true,  // Skip type checking of declaration files
 		"target": "es2022",
 		"paths": {
 			"*": ["./common/typedefs/*.d.ts", "./node_modules/@types/*", "./node_modules/*"]

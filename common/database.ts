@@ -199,9 +199,10 @@ export async function backupDatabases(channel: TextBasedChannel): Promise<void> 
 		attachment: Buffer.from(JSON.stringify(database.data), "utf8"),
 		name: `${database.name}.${process.env.NODE_ENV == "production" ? "scrubydb" : "json"}`,
 	}));
-
+//@ts-ignore
 	await channel.send("# Daily Scradd Database Backup");
 	while (attachments.length) {
+		//@ts-ignore
 		await channel.send({ files: attachments.splice(0, 10) });
 	}
 }

@@ -1,4 +1,3 @@
-import addons from "@sa-community/addons-data" assert { type: "json" };
 
 const domains = {
 	npm: "https://npmjs.com/package",
@@ -13,18 +12,6 @@ const domains = {
 } as const;
 
 export default {
-	addonSearchOptions: {
-		keys: [
-			({ addonId }: (typeof addons)[number]) => addonId.replaceAll("-", " "),
-			"addonId",
-			"manifest.name",
-			"manifest.description",
-			"manifest.settings.*.name",
-			"manifest.credits.*.name",
-			"manifest.presets.*.name",
-			"manifest.presets.*.description",
-		],
-	},
 
 	collectorTime: 45_000,
 	defaultPunishment: "No reason given.",

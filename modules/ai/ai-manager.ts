@@ -47,10 +47,7 @@ export class AIChat {
 			"Content-Type": "application/json",
 		};
 
-		if (process.env.OPENAI_KEY) {
-			headers["Authorization"] = `Bearer ${process.env.OPENAI_KEY}`;
-		}
-
+		console.log(message)
 		const response = await fetch(this.apiUrl, {
 			method: "POST",
 			headers: headers,
@@ -59,10 +56,12 @@ export class AIChat {
 				messages: this.getEffectiveHistory(),
 			}),
 		});
-
+		console.log(response)
 		const data = (await response.json().catch(() => undefined)) as any;
 		const reply = data.choices?.[0].message.content;
+		console.log(reply)
 		if (!reply) {
+			
 			await updateModels();
 			if (aiModel?.name != "All Down") return "[nothing]";
 		}

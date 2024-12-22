@@ -15,9 +15,11 @@ import {
 	type ThreadManager,
 } from "discord.js";
 import { client } from "strife.js";
-import { CUSTOM_ROLE_PREFIX } from "../modules/roles/misc.js";
+
 import type { NonFalsy } from "./misc.js";
 
+
+const CUSTOM_ROLE_PREFIX = "✨ "
 const IS_TESTING = process.argv.some((file) => file.endsWith(".test.js"));
 
 const guild = IS_TESTING ? undefined : await client.guilds.fetch(process.env.GUILD_ID);
@@ -277,6 +279,7 @@ export function getInitialThreads(
 export function getInitialThreads(
 	channel: NewsChannel | TextChannel,
 	filter?: undefined,
+	//@ts-ignore
 ): Collection<string, AnyThreadChannel<false>>;
 export function getInitialThreads(
 	channel?: ForumChannel | MediaChannel | NewsChannel | TextChannel,

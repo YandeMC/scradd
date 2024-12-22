@@ -3,144 +3,41 @@ import { AIChat } from "./ai-manager.js";
 import type { Message } from "discord.js";
 import config from "../../common/config.js";
 import Database from "../../common/database.js";
-import { xpDatabase } from "../xp/util.js";
-import { getLevelForXp } from "../xp/misc.js";
 import { gracefulFetch } from "../../util/promises.js";
 import { updateStatus } from "./model-status.js";
-import { prompts, freeWillPrompts, dmPrompts, people } from "./prompts.js";
-import log, { LoggingEmojis, LogSeverity } from "../logging/misc.js";
-import { allowFreeWill } from "./misc.js";
+import { prompts, people } from "./prompts.js";
 
 let sharedHistory: { role: string; content: string | any[]; type?: string }[] | undefined = [];
 
 const normalAi = new AIChat(
-	"https://api.openai.com/v1/chat/completions",
+	"https://penguinai.abby.is-a.dev/v1/chat/completions",
 	sharedHistory,
 	100,
 	prompts.map((p) => ({ content: `${p}`, role: "system" })),
 );
-const freeWill = new AIChat(
-	"https://api.openai.com/v1/chat/completions",
-	sharedHistory,
-	100,
-	freeWillPrompts.map((p) => ({ content: `${p}`, role: "system" })),
-);
-let dmAis: { [id: string]: AIChat } = {};
+
 
 const memory = new Database<{ content: string }>("aimem");
 
 await memory.init();
 defineEvent("messageCreate", async (m) => {
 	if (m.author.bot) return;
-	if (m.channel.isTextBased())
-		if (!m.channel.isDMBased())
-			if (!m.channel.permissionsFor(config.roles.verified?.id ?? "")?.has("ViewChannel"))
-				if (!!config.roles.verified?.id) return;
-	console.log(normalAi.getEffectiveHistory());
+	console.log(m.content)
+	if (!m.channel.isTextBased()) return
+	if (m.channel.isDMBased()) return
+	// console.log(normalAi.getEffectiveHistory());
 
 	const forcedReply =
-		m.channel.isDMBased() ||
 		m.channelId == "1276365384542453790" ||
 		m.mentions.has(client.user);
 	const ai =
 		m.channel.isDMBased() ?
-			(() => {
-				const userAi = dmAis[m.channel.id];
-				if (userAi) return userAi;
-				console.log("making new ai for " + m.author.displayName);
-				const newAi = new AIChat(
-					"https://api.openai.com/v1/chat/completions",
-					[
-						...normalAi.getChatHistory(),
-						{ content: "You are now in DMS.", role: "system" },
-					],
-					100,
-					dmPrompts.map((p) => ({ content: `${p}`, role: "system" })),
-				);
-				dmAis[m.channel.id] = newAi;
-				return newAi;
-			})()
-		:	normalAi;
-	let replyReason = "";
-	const canReply = allowFreeWill(m.channel) || forcedReply;
+			null
+			: normalAi;
+	if (!ai) return
+	const canReply = forcedReply;
 
-	console.log(canReply, forcedReply);
-	if (!forcedReply) {
-		const reference = m.reference ? await m.fetchReference() : null;
-		// if (!allowFreeWill(m.channel)) {
-		// 	(
-		// 		m.attachments
-		// 			.filter((attachment) =>
-		// 				attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i),
-		// 			)
-		// 			.map(() => "").length
-		// 	) ?
-		// 		freeWill.inform(
-		// 			[
-		// 				{
-		// 					type: "text",
-		// 					text: `${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
-		// 				},
-		// 				...[
-		// 					...m.attachments
-		// 						.filter((attachment) =>
-		// 							attachment.contentType?.match(
-		// 								/^image\/(bmp|jpeg|png|bpm|webp)$/i,
-		// 							),
-		// 						)
-		// 						.map((v) => v.url),
-		// 				].map((i) => ({ type: "image_url", image_url: { url: i } })),
-		// 			],
-		// 			"user",
-		// 			"complex",
-		// 		)
-		// 	:	freeWill.inform(
-		// 			`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
-		// 			"user",
-		// 			"text",
-		// 		);
-		// 	return;
-		// }
 
-		let response =
-			(
-				m.attachments
-					.filter((attachment) =>
-						attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i),
-					)
-					.map(() => "").length
-			) ?
-				await freeWill.send(
-					[
-						{
-							type: "text",
-							text: `${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
-						},
-						...[
-							...m.attachments
-								.filter((attachment) =>
-									attachment.contentType?.match(
-										/^image\/(bmp|jpeg|png|bpm|webp)$/i,
-									),
-								)
-								.map((v) => v.url),
-						].map((i) => ({ type: "image_url", image_url: { url: i } })),
-					],
-					"user",
-					"complex",
-					true,
-				)
-			:	await freeWill.send(
-					`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
-					"user",
-					"text",
-					true,
-				);
-		const commands = parseCommands(response);
-		if (!commands) return;
-		if (!commands.some((c) => c.name == "continue")) return;
-		replyReason = commands.find((c) => c.name == "continue")?.name ?? "";
-	}
 	let result = [];
 	let intCount = 0;
 	const interval = setInterval(() => {
@@ -162,7 +59,7 @@ defineEvent("messageCreate", async (m) => {
 					[
 						{
 							type: "text",
-							text: `${!forcedReply ? `!!!you are only answering this message because your freewill system detected it as important, reason : ${replyReason}\n` : ""}${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
+							text: `${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
 						},
 						...[
 							...m.attachments
@@ -177,8 +74,8 @@ defineEvent("messageCreate", async (m) => {
 					"user",
 					"complex",
 				)
-			:	await ai.send(
-					`${!forcedReply ? `!!!you are only answering this message because your freewill system detected it as important, reason : ${replyReason}\n` : ""}${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
+				: await ai.send(
+					`${m.reference ? `\n(replying to ${reference?.author.displayName} : ${reference?.author.id}\n${reference?.content})\n` : ""}${m.author.displayName} : ${m.author.id} : ${m.channel.isDMBased() ? `${m.author.displayName}'s DMs` : m.channel.name}\n${m.content}`,
 				);
 		//[...m.attachments.filter((attachment) => attachment.contentType?.match(/^image\/(bmp|jpeg|png|bpm|webp)$/i)).map(v => v.url)]
 
@@ -268,20 +165,12 @@ async function executeCommands(
 			case "time":
 				output.push("[time]: " + new Date().toString());
 				break;
-			case "alert":
-				await log(
-					`${LoggingEmojis.Bot} ${command.option + "\n" + m.url}`,
-					LogSeverity.AiAlerts,
-				);
-				break;
+
 			case "store":
 				store(command.option);
 				break;
 			case "recall":
 				output.push("[recall]: " + recall(command.option).join("\n") || "nothing found.  ");
-				break;
-			case "xp":
-				output.push(`[xp]: ${await getXp(command.option)}`);
 				break;
 			case "gif":
 				{
@@ -291,7 +180,7 @@ async function executeCommands(
 						(await gracefulFetch(
 							`https://discord.com/api/v9/gifs/search?q=${encodeURIComponent(command.option)}&media_format=gif&provider=tenor&locale=en-US`,
 						)) ?? [];
-					await m.reply(gifs.slice(0, 10).at(Math.round(Math.random() * 10))?.src ?? "");
+					output.push(`[${command.name}]: top ${gifs.length} gifs for ${command.option}\n${gifs.join("\n")}`);
 				}
 				break;
 			case "updatedesc":
@@ -316,14 +205,7 @@ async function executeCommands(
 	return output;
 }
 
-async function getXp(user: string) {
-	const allXp = xpDatabase.data.toSorted((one, two) => two.xp - one.xp);
 
-	const xp = allXp.find((entry) => entry.user === user)?.xp ?? 0;
-	const level = getLevelForXp(xp);
-	const rank = allXp.findIndex((info) => info.user === user) + 1;
-	return `(xp : level : nth rank in server) ${xp} : ${level} : ${rank}`;
-}
 
 function extractEmojis(str: string) {
 	const emojiRegex = /[\p{Emoji}\uFE0F]/gu;
